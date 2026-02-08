@@ -65,11 +65,12 @@ const App: React.FC = () => {
   const [isLiveOpen, setIsLiveOpen] = useState(false);
   const [isIngestOpen, setIsIngestOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // Toggles
   const [useThinking, setUseThinking] = useState(false);
   const [useSearch, setUseSearch] = useState(false);
   const [autoMap, setAutoMap] = useState(true);
+  const [autoTTS, setAutoTTS] = useState(false);
 
   // Watch Mode hooks
   const {
@@ -174,10 +175,18 @@ const App: React.FC = () => {
 
       setMessages(prev => [...prev, botMsg]);
 
+      // Auto-TTS: Speak responses automatically if enabled
+      if (autoTTS && isTTSAvailable) {
+        // Speak without blocking
+        handleSpeak(botMsg.text).catch(err => {
+          console.warn('Auto-TTS failed:', err);
+        });
+      }
+
       // Auto-Update Map if context implies architecture change
       if (autoMap && llmService.isTaskAvailable(TaskType.GRAPH_GENERATION)) {
-        if (botMsg.text.toLowerCase().includes('entry point') || 
-            botMsg.text.toLowerCase().includes('flow') || 
+        if (botMsg.text.toLowerCase().includes('entry point') ||
+            botMsg.text.toLowerCase().includes('flow') ||
             botMsg.text.toLowerCase().includes('architecture')) {
           try {
             const newData = await llmService.generateGraphData(botMsg.text);
@@ -381,7 +390,29 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
               </div>
             </FeatureTooltip>
           )}
-          
+
+          {/* Auto-TTS Toggle - with availability check */}
+          {isTTSAvailable ? (
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-400">Auto-Speak</span>
+              <button
+                onClick={() => setAutoTTS(!autoTTS)}
+                className={`w-10 h-6 rounded-full p-1 transition-colors ${autoTTS ? 'bg-cyan-600' : 'bg-slate-700'}`}
+              >
+                <div className={`w-4 h-4 bg-white rounded-full transition-transform ${autoTTS ? 'translate-x-4' : ''}`} />
+              </button>
+            </div>
+          ) : (
+            <FeatureTooltip message={getConfigureMessage('isTTSAvailable') || 'TTS unavailable'}>
+              <div className="flex items-center justify-between text-sm opacity-50">
+                <span className="text-slate-400">Auto-Speak</span>
+                <div className="w-10 h-6 rounded-full p-1 bg-slate-700 cursor-not-allowed">
+                  <div className="w-4 h-4 bg-slate-500 rounded-full" />
+                </div>
+              </div>
+            </FeatureTooltip>
+          )}
+
           {/* Real-time Voice Button - with availability check */}
           {isRealtimeAvailable ? (
             <button 
