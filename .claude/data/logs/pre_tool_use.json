@@ -1,0 +1,241 @@
+[
+  {
+    "timestamp": "2026-02-07T17:19:46.952427",
+    "session_id": "f6137678-168d-44ba-913f-0fc43438040c",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/f6137678-168d-44ba-913f-0fc43438040c.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "ls -la /Volumes/Storage/CodeBaseCartographer",
+      "description": "List root directory contents"
+    },
+    "tool_use_id": "call_99655a66f4de4ccdb4125ac1"
+  },
+  {
+    "timestamp": "2026-02-07T17:20:12.242282",
+    "session_id": "f6137678-168d-44ba-913f-0fc43438040c",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/f6137678-168d-44ba-913f-0fc43438040c.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "find /Volumes/Storage/CodeBaseCartographer -name \".env*\" -o -name \"*.env\" 2>/dev/null",
+      "description": "Find environment files"
+    },
+    "tool_use_id": "call_062c0a9741894506b0390539"
+  },
+  {
+    "timestamp": "2026-02-07T17:20:19.919644",
+    "session_id": "f6137678-168d-44ba-913f-0fc43438040c",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/f6137678-168d-44ba-913f-0fc43438040c.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "find /Volumes/Storage/CodeBaseCartographer -name \"Dockerfile\" -o -name \"docker-compose.yml\" -o -name \".gitlab-ci.yml\" -o -name \".gitignore\" 2>/dev/null | head -10",
+      "description": "Find deployment and git config files"
+    },
+    "tool_use_id": "call_d8938600bdc144a1b438c3e7"
+  },
+  {
+    "timestamp": "2026-02-07T17:20:24.723909",
+    "session_id": "f6137678-168d-44ba-913f-0fc43438040c",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/f6137678-168d-44ba-913f-0fc43438040c.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "ls -la /Volumes/Storage/CodeBaseCartographer/Local_LLM_Integration_Adjustments/codebase-cartographer/ | grep -E \"^\\.\"",
+      "description": "List hidden files in project root"
+    },
+    "tool_use_id": "call_304f0a8e14194bca9eb4d939"
+  },
+  {
+    "timestamp": "2026-02-07T17:20:30.262723",
+    "session_id": "f6137678-168d-44ba-913f-0fc43438040c",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/f6137678-168d-44ba-913f-0fc43438040c.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git status 2>&1 || echo \"Not a git repo\"",
+      "description": "Check git repository status"
+    },
+    "tool_use_id": "call_07300517229a4daebcbc4c44"
+  },
+  {
+    "timestamp": "2026-02-07T17:20:30.960001",
+    "session_id": "f6137678-168d-44ba-913f-0fc43438040c",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/f6137678-168d-44ba-913f-0fc43438040c.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "wc -l /Volumes/Storage/CodeBaseCartographer/Local_LLM_Integration_Adjustments/codebase-cartographer/src/**/*.{ts,tsx} 2>/dev/null | tail -1",
+      "description": "Count total lines of TypeScript code"
+    },
+    "tool_use_id": "call_0fb126b2ea924b888f8cc4aa"
+  },
+  {
+    "timestamp": "2026-02-07T17:20:37.015739",
+    "session_id": "f6137678-168d-44ba-913f-0fc43438040c",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/f6137678-168d-44ba-913f-0fc43438040c.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "ls -la /Volumes/Storage/CodeBaseCartographer/Local_LLM_Integration_Adjustments/codebase-cartographer/",
+      "description": "List all files in project directory"
+    },
+    "tool_use_id": "call_8972f44fce8e46d6acac64a4"
+  },
+  {
+    "timestamp": "2026-02-07T18:49:16.366730",
+    "session_id": "1649702b-6cb2-47e1-abbc-7e422f22bdf7",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/1649702b-6cb2-47e1-abbc-7e422f22bdf7.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "ls -la /Volumes/Storage/CodeBaseCartographer",
+      "description": "List repository root contents"
+    },
+    "tool_use_id": "call_ccbc5856d6ce4cad85b04fae"
+  },
+  {
+    "timestamp": "2026-02-07T18:49:16.376974",
+    "session_id": "1649702b-6cb2-47e1-abbc-7e422f22bdf7",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/1649702b-6cb2-47e1-abbc-7e422f22bdf7.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "find /Volumes/Storage/CodeBaseCartographer -maxdepth 2 -type f -o -type d | head -100",
+      "description": "Explore directory structure"
+    },
+    "tool_use_id": "call_14934c1e56104046a75b2f75"
+  },
+  {
+    "timestamp": "2026-02-07T18:49:18.724503",
+    "session_id": "1649702b-6cb2-47e1-abbc-7e422f22bdf7",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/1649702b-6cb2-47e1-abbc-7e422f22bdf7.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "find /Volumes/Storage/CodeBaseCartographer/Local_LLM_Integration_Adjustments -type f -o -type d | sort",
+      "description": "Full structure of nested folder"
+    },
+    "tool_use_id": "call_35e9c2517fa9424281f5e548"
+  },
+  {
+    "timestamp": "2026-02-07T18:49:30.809121",
+    "session_id": "1649702b-6cb2-47e1-abbc-7e422f22bdf7",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/1649702b-6cb2-47e1-abbc-7e422f22bdf7.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "ls -la /Volumes/Storage/CodeBaseCartographer/Local_LLM_Integration_Adjustments/codebase-cartographer/",
+      "description": "List all files at app level"
+    },
+    "tool_use_id": "call_6f56dd1ee3f9437b8e6da7ab"
+  },
+  {
+    "timestamp": "2026-02-07T18:49:40.715162",
+    "session_id": "1649702b-6cb2-47e1-abbc-7e422f22bdf7",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/1649702b-6cb2-47e1-abbc-7e422f22bdf7.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "head -50 /Volumes/Storage/CodeBaseCartographer/Local_LLM_Integration_Adjustments/codebase-cartographer/src/config/configManager.ts",
+      "description": "Check sample import patterns"
+    },
+    "tool_use_id": "call_42759d26c87342989080d254"
+  },
+  {
+    "timestamp": "2026-02-07T19:13:33.137374",
+    "session_id": "d0453c33-101e-4845-ba71-213b45e86718",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/d0453c33-101e-4845-ba71-213b45e86718.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git checkout -b restructure-repo",
+      "description": "Create new branch for restructuring"
+    },
+    "tool_use_id": "call_89e8231650f94f35a0ca9e76"
+  },
+  {
+    "timestamp": "2026-02-07T19:13:34.011486",
+    "session_id": "d0453c33-101e-4845-ba71-213b45e86718",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/d0453c33-101e-4845-ba71-213b45e86718.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "cd /Volumes/Storage/CodeBaseCartographer/Local_LLM_Integration_Adjustments/codebase-cartographer && npm run build",
+      "timeout": 120000,
+      "description": "Build current app to verify it works"
+    },
+    "tool_use_id": "call_08d2c06793ae416d8897c15c"
+  },
+  {
+    "timestamp": "2026-02-07T19:14:22.977329",
+    "session_id": "d0453c33-101e-4845-ba71-213b45e86718",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/d0453c33-101e-4845-ba71-213b45e86718.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git init",
+      "description": "Initialize git repository"
+    },
+    "tool_use_id": "call_2225183b2ef74411bd07c015"
+  },
+  {
+    "timestamp": "2026-02-07T19:14:23.733458",
+    "session_id": "d0453c33-101e-4845-ba71-213b45e86718",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/d0453c33-101e-4845-ba71-213b45e86718.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git status",
+      "description": "Check git repository status"
+    },
+    "tool_use_id": "call_a61d93b0934b4c029fb26874"
+  },
+  {
+    "timestamp": "2026-02-07T19:14:25.251077",
+    "session_id": "d0453c33-101e-4845-ba71-213b45e86718",
+    "transcript_path": "/Users/douglastalley/.claude/projects/-Volumes-Storage-CodeBaseCartographer/d0453c33-101e-4845-ba71-213b45e86718.jsonl",
+    "cwd": "/Volumes/Storage/CodeBaseCartographer",
+    "permission_mode": "bypassPermissions",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Bash",
+    "tool_input": {
+      "command": "git add . && git commit -m \"Initial commit before restructuring\"",
+      "description": "Add all files and create initial commit"
+    },
+    "tool_use_id": "call_91d35bbcd52442ff81f6e6e2"
+  }
+]

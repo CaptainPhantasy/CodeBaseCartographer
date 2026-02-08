@@ -1,0 +1,7 @@
+{
+  "name": "Codebase Cartographer",
+  "description": "An AI-powered system behavior mapping and data flow cartography tool.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
