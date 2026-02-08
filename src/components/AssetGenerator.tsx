@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { getLLMService } from '../src/services/llmService';
-import { useFeatureAvailability } from '../src/hooks/useFeatureAvailability';
+import { getLLMService } from '../services/llmService';
+import { useFeatureAvailability } from '../hooks/useFeatureAvailability';
 
 const AssetGenerator: React.FC = () => {
     const { isVideoAvailable, getConfigureMessage } = useFeatureAvailability();

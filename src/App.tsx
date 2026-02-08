@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Message, AppMode, GraphData } from './types';
-import { getLLMService, TaskType } from './src/services/llmService';
-import { useFeatureAvailability } from './src/hooks/useFeatureAvailability';
+import { getLLMService, TaskType } from './services/llmService';
+import { useFeatureAvailability } from './hooks/useFeatureAvailability';
 import FlowMap from './components/FlowMap';
 import AssetGenerator from './components/AssetGenerator';
 import LiveSession from './components/LiveSession';
 import RepoIngest from './components/RepoIngest';
 import { INITIAL_GRAPH_DATA, CARTOGRAPHER_SYSTEM_INSTRUCTION } from './constants';
-import { SetupWizard } from './src/components/SetupWizard';
-import { SettingsPage } from './src/components/SettingsPage';
-import { useConfig } from './src/hooks/useConfig';
+import { SetupWizard } from './components/SetupWizard';
+import { SettingsPage } from './components/SettingsPage';
+import { useConfig } from './hooks/useConfig';
 
 // Tooltip component for unavailable features
 const FeatureTooltip: React.FC<{ message: string; children: React.ReactNode }> = ({ message, children }) => (

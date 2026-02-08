@@ -22,7 +22,7 @@ import {
   UnsupportedCapabilityError
 } from './adapters';
 import { TaskType, ProviderId, Capability, TASK_REQUIRED_CAPABILITIES } from '../types/capabilities';
-import type { GraphData } from '../../types';
+import type { GraphData } from '../types';
 
 // Re-export TaskType for convenience
 export { TaskType } from '../types/capabilities';

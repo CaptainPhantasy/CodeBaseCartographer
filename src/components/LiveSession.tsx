@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getLLMService } from '../src/services/llmService';
-import { useFeatureAvailability } from '../src/hooks/useFeatureAvailability';
+import { getLLMService } from '../services/llmService';
+import { useFeatureAvailability } from '../hooks/useFeatureAvailability';
 import { CARTOGRAPHER_SYSTEM_INSTRUCTION } from '../constants';
 
 // Audio utils
