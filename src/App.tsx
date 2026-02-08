@@ -9,7 +9,10 @@ import RepoIngest from './components/RepoIngest';
 import { INITIAL_GRAPH_DATA, CARTOGRAPHER_SYSTEM_INSTRUCTION } from './constants';
 import { SetupWizard } from './components/SetupWizard';
 import { SettingsPage } from './components/SettingsPage';
+import { NoApiKeyWarning } from './components/NoApiKeyWarning';
 import { useConfig } from './hooks/useConfig';
+import DOMPurify from 'dompurify';
+import { sanitizeError } from './utils/errorSanitizer';
 
 // Tooltip component for unavailable features
 const FeatureTooltip: React.FC<{ message: string; children: React.ReactNode }> = ({ message, children }) => (
@@ -143,13 +146,13 @@ const App: React.FC = () => {
       }
 
     } catch (err) {
-      console.error(err);
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      setMessages(prev => [...prev, { 
-        id: Date.now().toString(), 
-        role: 'model', 
-        text: "Error: " + errorMessage + "\n\nPlease check your API key configuration in Settings.", 
-        timestamp: new Date() 
+      const sanitizedError = sanitizeError(err);
+      console.error(sanitizedError);
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'model',
+        text: "Error: " + sanitizedError + "\n\nPlease check your API key configuration in Settings.",
+        timestamp: new Date()
       }]);
     } finally {
       setIsLoading(false);
@@ -318,7 +321,13 @@ Please perform Phase 1: Initial Repo Reconnaissance.
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col relative">
-        
+
+        {/* No API Key Warning Banner */}
+        <NoApiKeyWarning
+          onOpenSetup={() => setShowSetupWizard(true)}
+          onOpenSettings={() => setShowSettings(true)}
+        />
+
         {/* Header */}
         <header className="h-16 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between px-6 backdrop-blur">
           <h2 className="text-xl font-semibold text-slate-100">
@@ -369,9 +378,21 @@ Please perform Phase 1: Initial Repo Reconnaissance.
                         )}
                       </div>
                     )}
-                    <div className="prose prose-invert prose-sm whitespace-pre-wrap leading-relaxed">
-                      {msg.text}
-                    </div>
+                    {msg.role === 'model' ? (
+                      <div
+                        className="prose prose-invert prose-sm whitespace-pre-wrap leading-relaxed"
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(msg.text, {
+                            ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'code', 'pre', 'a', 'p', 'br'],
+                            ALLOWED_ATTR: ['href']
+                          })
+                        }}
+                      />
+                    ) : (
+                      <div className="prose prose-invert prose-sm whitespace-pre-wrap leading-relaxed">
+                        {msg.text}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

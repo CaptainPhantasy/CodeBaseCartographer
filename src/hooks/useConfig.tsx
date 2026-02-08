@@ -25,21 +25,26 @@ interface ConfigContextValue {
   config: AppConfig;
   isFirstRun: boolean;
   isLoading: boolean;
-  
+
   // Provider management
   getApiKey: (providerId: ProviderId) => string | undefined;
-  setProviderKey: (providerId: ProviderId, apiKey: string, isEnabled?: boolean) => void;
+  setProviderKey: (providerId: ProviderId, apiKey: string, isEnabled?: boolean) => Promise<void>;
   removeProvider: (providerId: ProviderId) => void;
   setProviderValidation: (providerId: ProviderId, isValid: boolean) => void;
   getEnabledProviders: () => ProviderConfig[];
-  
+
+  // Encryption helpers
+  hasLegacyKeys: () => boolean;
+  hasEncryptedKeys: () => boolean;
+  migrateAllKeys: () => Promise<number>;
+
   // Task mapping management
   getTaskMapping: (taskType: TaskType) => TaskProviderMapping | undefined;
   setTaskMapping: (mapping: TaskProviderMapping) => void;
-  
+
   // Preferences
   setPreferences: (preferences: Partial<UserPreferences>) => void;
-  
+
   // Config operations
   exportConfig: () => string;
   importConfig: (jsonString: string) => boolean;
@@ -82,8 +87,8 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
     return configManager.getApiKey(providerId);
   }, [configManager]);
 
-  const setProviderKey = useCallback((providerId: ProviderId, apiKey: string, isEnabled = true) => {
-    configManager.setProviderKey(providerId, apiKey, isEnabled);
+  const setProviderKey = useCallback(async (providerId: ProviderId, apiKey: string, isEnabled = true) => {
+    await configManager.setProviderKey(providerId, apiKey, isEnabled);
   }, [configManager]);
 
   const removeProvider = useCallback((providerId: ProviderId) => {
@@ -96,6 +101,18 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
 
   const getEnabledProviders = useCallback(() => {
     return configManager.getEnabledProviders();
+  }, [configManager]);
+
+  const hasLegacyKeys = useCallback(() => {
+    return configManager.hasLegacyKeys();
+  }, [configManager]);
+
+  const hasEncryptedKeys = useCallback(() => {
+    return configManager.hasEncryptedKeys();
+  }, [configManager]);
+
+  const migrateAllKeys = useCallback(async () => {
+    return configManager.migrateAllKeys();
   }, [configManager]);
 
   const getTaskMapping = useCallback((taskType: TaskType) => {
@@ -137,6 +154,9 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
     removeProvider,
     setProviderValidation,
     getEnabledProviders,
+    hasLegacyKeys,
+    hasEncryptedKeys,
+    migrateAllKeys,
     getTaskMapping,
     setTaskMapping,
     setPreferences,

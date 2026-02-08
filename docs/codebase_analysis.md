@@ -100,15 +100,9 @@ All LLM functionality is provided by Google Gemini through the `@google/genai` S
 GEMINI_API_KEY=PLACEHOLDER_API_KEY
 ```
 
-**How it's loaded:** Via Vite's `loadEnv()` in `vite.config.ts`:
-```typescript
-define: {
-  'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-  'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-}
-```
+**How it's loaded:** API keys are now managed at runtime via the `ConfigManager` class. Users configure their API keys through the Settings UI, which are stored in localStorage (obfuscated, not encrypted). The application uses the `useConfig` hook to access keys at runtime, preventing them from being embedded in the browser bundle.
 
-**Usage in code:** `process.env.API_KEY` (single key for all operations)
+**Usage in code:** `getConfigManager().getApiKey('google')` (provider-specific keys for multi-provider support)
 
 ### Model Types Defined (`types.ts`)
 

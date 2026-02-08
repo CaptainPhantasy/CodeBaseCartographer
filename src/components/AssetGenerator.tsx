@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { getLLMService } from '../services/llmService';
 import { useFeatureAvailability } from '../hooks/useFeatureAvailability';
+import { sanitizeError } from '../utils/errorSanitizer';
 
 const AssetGenerator: React.FC = () => {
     const { isVideoAvailable, getConfigureMessage } = useFeatureAvailability();
@@ -51,9 +52,10 @@ const AssetGenerator: React.FC = () => {
             );
             
             setVideoUrl(result.videoUrl);
-        } catch (err: any) {
-            console.error('Video generation failed:', err);
-            setError(err.message || 'Failed to generate video');
+        } catch (err: unknown) {
+            const sanitizedError = sanitizeError(err);
+            console.error('Video generation failed:', sanitizedError);
+            setError(sanitizedError || 'Failed to generate video');
         } finally {
             setLoading(false);
         }

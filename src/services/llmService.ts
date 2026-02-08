@@ -75,7 +75,7 @@ export class LLMService {
   private getAdapter(providerId: ProviderId | 'elevenlabs', modelId?: string): BaseLLMAdapter {
     const configManager = getConfigManager();
     const apiKey = configManager.getApiKey(providerId as ProviderId);
-    
+
     if (!apiKey) {
       throw new AdapterError(
         `No API key configured for ${providerId}`,
@@ -86,7 +86,7 @@ export class LLMService {
     }
 
     const cacheKey = `${providerId}:${modelId || 'default'}`;
-    
+
     if (!this.adapterCache.has(cacheKey)) {
       const adapter = createAdapter(providerId, apiKey, modelId);
       this.adapterCache.set(cacheKey, adapter);

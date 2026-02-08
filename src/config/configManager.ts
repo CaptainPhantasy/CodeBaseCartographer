@@ -22,57 +22,160 @@ const CONFIG_STORAGE_KEY = 'codebase_cartographer_config';
 const CONFIG_FILE_PATH = './config.json'; // For Node.js environment
 
 // ============================================================================
-// OBFUSCATION UTILITIES
-// Note: This is basic obfuscation, NOT encryption.
-// For production, use proper encryption (e.g., Web Crypto API)
+// ENCRYPTION UTILITIES
+// Uses AES-GCM encryption with PBKDF2 key derivation
+// ============================================================================
+
+import {
+  encryptData,
+  decryptData,
+  isEncryptedFormat,
+  getPinFromSession,
+  isValidPin,
+  isPinSetUp
+} from '../utils/cryptoUtils';
+
+// ============================================================================
+// LEGACY OBFUSCATION (for backward compatibility)
 // ============================================================================
 
 /**
- * Obfuscate an API key for storage
- * Uses base64 + simple character rotation
- * WARNING: This is NOT secure encryption - just obfuscation to prevent casual viewing
+ * Legacy obfuscation for backward compatibility
+ * DEPRECATED: Used only for migrating old keys
  */
-export function obfuscateKey(key: string): string {
+function obfuscateKeyLegacy(key: string): string {
   if (!key) return '';
-  // Add a prefix to identify obfuscated keys
   const prefixed = `OBF:${key}`;
-  // Simple rotation + base64
-  const rotated = prefixed.split('').map(c => 
+  const rotated = prefixed.split('').map(c =>
     String.fromCharCode(c.charCodeAt(0) + 3)
   ).join('');
   return btoa(rotated);
 }
 
 /**
- * Deobfuscate an API key from storage
+ * Legacy deobfuscation for backward compatibility
+ * DEPRECATED: Used only for migrating old keys
  */
-export function deobfuscateKey(obfuscatedKey: string): string {
+function deobfuscateKeyLegacy(obfuscatedKey: string): string {
   if (!obfuscatedKey) return '';
   try {
     const rotated = atob(obfuscatedKey);
-    const unrotated = rotated.split('').map(c => 
+    const unrotated = rotated.split('').map(c =>
       String.fromCharCode(c.charCodeAt(0) - 3)
     ).join('');
-    // Check and remove prefix
     if (unrotated.startsWith('OBF:')) {
       return unrotated.slice(4);
     }
     return unrotated;
   } catch {
-    // If deobfuscation fails, return as-is (might be plain key)
     return obfuscatedKey;
   }
 }
 
-// TODO: Production encryption using Web Crypto API
-// async function encryptKey(key: string, password: string): Promise<string> {
-//   const encoder = new TextEncoder();
-//   const data = encoder.encode(key);
-//   const keyMaterial = await crypto.subtle.importKey(
-//     'raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits', 'deriveKey']
-//   );
-//   // ... implement AES-GCM encryption
-// }
+// ============================================================================
+// ENCRYPTION WRAPPERS
+// ============================================================================
+
+/**
+ * Get the current PIN from session
+ * Returns null if PIN not set or not in session
+ */
+function getSessionPin(): string | null {
+  return getPinFromSession();
+}
+
+/**
+ * Encrypt an API key for storage
+ * Uses AES-GCM encryption if PIN is available, falls back to legacy obfuscation
+ *
+ * @param key - API key to encrypt
+ * @returns Encrypted or obfuscated string for storage
+ */
+export async function obfuscateKey(key: string): Promise<string> {
+  if (!key) return '';
+
+  const pin = getSessionPin();
+
+  // If PIN is available, use proper encryption
+  if (pin) {
+    try {
+      const result = await encryptData(key, pin);
+      return result.storageString;
+    } catch (error) {
+      console.warn('Encryption failed, falling back to obfuscation:', error);
+      // Fall through to legacy obfuscation
+    }
+  }
+
+  // Fallback to legacy obfuscation
+  return obfuscateKeyLegacy(key);
+}
+
+/**
+ * Deobfuscate/Decrypt an API key from storage
+ * Handles both new encrypted format and legacy obfuscated format
+ *
+ * @param obfuscatedKey - Encrypted or obfuscated key from storage
+ * @returns Decrypted API key
+ * @throws Error if decryption fails (wrong PIN)
+ */
+export async function deobfuscateKey(obfuscatedKey: string): Promise<string> {
+  if (!obfuscatedKey) return '';
+
+  const pin = getSessionPin();
+
+  // Check if it's in the new encrypted format
+  if (isEncryptedFormat(obfuscatedKey)) {
+    if (!pin) {
+      throw new Error('PIN required to decrypt API keys');
+    }
+
+    try {
+      return await decryptData(obfuscatedKey, pin);
+    } catch (error) {
+      console.error('Decryption failed:', error);
+      throw new Error('Failed to decrypt API key. Incorrect PIN?');
+    }
+  }
+
+  // Legacy obfuscated format
+  return deobfuscateKeyLegacy(obfuscatedKey);
+}
+
+/**
+ * Check if a key is encrypted (requires PIN to decrypt)
+ */
+export function isKeyEncrypted(obfuscatedKey: string): boolean {
+  return isEncryptedFormat(obfuscatedKey);
+}
+
+/**
+ * Migrate a legacy obfuscated key to encrypted format
+ *
+ * @param legacyKey - Legacy obfuscated key
+ * @returns New encrypted key
+ * @throws Error if PIN not available
+ */
+export async function migrateKeyToEncryption(legacyKey: string): Promise<string> {
+  if (!legacyKey) return '';
+
+  // Already encrypted
+  if (isEncryptedFormat(legacyKey)) {
+    return legacyKey;
+  }
+
+  const pin = getSessionPin();
+  if (!pin) {
+    throw new Error('PIN required to migrate keys to encrypted storage');
+  }
+
+  // Decrypt legacy key first
+  const decryptedKey = deobfuscateKeyLegacy(legacyKey);
+
+  // Encrypt with new method
+  const result = await encryptData(decryptedKey, pin);
+  return result.storageString;
+}
 
 // ============================================================================
 // CONFIG MANAGER CLASS
@@ -81,9 +184,56 @@ export function deobfuscateKey(obfuscatedKey: string): string {
 export class ConfigManager {
   private config: AppConfig;
   private listeners: Set<(config: AppConfig) => void> = new Set();
+  private isUnlocked: boolean = false;
+  private decryptedKeysCache: Map<ProviderId, string> = new Map();
 
   constructor() {
     this.config = this.loadConfig();
+  }
+
+  // --------------------------------------------------------------------------
+  // INITIALIZATION & UNLOCK
+  // --------------------------------------------------------------------------
+
+  /**
+   * Unlock the config manager by decrypting all API keys
+   * Should be called after PIN is entered
+   */
+  async unlock(): Promise<void> {
+    const pin = getSessionPin();
+    if (!pin) {
+      throw new Error('PIN required to unlock config');
+    }
+
+    // Decrypt all encrypted keys and cache them
+    for (const provider of this.config.providers) {
+      if (provider.apiKey && isEncryptedFormat(provider.apiKey)) {
+        try {
+          const decryptedKey = await decryptData(provider.apiKey, pin);
+          this.decryptedKeysCache.set(provider.providerId, decryptedKey);
+        } catch (error) {
+          console.error(`Failed to decrypt key for ${provider.providerId}:`, error);
+          throw error;
+        }
+      }
+    }
+
+    this.isUnlocked = true;
+  }
+
+  /**
+   * Lock the config manager and clear decrypted keys from memory
+   */
+  lock(): void {
+    this.decryptedKeysCache.clear();
+    this.isUnlocked = false;
+  }
+
+  /**
+   * Check if the config is unlocked
+   */
+  getIsUnlocked(): boolean {
+    return this.isUnlocked;
   }
 
   // --------------------------------------------------------------------------
@@ -111,8 +261,8 @@ export class ConfigManager {
       }
     }
 
-    // Try Vite environment variables
-    const envConfig = this.loadFromEnvVars();
+    // Try Vite environment variables (use legacy obfuscation for initial load)
+    const envConfig = this.loadFromEnvVarsSync();
     if (envConfig) {
       return envConfig;
     }
@@ -122,16 +272,17 @@ export class ConfigManager {
   }
 
   /**
-   * Load configuration from Vite environment variables
+   * Load configuration from Vite environment variables (synchronous)
+   * Uses legacy obfuscation to avoid async issues in constructor
    */
-  private loadFromEnvVars(): AppConfig | null {
+  private loadFromEnvVarsSync(): AppConfig | null {
     // Check for env vars (Vite exposes them as import.meta.env)
     const envKeys: Partial<Record<ProviderId, string>> = {};
-    
+
     // These would be set in .env.local
     if (typeof import.meta !== 'undefined' && import.meta.env) {
       const env = import.meta.env as Record<string, string>;
-      
+
       if (env.VITE_OPENROUTER_API_KEY) envKeys.openrouter = env.VITE_OPENROUTER_API_KEY;
       if (env.VITE_OPENAI_API_KEY) envKeys.openai = env.VITE_OPENAI_API_KEY;
       if (env.VITE_ANTHROPIC_API_KEY) envKeys.anthropic = env.VITE_ANTHROPIC_API_KEY;
@@ -150,13 +301,15 @@ export class ConfigManager {
       for (const [providerId, apiKey] of Object.entries(envKeys)) {
         if (apiKey) {
           const existingProvider = config.providers.find(p => p.providerId === providerId);
+          // Use legacy obfuscation for sync loading
+          const encryptedKey = obfuscateKeyLegacy(apiKey);
           if (existingProvider) {
-            existingProvider.apiKey = obfuscateKey(apiKey);
+            existingProvider.apiKey = encryptedKey;
             existingProvider.isEnabled = true;
           } else {
             config.providers.push({
               providerId: providerId as ProviderId,
-              apiKey: obfuscateKey(apiKey),
+              apiKey: encryptedKey,
               isEnabled: true
             });
           }
@@ -166,6 +319,39 @@ export class ConfigManager {
     }
 
     return null;
+  }
+
+  /**
+   * Re-encrypt API keys from env vars with proper encryption
+   * Call this after PIN is set up
+   */
+  async reEncryptEnvKeys(): Promise<void> {
+    const pin = getSessionPin();
+    if (!pin) return;
+
+    // Check if we have env vars that need re-encryption
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
+      const env = import.meta.env as Record<string, string>;
+      const envKeys: Partial<Record<ProviderId, string>> = {};
+
+      if (env.VITE_OPENROUTER_API_KEY) envKeys.openrouter = env.VITE_OPENROUTER_API_KEY;
+      if (env.VITE_OPENAI_API_KEY) envKeys.openai = env.VITE_OPENAI_API_KEY;
+      if (env.VITE_ANTHROPIC_API_KEY) envKeys.anthropic = env.VITE_ANTHROPIC_API_KEY;
+      if (env.VITE_GOOGLE_API_KEY || env.VITE_GEMINI_API_KEY) {
+        envKeys.google = env.VITE_GOOGLE_API_KEY || env.VITE_GEMINI_API_KEY;
+      }
+
+      // Re-encrypt any keys that match env vars
+      for (const [providerId, apiKey] of Object.entries(envKeys)) {
+        const provider = this.config.providers.find(p => p.providerId === providerId);
+        if (provider && apiKey === deobfuscateKeyLegacy(provider.apiKey)) {
+          // This key came from env vars, re-encrypt it
+          provider.apiKey = await obfuscateKey(apiKey);
+        }
+      }
+
+      this.saveConfig();
+    }
   }
 
   /**
@@ -270,21 +456,36 @@ export class ConfigManager {
 
   /**
    * Get decrypted API key for a provider
+   * Returns the cached decrypted key if unlocked, otherwise throws
+   * @returns Decrypted API key, or undefined if not found
+   * @throws Error if config is locked and key is encrypted
    */
   getApiKey(providerId: ProviderId): string | undefined {
     const provider = this.getProvider(providerId);
     if (!provider?.apiKey) return undefined;
-    return deobfuscateKey(provider.apiKey);
+
+    // If key is encrypted, check cache first
+    if (isEncryptedFormat(provider.apiKey)) {
+      if (!this.isUnlocked) {
+        throw new Error('Config is locked. Please unlock by entering your PIN.');
+      }
+      return this.decryptedKeysCache.get(providerId);
+    }
+
+    // Legacy obfuscated key - decrypt synchronously
+    return deobfuscateKeyLegacy(provider.apiKey);
   }
 
   /**
    * Set or update a provider's API key
+   * Encrypts the key before storing if PIN is available
    */
-  setProviderKey(providerId: ProviderId, apiKey: string, isEnabled = true): void {
+  async setProviderKey(providerId: ProviderId, apiKey: string, isEnabled = true): Promise<void> {
     const existingIndex = this.config.providers.findIndex(p => p.providerId === providerId);
+    const encryptedKey = await obfuscateKey(apiKey);
     const providerConfig: ProviderConfig = {
       providerId,
-      apiKey: obfuscateKey(apiKey),
+      apiKey: encryptedKey,
       isEnabled,
       validatedAt: undefined,
       isValid: undefined
@@ -295,6 +496,12 @@ export class ConfigManager {
     } else {
       this.config.providers.push(providerConfig);
     }
+
+    // Update cache if unlocked
+    if (this.isUnlocked) {
+      this.decryptedKeysCache.set(providerId, apiKey);
+    }
+
     this.saveConfig();
   }
 
@@ -428,6 +635,62 @@ export class ConfigManager {
    */
   getFullConfig(): AppConfig {
     return { ...this.config };
+  }
+
+  // --------------------------------------------------------------------------
+  // ENCRYPTION HELPERS
+  // --------------------------------------------------------------------------
+
+  /**
+   * Check if any providers have legacy (non-encrypted) keys
+   */
+  hasLegacyKeys(): boolean {
+    return this.config.providers.some(p => p.apiKey && !isEncryptedFormat(p.apiKey));
+  }
+
+  /**
+   * Get count of legacy keys
+   */
+  getLegacyKeyCount(): number {
+    return this.config.providers.filter(p => p.apiKey && !isEncryptedFormat(p.apiKey)).length;
+  }
+
+  /**
+   * Check if any providers have encrypted keys
+   */
+  hasEncryptedKeys(): boolean {
+    return this.config.providers.some(p => p.apiKey && isEncryptedFormat(p.apiKey));
+  }
+
+  /**
+   * Migrate all legacy keys to encrypted format
+   * @returns Number of keys migrated
+   */
+  async migrateAllKeys(): Promise<number> {
+    const pin = getSessionPin();
+    if (!pin) {
+      throw new Error('PIN required to migrate keys to encrypted storage');
+    }
+
+    let migratedCount = 0;
+
+    for (const provider of this.config.providers) {
+      if (provider.apiKey && !isEncryptedFormat(provider.apiKey)) {
+        try {
+          provider.apiKey = await migrateKeyToEncryption(provider.apiKey);
+          migratedCount++;
+        } catch (error) {
+          console.error(`Failed to migrate key for ${provider.providerId}:`, error);
+          // Continue with other keys
+        }
+      }
+    }
+
+    if (migratedCount > 0) {
+      this.saveConfig();
+    }
+
+    return migratedCount;
   }
 }
 

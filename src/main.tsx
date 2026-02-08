@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ConfigProvider } from './hooks/useConfig';
+import ErrorBoundary from './components/ErrorBoundary';
+import { SecurityProvider } from './components/SecurityProvider';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -11,8 +13,12 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <ConfigProvider>
-      <App />
-    </ConfigProvider>
+    <ErrorBoundary>
+      <ConfigProvider>
+        <SecurityProvider>
+          <App />
+        </SecurityProvider>
+      </ConfigProvider>
+    </ErrorBoundary>
   </React.StrictMode>
 );

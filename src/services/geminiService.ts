@@ -1,9 +1,17 @@
 import { GoogleGenAI, LiveServerMessage, Modality, Type, FunctionDeclaration } from "@google/genai";
 import { ModelType } from "../types";
 import { CARTOGRAPHER_SYSTEM_INSTRUCTION } from "../constants";
+import { getConfigManager } from "../config/configManager";
 
-// Helper to get fresh instance (especially for Veo key selection)
-const getAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Helper to get fresh instance with runtime API key (especially for Veo key selection)
+const getAI = () => {
+  const configManager = getConfigManager();
+  const apiKey = configManager.getApiKey('google');
+  if (!apiKey) {
+    throw new Error('Google API key not configured. Please add your API key in Settings.');
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 export const generateTextResponse = async (
   history: { role: string; text: string }[],
@@ -183,7 +191,12 @@ export const generateVideo = async (prompt: string, imageBase64: string | null =
   const videoUri = operation.response?.generatedVideos?.[0]?.video?.uri;
   if (!videoUri) throw new Error("No video generated");
 
-  const response = await fetch(`${videoUri}&key=${process.env.API_KEY}`);
+  const configManager = getConfigManager();
+  const apiKey = configManager.getApiKey('google');
+  if (!apiKey) {
+    throw new Error('Google API key not configured. Please add your API key in Settings.');
+  }
+  const response = await fetch(`${videoUri}&key=${apiKey}`);
   const blob = await response.blob();
   return URL.createObjectURL(blob);
 };

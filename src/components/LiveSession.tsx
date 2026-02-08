@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { getLLMService } from '../services/llmService';
 import { useFeatureAvailability } from '../hooks/useFeatureAvailability';
 import { CARTOGRAPHER_SYSTEM_INSTRUCTION } from '../constants';
+import { sanitizeError } from '../utils/errorSanitizer';
 
 // Audio utils
 function base64ToUint8Array(base64: string): Uint8Array {
@@ -128,21 +129,23 @@ const LiveSession: React.FC<LiveSessionProps> = ({ onClose }) => {
                         if (mounted) setStatus('closed');
                     },
                     onError: (err: Error) => {
-                        console.error('Realtime error:', err);
+                        const sanitizedError = sanitizeError(err);
+                        console.error('Realtime error:', sanitizedError);
                         if (mounted) {
                             setStatus('error');
-                            setErrorMessage(err.message);
+                            setErrorMessage(sanitizedError);
                         }
                     }
                 });
                 
                 connectionRef.current = connection;
 
-            } catch (e: any) {
-                console.error("Live session failed", e);
+            } catch (e: unknown) {
+                const sanitizedError = sanitizeError(e);
+                console.error("Live session failed", sanitizedError);
                 if (mounted) {
                     setStatus('error');
-                    setErrorMessage(e.message || 'Failed to connect');
+                    setErrorMessage(sanitizedError || 'Failed to connect');
                 }
             }
         };

@@ -5,7 +5,7 @@
 import React, { useState, useRef } from 'react';
 import { ProviderId, TaskType, TASK_REQUIRED_CAPABILITIES, ModelTier } from '../types/capabilities';
 import { PROVIDERS, getAvailableProviders, getProvider } from '../config/providers';
-import { validateApiKey } from '../utils/apiKeyValidator';
+import { validateApiKey, quickValidateKeyFormat } from '../utils/apiKeyValidator';
 import { useConfig } from '../hooks/useConfig';
 import CapabilityMatrix from './CapabilityMatrix';
 
@@ -19,6 +19,7 @@ interface ProviderEditState {
   apiKey: string;
   showKey: boolean;
   validating: boolean;
+  formatValid: boolean;
   error?: string;
 }
 
@@ -69,7 +70,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
   
   const [activeTab, setActiveTab] = useState<SettingsTab>('apikeys');
   const [editingProvider, setEditingProvider] = useState<ProviderId | null>(null);
-  const [editState, setEditState] = useState<ProviderEditState>({ apiKey: '', showKey: false, validating: false });
+  const [editState, setEditState] = useState<ProviderEditState>({ apiKey: '', showKey: false, validating: false, formatValid: true });
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -82,23 +83,66 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
   const handleEditProvider = (providerId: ProviderId) => {
     const existingKey = getApiKey(providerId) || '';
     setEditingProvider(providerId);
-    setEditState({ apiKey: existingKey, showKey: false, validating: false });
+    setEditState({
+      apiKey: existingKey,
+      showKey: false,
+      validating: false,
+      formatValid: existingKey === '' || quickValidateKeyFormat(providerId, existingKey)
+    });
   };
 
   const handleSaveKey = async () => {
     if (!editingProvider || !editState.apiKey) return;
-    
+
+    // Quick format validation before making API call
+    if (!quickValidateKeyFormat(editingProvider, editState.apiKey)) {
+      setEditState(prev => ({
+        ...prev,
+        error: getFormatError(editingProvider)
+      }));
+      return;
+    }
+
     setEditState(prev => ({ ...prev, validating: true, error: undefined }));
-    
+
     const result = await validateApiKey(editingProvider, editState.apiKey);
-    
+
     if (result.isValid) {
-      setProviderKey(editingProvider, editState.apiKey, true);
+      await setProviderKey(editingProvider, editState.apiKey, true);
       setProviderValidation(editingProvider, true);
       setEditingProvider(null);
     } else {
       setEditState(prev => ({ ...prev, validating: false, error: result.errorMessage }));
     }
+  };
+
+  const getFormatError = (providerId: ProviderId): string => {
+    switch (providerId) {
+      case 'openrouter':
+        return 'Invalid format. OpenRouter keys must start with "sk-or-"';
+      case 'openai':
+        return 'Invalid format. OpenAI keys must start with "sk-"';
+      case 'anthropic':
+        return 'Invalid format. Anthropic keys must start with "sk-ant-"';
+      case 'google':
+        return 'Invalid format. Google AI keys are typically 39+ characters';
+      case 'elevenlabs':
+        return 'Invalid format. ElevenLabs keys appear too short';
+      case 'local_llm':
+        return 'Enter a valid local endpoint URL';
+      default:
+        return 'Invalid API key format';
+    }
+  };
+
+  const handleApiKeyChange = (providerId: ProviderId, value: string) => {
+    const formatValid = value === '' || quickValidateKeyFormat(providerId, value);
+    setEditState(prev => ({
+      ...prev,
+      apiKey: value,
+      formatValid,
+      error: undefined
+    }));
   };
 
   const handleRemoveProvider = (providerId: ProviderId) => {
@@ -175,9 +219,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                             <input
                               type={editState.showKey ? 'text' : 'password'}
                               value={editState.apiKey}
-                              onChange={(e) => setEditState(prev => ({ ...prev, apiKey: e.target.value }))}
+                              onChange={(e) => handleApiKeyChange(providerConfig.providerId, e.target.value)}
                               placeholder="Enter API key"
-                              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 pr-12 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                              className={`w-full bg-slate-900 border rounded-lg px-4 py-2 pr-12 text-white focus:ring-2 focus:outline-none ${
+                                editState.apiKey && !editState.formatValid
+                                  ? 'border-red-500 focus:ring-red-500'
+                                  : 'border-slate-600 focus:ring-cyan-500'
+                              }`}
                             />
                             <button
                               onClick={() => setEditState(prev => ({ ...prev, showKey: !prev.showKey }))}
@@ -188,7 +236,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                           </div>
                           <button
                             onClick={handleSaveKey}
-                            disabled={editState.validating || !editState.apiKey}
+                            disabled={editState.validating || !editState.apiKey || !editState.formatValid}
                             className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white rounded-lg transition-colors"
                           >
                             {editState.validating ? 'Validating...' : 'Save'}
@@ -202,6 +250,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                         </div>
                         {editState.error && (
                           <p className="mt-2 text-sm text-red-400">{editState.error}</p>
+                        )}
+                        {editState.apiKey && !editState.formatValid && !editState.error && (
+                          <p className="mt-2 text-sm text-amber-400">
+                            {getFormatError(providerConfig.providerId)}
+                          </p>
                         )}
                       </div>
                     )}
@@ -261,9 +314,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                     {isEditing && (
                       <div className="mt-4 pt-4 border-t border-slate-700">
                         {provider.keyInstructions && (
-                          <a 
-                            href={provider.docsUrl} 
-                            target="_blank" 
+                          <a
+                            href={provider.docsUrl}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-cyan-400 hover:underline mb-2 block"
                           >
@@ -275,9 +328,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                             <input
                               type={editState.showKey ? 'text' : 'password'}
                               value={editState.apiKey}
-                              onChange={(e) => setEditState(prev => ({ ...prev, apiKey: e.target.value }))}
+                              onChange={(e) => handleApiKeyChange(provider.id, e.target.value)}
                               placeholder="Enter API key"
-                              className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-2 pr-12 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                              className={`w-full bg-slate-900 border rounded-lg px-4 py-2 pr-12 text-white focus:ring-2 focus:outline-none ${
+                                editState.apiKey && !editState.formatValid
+                                  ? 'border-red-500 focus:ring-red-500'
+                                  : 'border-slate-600 focus:ring-cyan-500'
+                              }`}
                             />
                             <button
                               onClick={() => setEditState(prev => ({ ...prev, showKey: !prev.showKey }))}
@@ -288,7 +345,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                           </div>
                           <button
                             onClick={handleSaveKey}
-                            disabled={editState.validating || !editState.apiKey}
+                            disabled={editState.validating || !editState.apiKey || !editState.formatValid}
                             className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white rounded-lg transition-colors"
                           >
                             {editState.validating ? 'Validating...' : 'Validate & Save'}
@@ -302,6 +359,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                         </div>
                         {editState.error && (
                           <p className="mt-2 text-sm text-red-400">{editState.error}</p>
+                        )}
+                        {editState.apiKey && !editState.formatValid && !editState.error && (
+                          <p className="mt-2 text-sm text-amber-400">
+                            {getFormatError(provider.id)}
+                          </p>
                         )}
                       </div>
                     )}

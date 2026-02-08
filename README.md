@@ -19,7 +19,7 @@ An AI-powered tool for mapping, visualizing, and understanding complex codebases
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 - At least one LLM API key (see [Provider Setup](#provider-setup))
 
@@ -157,6 +157,24 @@ All configuration is stored in browser localStorage:
 - Task mappings and preferences are JSON-stored
 - Config can be exported/imported via Settings
 
+## 📚 Documentation
+
+Comprehensive documentation is available for different aspects of the application:
+
+- 🏗️ [Architecture](docs/ARCHITECTURE.md) - System architecture diagrams and component relationships
+- 🔌 [Adding a Provider](docs/ADDING_A_PROVIDER.md) - Step-by-step guide for adding new LLM providers
+- 📚 [API Reference](docs/API_REFERENCE.md) - Complete API documentation for services, hooks, and types
+- 🛠️ [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions for providers and setup
+
+### Documentation Overview
+
+| Document | Purpose | Audience |
+|---------|---------|----------|
+| **Architecture** | Understanding system design and patterns | Developers, Architects |
+| **Adding a Provider** | Integration guide for new LLM providers | Developers |
+| **API Reference** | Technical API documentation | Developers |
+| **Troubleshooting** | Fixing common issues | Users, Developers |
+
 ## 🛠️ Development
 
 ### Scripts
@@ -170,41 +188,44 @@ npm run lint     # Type-check with TypeScript
 
 ### Adding a New Provider
 
-1. Create adapter in `src/services/adapters/newprovider.ts`:
-```typescript
-import { BaseLLMAdapter } from './base';
+For detailed instructions, see [Adding a Provider](docs/ADDING_A_PROVIDER.md). Summary:
 
-export class NewProviderAdapter extends BaseLLMAdapter {
-  readonly providerId = 'newprovider' as const;
-  readonly name = 'New Provider';
-  
-  // Implement required methods...
-}
-```
-
-2. Add to `src/config/providers.ts`:
-```typescript
-export const PROVIDERS: Record<ProviderId, ProviderDefinition> = {
-  // ... existing providers
-  newprovider: {
-    id: 'newprovider',
-    name: 'New Provider',
-    models: [/* model definitions */],
-    // ...
-  }
-};
-```
-
-3. Export in `src/services/adapters/index.ts`
-4. Add to `createAdapter()` factory function
-5. Update `ProviderId` type in `src/types/capabilities.ts`
+1. Create adapter in `src/services/adapters/[provider].ts`
+2. Add to `src/config/providers.ts`
+3. Update type definitions in `src/types/capabilities.ts`
+4. Update adapter factory and UI components
 
 ## 🔒 Security Notes
 
-- API keys are stored in browser localStorage with basic obfuscation
-- **Do not use in shared/public environments**
-- For production, implement proper server-side key management
-- No keys are ever sent to third parties (only to their respective API endpoints)
+> **⚠️ IMPORTANT SECURITY WARNING**
+
+This application is designed for **localhost development use only**. Before deploying or sharing, please understand the following security limitations:
+
+### Key Storage Security
+- API keys are stored in **browser localStorage** with basic obfuscation (not encryption)
+- Anyone with access to the browser can extract stored API keys
+- **Do not use this app on shared computers or public devices**
+- **Do not commit `.env.local` files to version control** (already in .gitignore)
+
+### Recommended Security Practices
+
+1. **Local Development Only**: Run this application only on your personal development machine
+2. **Environment Variables**: Use `.env.local` for API keys instead of the in-app settings when possible
+3. **Key Rotation**: Regularly rotate your API keys, especially if you suspect exposure
+4. **Permissions**: Use API keys with minimal required permissions/scopes
+5. **Monitoring**: Monitor your API provider's usage dashboard for unusual activity
+
+### Production Deployment
+For production use, you must implement:
+- **Server-side key management** (never expose keys to clients)
+- **Authentication/Authorization** to control access
+- **Backend proxy** for all LLM API calls
+- **Secure key vault** (e.g., AWS Secrets Manager, Azure Key Vault)
+
+### Data Privacy
+- API keys are sent **directly to their respective providers only**
+- No keys are sent to any third-party services or intermediaries
+- No telemetry or analytics data is collected by this application
 
 ## 📄 License
 

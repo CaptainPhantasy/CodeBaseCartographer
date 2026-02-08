@@ -5,7 +5,7 @@
 import React, { useState, useCallback } from 'react';
 import { ProviderId, TaskType, TASK_REQUIRED_CAPABILITIES, Capability } from '../types/capabilities';
 import { PROVIDERS, getAvailableProviders, getProvider } from '../config/providers';
-import { validateApiKey } from '../utils/apiKeyValidator';
+import { validateApiKey, quickValidateKeyFormat } from '../utils/apiKeyValidator';
 import { getCapableProvidersForTask, getBestProviderForTask } from '../utils/capabilityMatrix';
 import { useConfig } from '../hooks/useConfig';
 
@@ -19,6 +19,7 @@ interface ProviderSetupState {
   validating: boolean;
   validated: boolean;
   isValid: boolean;
+  formatValid: boolean;
   error?: string;
 }
 
@@ -133,17 +134,37 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     if (!providerStates[providerId]) {
       setProviderStates(prev => ({
         ...prev,
-        [providerId]: { apiKey: '', showKey: false, validating: false, validated: false, isValid: false }
+        [providerId]: { apiKey: '', showKey: false, validating: false, validated: false, isValid: false, formatValid: true }
       }));
     }
   };
 
   // API key handlers
   const updateApiKey = (providerId: ProviderId, apiKey: string) => {
+    const formatValid = apiKey === '' || quickValidateKeyFormat(providerId, apiKey);
     setProviderStates(prev => ({
       ...prev,
-      [providerId]: { ...prev[providerId], apiKey, validated: false, isValid: false, error: undefined }
+      [providerId]: { ...prev[providerId], apiKey, validated: false, isValid: false, formatValid, error: undefined }
     }));
+  };
+
+  const getFormatError = (providerId: ProviderId): string => {
+    switch (providerId) {
+      case 'openrouter':
+        return 'Invalid format. OpenRouter keys must start with "sk-or-"';
+      case 'openai':
+        return 'Invalid format. OpenAI keys must start with "sk-"';
+      case 'anthropic':
+        return 'Invalid format. Anthropic keys must start with "sk-ant-"';
+      case 'google':
+        return 'Invalid format. Google AI keys are typically 39+ characters';
+      case 'elevenlabs':
+        return 'Invalid format. ElevenLabs keys appear too short';
+      case 'local_llm':
+        return 'Enter a valid local endpoint URL';
+      default:
+        return 'Invalid API key format';
+    }
   };
 
   const toggleShowKey = (providerId: ProviderId) => {
@@ -157,6 +178,15 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     const state = providerStates[providerId];
     if (!state?.apiKey) return;
 
+    // Quick format validation before making API call
+    if (!quickValidateKeyFormat(providerId, state.apiKey)) {
+      setProviderStates(prev => ({
+        ...prev,
+        [providerId]: { ...prev[providerId], validating: false, validated: true, isValid: false, error: getFormatError(providerId) }
+      }));
+      return;
+    }
+
     setProviderStates(prev => ({
       ...prev,
       [providerId]: { ...prev[providerId], validating: true, error: undefined }
@@ -166,10 +196,10 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
 
     setProviderStates(prev => ({
       ...prev,
-      [providerId]: { 
-        ...prev[providerId], 
-        validating: false, 
-        validated: true, 
+      [providerId]: {
+        ...prev[providerId],
+        validating: false,
+        validated: true,
         isValid: result.isValid,
         error: result.errorMessage
       }
@@ -177,7 +207,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
 
     // If valid, save to config
     if (result.isValid) {
-      setProviderKey(providerId, state.apiKey, true);
+      await setProviderKey(providerId, state.apiKey, true);
       setProviderValidation(providerId, true);
     }
   };
@@ -286,7 +316,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
           const provider = getProvider(providerId);
           if (!provider) return null;
           
-          const state = providerStates[providerId] || { apiKey: '', showKey: false, validating: false, validated: false, isValid: false };
+          const state = providerStates[providerId] || { apiKey: '', showKey: false, validating: false, validated: false, isValid: false, formatValid: true, error: undefined };
           const info = PROVIDER_INFO[providerId];
           
           return (
@@ -326,7 +356,11 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                     value={state.apiKey}
                     onChange={(e) => updateApiKey(providerId, e.target.value)}
                     placeholder={`Enter your ${provider.name} API key`}
-                    className="w-full bg-slate-900 border border-slate-600 rounded-lg px-4 py-3 pr-12 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                    className={`w-full bg-slate-900 border rounded-lg px-4 py-3 pr-12 text-white focus:ring-2 focus:outline-none ${
+                      state.apiKey && !state.formatValid
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-slate-600 focus:ring-cyan-500'
+                    }`}
                   />
                   <button
                     onClick={() => toggleShowKey(providerId)}
@@ -338,7 +372,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                 </div>
                 <button
                   onClick={() => validateKey(providerId)}
-                  disabled={!state.apiKey || state.validating}
+                  disabled={!state.apiKey || state.validating || !state.formatValid}
                   className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:hover:bg-cyan-600 text-white rounded-lg font-medium transition-colors min-w-[100px]"
                 >
                   {state.validating ? (
@@ -348,9 +382,12 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                   ) : 'Validate'}
                 </button>
               </div>
-              
+
               {state.error && (
                 <p className="mt-2 text-sm text-red-400">{state.error}</p>
+              )}
+              {state.apiKey && !state.formatValid && !state.error && (
+                <p className="mt-2 text-sm text-amber-400">{getFormatError(providerId)}</p>
               )}
             </div>
           );
