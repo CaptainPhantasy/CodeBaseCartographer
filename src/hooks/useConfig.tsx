@@ -57,6 +57,7 @@ interface ConfigContextValue {
   getSelectedResource: (providerId: ProviderId) => string | undefined;
 
   // Config operations
+  setConfig: (config: AppConfig) => void;
   exportConfig: () => string;
   importConfig: (jsonString: string) => boolean;
   clearConfig: () => void;
@@ -209,7 +210,8 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
     exportConfig: exportConfigFn,
     importConfig: importConfigFn,
     clearConfig,
-    markSetupComplete
+    markSetupComplete,
+    setConfig // Add setConfig to context for triggering re-renders
   };
 
   return (

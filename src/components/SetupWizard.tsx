@@ -2,12 +2,13 @@
  * SetupWizard Component - Multi-step onboarding wizard for first-run configuration
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { ProviderId, TaskType, TASK_REQUIRED_CAPABILITIES, Capability } from '../types/capabilities';
 import { PROVIDERS, getAvailableProviders, getProvider } from '../config/providers';
 import { validateApiKey, quickValidateKeyFormat } from '../utils/apiKeyValidator';
 import { getCapableProvidersForTask, getBestProviderForTask } from '../utils/capabilityMatrix';
 import { useConfig } from '../hooks/useConfig';
+import { getConfigManager } from '../config/configManager';
 
 // ============================================================================
 // TYPES
@@ -82,12 +83,16 @@ interface SetupWizardProps {
 }
 
 export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
-  const { setProviderKey, setProviderValidation, setTaskMapping, config } = useConfig();
-  
+  const { setProviderKey, setProviderValidation, setTaskMapping, config, importConfig, setConfig } = useConfig();
+  const configManager = getConfigManager();
+
   const [currentStep, setCurrentStep] = useState<WizardStep>('welcome');
   const [selectedProviders, setSelectedProviders] = useState<Set<ProviderId>>(new Set());
   const [providerStates, setProviderStates] = useState<Partial<Record<ProviderId, ProviderSetupState>>>({});
   const [taskMappings, setTaskMappings] = useState<Record<TaskType, { providerId: ProviderId; modelId: string } | null>>({} as any);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Step navigation
   const steps: WizardStep[] = ['welcome', 'providers', 'apikeys', 'tasks', 'complete'];
@@ -213,6 +218,41 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     }
   };
 
+  // Import config from file
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    setImportError(null);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const success = importConfig(content);
+        if (!success) {
+          setImportError('Failed to import configuration. Please check the file format.');
+        } else {
+          setImportError(null);
+          // Trigger re-render with new config
+          setConfig(configManager.getFullConfig());
+          // Complete setup immediately after successful import
+          onComplete();
+        }
+      } catch (err) {
+        setImportError('Invalid JSON file');
+      } finally {
+        setImporting(false);
+      }
+    };
+    reader.onerror = () => {
+      setImportError('Failed to read file');
+      setImporting(false);
+    };
+    reader.readAsText(file);
+  };
+
   // Complete setup
   const handleComplete = () => {
     // Save task mappings
@@ -243,9 +283,35 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       </div>
       <h2 className="text-3xl font-bold text-white">Welcome to Codebase Cartographer</h2>
       <p className="text-slate-400 max-w-md mx-auto">
-        To get started, we need to configure API keys for the AI providers you want to use.
-        This allows the app to map your codebase, generate insights, and more.
+        To get started, configure API keys for AI providers or import an existing configuration.
       </p>
+
+      {/* Import Config Option */}
+      <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 max-w-md mx-auto text-left">
+        <h4 className="font-medium text-slate-200 mb-3">Already have a config?</h4>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          onChange={handleImport}
+          className="hidden"
+          disabled={importing}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={importing}
+          className="w-full py-2 px-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {importing ? 'Importing...' : '📥 Import Config JSON'}
+        </button>
+        {importError && (
+          <p className="text-red-400 text-sm mt-2">{importError}</p>
+        )}
+        <p className="text-xs text-slate-500 mt-2">Import your saved API keys and settings</p>
+      </div>
+
+      <div className="text-sm text-slate-500">— or set up manually —</div>
+
       <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 max-w-md mx-auto text-left">
         <h4 className="font-medium text-slate-200 mb-2">What you'll need:</h4>
         <ul className="text-sm text-slate-400 space-y-2">

@@ -102,6 +102,9 @@ export class Server {
     this.app.get('/api/changes', this.listChanges.bind(this));
     this.app.get('/api/changes/:id', this.getChange.bind(this));
     this.app.post('/api/changes/:id/rollback', this.rollbackChange.bind(this));
+
+    // ElevenLabs proxy routes (for voice preview)
+    this.app.get('/api/elevenlabs/preview', this.proxyElevenLabsPreview.bind(this));
   }
 
   /**
@@ -395,6 +398,43 @@ export class Server {
       });
     } catch (error) {
       res.status(500).json(FileOperator.handleError(error));
+    }
+  }
+
+  /**
+   * GET /api/elevenlabs/preview - Proxy ElevenLabs preview URL to avoid CORS
+   */
+  private async proxyElevenLabsPreview(req: Request, res: Response): Promise<void> {
+    try {
+      const { url } = req.query;
+
+      if (!url || typeof url !== 'string') {
+        res.status(400).json({ error: 'URL parameter required' });
+        return;
+      }
+
+      // Fetch from ElevenLabs with proper headers
+      const response = await fetch(url as string, {
+        headers: {
+          'User-Agent': 'CodebaseCartographer/1.0'
+        }
+      });
+
+      if (!response.ok) {
+        res.status(response.status).json({ error: 'Failed to fetch preview' });
+        return;
+      }
+
+      // Stream the audio back
+      res.setHeader('Content-Type', 'audio/mpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours
+      res.setHeader('Access-Control-Allow-Origin', '*');
+
+      const arrayBuffer = await response.arrayBuffer();
+      res.send(Buffer.from(arrayBuffer));
+    } catch (error) {
+      console.error('Preview proxy error:', error);
+      res.status(500).json({ error: 'Failed to proxy preview' });
     }
   }
 

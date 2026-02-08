@@ -114,14 +114,24 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
     setPreviewError(null);
 
     try {
-      const audio = new Audio(voice.preview_url);
+      // Use proxy to avoid CORS issues - use backend server on port 3000
+      const backendUrl = window.location.port === '3002' ? 'http://localhost:3000' : '';
+      const proxyUrl = `${backendUrl}/api/elevenlabs/preview?url=${encodeURIComponent(voice.preview_url)}`;
+      const audio = new Audio();
+      audio.crossOrigin = 'anonymous';
+      audio.src = proxyUrl;
       audioRef.current = audio;
+
+      audio.onloadeddata = () => {
+        setPreviewingVoice(null);
+      };
 
       audio.onended = () => {
         setPreviewingVoice(null);
       };
 
-      audio.onerror = () => {
+      audio.onerror = (e) => {
+        console.error('Audio error:', e);
         setPreviewingVoice(null);
         setPreviewError('Failed to play preview');
         setTimeout(() => setPreviewError(null), 3000);
@@ -129,6 +139,7 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
 
       await audio.play();
     } catch (error) {
+      console.error('Preview error:', error);
       setPreviewingVoice(null);
       setPreviewError('Failed to play preview');
       setTimeout(() => setPreviewError(null), 3000);

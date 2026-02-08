@@ -10,9 +10,9 @@
       default-src 'self';
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://esm.sh;
       style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com;
-      connect-src 'self' https://openrouter.ai https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://api.elevenlabs.io;
+      connect-src 'self' http://localhost:3000 http://localhost:3001 http://localhost:3002 http://localhost:4000 ws://localhost:3001 ws://localhost:4000 https://openrouter.ai https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://api.elevenlabs.io;
       img-src 'self' data: blob: https:;
-      media-src 'self' blob: data:;
+      media-src 'self' http://localhost:3000 http://localhost:3002 blob: data:;
       object-src 'none';
     " />
     <script src="https://cdn.tailwindcss.com"></script>

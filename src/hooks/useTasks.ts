@@ -12,7 +12,8 @@ import type {
   TaskStats,
 } from '../types/task';
 
-const API_BASE = 'http://localhost:4000/api';
+// Use backend server port (3000 by default)
+const API_BASE = 'http://localhost:3000/api';
 
 export interface UseTasksResult {
   tasks: Task[];

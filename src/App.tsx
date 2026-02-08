@@ -290,13 +290,12 @@ Please perform Phase 1: Initial Repo Reconnaissance.
             className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.FLOW_CHART ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'hover:bg-slate-800'}`}
           >
             <span>📊</span> Flow Chart
-
+          </button>
           <button
             onClick={() => setMode(AppMode.TASKS)}
             className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.TASKS ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'hover:bg-slate-800'}`}
           >
             <span>✅</span> Tasks
-          </button>
           </button>
 
           {/* Video/Asset Studio - conditionally show based on availability */}

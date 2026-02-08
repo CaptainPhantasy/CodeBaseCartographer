@@ -23,7 +23,8 @@ class FileVersionStore {
    * Store a file version
    */
   storeVersion(path: string, content: string, timestamp?: number): void {
-    const now = timestamp || Date.now();
+    const fileTimestamp = timestamp || Date.now();
+    const now = Date.now(); // Current time for cache eviction
 
     // Check if we already have a recent version
     const existing = this.store.get(path);
@@ -37,7 +38,7 @@ class FileVersionStore {
     this.store.set(path, {
       path,
       content,
-      timestamp: now,
+      timestamp: fileTimestamp,
       lastAccessed: now
     });
 
