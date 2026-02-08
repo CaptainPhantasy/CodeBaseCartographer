@@ -15,7 +15,10 @@ export interface TaskCardProps {
   onUpdate: (id: string, updates: Partial<Task>) => void;
   onDelete: (id: string) => void;
   onNodeClick?: (filePaths: string[]) => void;
+  onExecute?: (task: Task) => void;
+  onUndo?: (task: Task) => void;
   isDragging?: boolean;
+  executionStatus?: 'idle' | 'running' | 'completed' | 'failed';
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -23,10 +26,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onUpdate,
   onDelete,
   onNodeClick,
+  onExecute,
+  onUndo,
   isDragging = false,
+  executionStatus = 'idle',
 }) => {
   const [expanded, setExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDestructiveConfirm, setShowDestructiveConfirm] = useState(false);
 
   const statusInfo = STATUS_CONFIG[task.status];
   const priorityInfo = PRIORITY_CONFIG[task.priority];
@@ -44,6 +51,32 @@ const TaskCard: React.FC<TaskCardProps> = ({
       onNodeClick([file]);
     }
   };
+
+  const handleExecute = () => {
+    if (onExecute) {
+      // Check if task might be destructive
+      const isDestructive =
+        task.title.toLowerCase().includes('delete') ||
+        task.title.toLowerCase().includes('remove') ||
+        task.description?.toLowerCase().includes('delete') ||
+        task.description?.toLowerCase().includes('remove');
+
+      if (isDestructive) {
+        setShowDestructiveConfirm(true);
+      } else {
+        onExecute(task);
+      }
+    }
+  };
+
+  const handleUndo = () => {
+    if (onUndo) {
+      onUndo(task);
+    }
+  };
+
+  const canExecute = task.status === 'pending' || task.status === 'blocked';
+  const canUndo = executionStatus === 'completed';
 
   return (
     <div
@@ -70,6 +103,25 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
 
         <div className="flex items-center gap-1">
+          {canExecute && onExecute && (
+            <button
+              onClick={handleExecute}
+              disabled={executionStatus === 'running'}
+              className="px-2 py-1 text-xs bg-green-600 hover:bg-green-500 disabled:bg-slate-700 disabled:text-slate-500 text-white rounded transition-colors"
+              title="Execute this task"
+            >
+              {executionStatus === 'running' ? 'Running...' : 'Execute'}
+            </button>
+          )}
+          {canUndo && onUndo && (
+            <button
+              onClick={handleUndo}
+              className="px-2 py-1 text-xs bg-orange-600 hover:bg-orange-500 text-white rounded transition-colors"
+              title="Undo changes from this task"
+            >
+              Undo
+            </button>
+          )}
           <button
             onClick={() => setExpanded(!expanded)}
             className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
@@ -229,6 +281,45 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 className="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded transition-colors"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Destructive Operation Confirmation */}
+      {showDestructiveConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-slate-800 border border-slate-700 rounded-lg p-5 max-w-md mx-4 shadow-xl">
+            <h3 className="text-white font-semibold mb-2">Destructive Operation</h3>
+            <p className="text-slate-300 text-sm mb-3">
+              This task may contain destructive operations (deletions). Are you sure you want to proceed?
+            </p>
+            <div className="bg-slate-900 border border-slate-700 rounded p-3 mb-4">
+              <p className="text-white text-sm font-medium">{task.title}</p>
+              {task.description && (
+                <p className="text-slate-400 text-xs mt-1 line-clamp-3">{task.description}</p>
+              )}
+            </div>
+            <p className="text-yellow-400 text-xs mb-4">
+              Warning: This action may delete files or modify code in ways that cannot be easily undone.
+              Consider creating a backup before proceeding.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDestructiveConfirm(false)}
+                className="px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-slate-700 rounded transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowDestructiveConfirm(false);
+                  if (onExecute) onExecute(task);
+                }}
+                className="px-4 py-2 text-sm bg-yellow-600 hover:bg-yellow-500 text-white rounded transition-colors"
+              >
+                Proceed with Caution
               </button>
             </div>
           </div>

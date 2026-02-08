@@ -5,3 +5,4 @@
 
 export * from './useFeatureAvailability';
 export { useConfig, useConfigStandalone, ConfigProvider } from './useConfig';
+export { useKeyboardShortcuts, formatShortcut, getDefaultShortcuts } from './useKeyboardShortcuts';

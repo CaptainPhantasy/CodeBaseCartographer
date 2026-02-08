@@ -18,7 +18,7 @@ export interface Node {
   id: string;
   group: number;
   label: string;
-  type: 'entry' | 'logic' | 'storage' | 'exit' | 'external';
+  type: 'entry' | 'logic' | 'storage' | 'exit' | 'external' | 'decision' | 'process';
 }
 
 export interface Link {

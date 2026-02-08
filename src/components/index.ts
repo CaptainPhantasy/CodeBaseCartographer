@@ -14,3 +14,11 @@ export { default as WatchModeToggle } from './WatchModeToggle';
 export { default as DiagramView } from './DiagramView';
 export { default as DiagramNode } from './DiagramNode';
 export { default as ViewToggle } from './ViewToggle';
+
+// Phase 4: Focus Mode + Search Navigation
+export { default as FocusMode } from './FocusMode';
+export { default as SearchModal } from './SearchModal';
+export { default as QuickActionsMenu } from './QuickActionsMenu';
+export { default as ContextMenu, useContextMenu, getNodeContextMenuItems, getCanvasContextMenuItems } from './ContextMenu';
+export { default as FlowMapEnhanced } from './FlowMapEnhanced';
+export { default as DiagramViewEnhanced } from './DiagramViewEnhanced';
