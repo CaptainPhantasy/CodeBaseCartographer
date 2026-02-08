@@ -95,14 +95,22 @@ export class GoogleAdapter extends BaseLLMAdapter {
       parts: [{ text: msg.text }]
     }));
 
+    // Build config object with only defined properties
+    const config: any = {};
+    if (options.systemPrompt) {
+      config.systemInstruction = options.systemPrompt;
+    }
+    if (tools.length > 0) {
+      config.tools = tools;
+    }
+    if (options.useThinking) {
+      config.thinkingConfig = { thinkingBudget: 16000 };
+    }
+
     const chat = this.ai.chats.create({
       model: modelId,
       history: previousHistory,
-      config: {
-        systemInstruction: options.systemPrompt,
-        tools,
-        ...(options.useThinking ? { thinkingConfig: { thinkingBudget: 16000 } } : {}),
-      }
+      config
     });
 
     // Prepare message content
@@ -143,7 +151,27 @@ export class GoogleAdapter extends BaseLLMAdapter {
         responseSchema: schema as any
       }
     });
-    return JSON.parse(response.text || '{}');
+
+    if (!response.text || response.text.trim() === '') {
+      throw new AdapterError('Empty response from API', 'EMPTY_RESPONSE', this.providerId, false);
+    }
+
+    try {
+      const parsed = JSON.parse(response.text);
+      // Validate that required fields exist for graph data
+      if (parsed && typeof parsed === 'object') {
+        if ('nodes' in parsed && (!parsed.nodes || !Array.isArray(parsed.nodes))) {
+          throw new AdapterError('Response missing valid nodes array', 'INVALID_RESPONSE', this.providerId, false);
+        }
+        if ('links' in parsed && (!parsed.links || !Array.isArray(parsed.links))) {
+          throw new AdapterError('Response missing valid links array', 'INVALID_RESPONSE', this.providerId, false);
+        }
+      }
+      return parsed as T;
+    } catch (e) {
+      if (e instanceof AdapterError) throw e;
+      throw new AdapterError(`Failed to parse response: ${e}`, 'PARSE_ERROR', this.providerId, false);
+    }
   }
 
   async generateSpeech(
@@ -293,7 +321,7 @@ export class GoogleAdapter extends BaseLLMAdapter {
           }
         });
       },
-      close: () => session.close(),
+      close: session.close,
       isConnected: true
     };
   }

@@ -230,8 +230,15 @@ ${truncatedPaths.join('\n')}
 
 Please perform Phase 1: Initial Repo Reconnaissance.
 1. Identify likely entry points (CLI, API, UI).
-2. Map the probable architecture skeleton.
+2. Map the probable architecture skeleton with DATA FLOWS between components.
 3. Identify where LLM/AI integration might live based on file names (e.g., 'ai', 'prompts', 'services').
+
+IMPORTANT: Help me understand:
+- What are the main components and how do they CONNECT?
+- What data flows from entry points THROUGH the system?
+- Where are the key integration points?
+
+After your analysis, suggest I ask you to "generate a flow chart" to visualize the architecture.
 `;
     handleSendMessage(prompt);
   };
@@ -534,7 +541,7 @@ Please perform Phase 1: Initial Repo Reconnaissance.
 
           {/* Flow Chart View */}
           <div className={`absolute inset-0 ${mode === AppMode.FLOW_CHART ? 'z-10' : '-z-10 opacity-0 pointer-events-none'}`}>
-            <DiagramView />
+            <DiagramView graphData={graphData} />
           </div>
 
           {/* Tasks View */}

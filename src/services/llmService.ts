@@ -359,16 +359,21 @@ export class LLMService {
   async generateGraphData(description: string): Promise<GraphData> {
     const schema = {
       type: 'object',
+      required: ['nodes', 'links'],
       properties: {
         nodes: {
           type: 'array',
           items: {
             type: 'object',
+            required: ['id', 'label', 'type'],
             properties: {
               id: { type: 'string' },
               group: { type: 'integer' },
               label: { type: 'string' },
-              type: { type: 'string', enum: ['entry', 'logic', 'storage', 'exit', 'external'] }
+              type: {
+                type: 'string',
+                enum: ['entry', 'logic', 'storage', 'exit', 'external', 'decision', 'process']
+              }
             }
           }
         },
@@ -376,23 +381,46 @@ export class LLMService {
           type: 'array',
           items: {
             type: 'object',
+            required: ['source', 'target'],
             properties: {
               source: { type: 'string' },
               target: { type: 'string' },
-              value: { type: 'integer' }
+              value: { type: 'integer' },
+              label: { type: 'string' }
             }
           }
         }
       }
     };
 
-    const prompt = `Generate a JSON object representing a node-link graph for a system described as: "${description}". 
-    The JSON must adhere to this schema:
-    {
-      "nodes": [{ "id": "string", "group": number, "label": "string", "type": "entry" | "logic" | "storage" | "exit" | "external" }],
-      "links": [{ "source": "string", "target": "string", "value": number }]
-    }
-    Return ONLY valid JSON.`;
+    const prompt = `Generate a JSON object representing a node-link graph for a system described as: "${description}".
+
+CRITICAL REQUIREMENTS:
+1. You MUST include BOTH "nodes" AND "links" arrays in your response
+2. Each link's "source" and "target" MUST reference an existing node's "id" value
+3. Create edges that show data flow, control flow, or dependencies between components
+4. Include at least 1 link for every 2 nodes (show connections!)
+
+The JSON must adhere to this schema:
+{
+  "nodes": [{"id": "string", "group": number, "label": "string", "type": "entry|logic|storage|exit|external|decision|process"}],
+  "links": [{"source": "string", "target": "string", "value": number, "label": "string (optional)"}]
+}
+
+EXAMPLE of a valid response:
+{
+  "nodes": [
+    {"id": "user", "group": 1, "label": "User", "type": "entry"},
+    {"id": "api", "group": 2, "label": "API Gateway", "type": "logic"},
+    {"id": "db", "group": 3, "label": "Database", "type": "storage"}
+  ],
+  "links": [
+    {"source": "user", "target": "api", "value": 1, "label": "HTTP"},
+    {"source": "api", "target": "db", "value": 1, "label": "query"}
+  ]
+}
+
+Return ONLY valid JSON.`;
 
     return this.generateStructuredOutput<GraphData>(prompt, schema);
   }

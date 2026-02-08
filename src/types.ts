@@ -19,6 +19,9 @@ export interface Node {
   group: number;
   label: string;
   type: 'entry' | 'logic' | 'storage' | 'exit' | 'external' | 'decision' | 'process';
+  x?: number;
+  y?: number;
+  description?: string;
 }
 
 export interface Link {

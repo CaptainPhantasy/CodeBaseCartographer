@@ -18,9 +18,14 @@ const FlowMap: React.FC<FlowMapProps> = ({ data }) => {
         const width = svgRef.current.clientWidth;
         const height = svgRef.current.clientHeight;
 
-        // Force Simulation
-        const simulation = d3.forceSimulation(data.nodes as d3.SimulationNodeDatum[])
-            .force("link", d3.forceLink(data.links).id((d: any) => d.id).distance(100))
+        // Clone data to prevent D3 from mutating the original
+        // D3.forceLink replaces string IDs with object references
+        const clonedNodes = data.nodes.map(n => ({ ...n }));
+        const clonedLinks = data.links.map(l => ({ ...l }));
+
+        // Force Simulation (uses cloned data)
+        const simulation = d3.forceSimulation(clonedNodes as d3.SimulationNodeDatum[])
+            .force("link", d3.forceLink(clonedLinks).id((d: any) => d.id).distance(100))
             .force("charge", d3.forceManyBody().strength(-300))
             .force("center", d3.forceCenter(width / 2, height / 2));
 
@@ -29,7 +34,7 @@ const FlowMap: React.FC<FlowMapProps> = ({ data }) => {
             .attr("stroke", "#475569") // slate-600
             .attr("stroke-opacity", 0.6)
             .selectAll("line")
-            .data(data.links)
+            .data(clonedLinks)
             .join("line")
             .attr("stroke-width", (d: any) => Math.sqrt(d.value || 1) * 2);
 
@@ -38,7 +43,7 @@ const FlowMap: React.FC<FlowMapProps> = ({ data }) => {
             .attr("stroke", "#fff")
             .attr("stroke-width", 1.5)
             .selectAll("circle")
-            .data(data.nodes)
+            .data(clonedNodes)
             .join("circle")
             .attr("r", 10)
             .attr("fill", (d: Node) => {
@@ -55,7 +60,7 @@ const FlowMap: React.FC<FlowMapProps> = ({ data }) => {
         // Labels
         const label = svg.append("g")
             .selectAll("text")
-            .data(data.nodes)
+            .data(clonedNodes)
             .join("text")
             .attr("dx", 15)
             .attr("dy", 4)
@@ -75,7 +80,7 @@ const FlowMap: React.FC<FlowMapProps> = ({ data }) => {
             node
                 .attr("cx", (d: any) => d.x)
                 .attr("cy", (d: any) => d.y);
-            
+
             label
                 .attr("x", (d: any) => d.x)
                 .attr("y", (d: any) => d.y);
