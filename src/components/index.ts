@@ -22,3 +22,5 @@ export { default as QuickActionsMenu } from './QuickActionsMenu';
 export { default as ContextMenu, useContextMenu, getNodeContextMenuItems, getCanvasContextMenuItems } from './ContextMenu';
 export { default as FlowMapEnhanced } from './FlowMapEnhanced';
 export { default as DiagramViewEnhanced } from './DiagramViewEnhanced';
+export { default as VoiceSelector } from './VoiceSelector';
+export { default as ModelSelector } from './ModelSelector';

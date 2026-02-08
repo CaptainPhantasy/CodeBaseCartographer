@@ -1,3 +1,16 @@
+---
+
+# ⚠️  ARCHIVED DOCUMENTATION
+
+**Status:** ARCHIVAL - NOT RELEVANT TO CURRENT CODE WORK  
+**Archived:** February 8, 2026  
+**Location:** docs/archive/
+
+This document is preserved for historical reference only. For current documentation, see:
+- [Current Docs Index](../README.md)
+- [Main README](../../README.md)
+
+---
 # Codebase Cartographer - Comprehensive Analysis Report
 
 ## Overview

@@ -81,4 +81,40 @@ export interface WatcherOptions {
   ignored?: string[];
   persistent?: boolean;
   ignoreInitial?: boolean;
+  includeHidden?: boolean;
+}
+
+export type FileTypeCategory = 'code' | 'config' | 'documentation' | 'image' | 'binary' | 'infrastructure' | 'style' | 'web';
+
+export interface ProcessedFile {
+  path: string;
+  content: string;
+  category: FileTypeCategory;
+  metadata?: Record<string, any>;
+  binary?: boolean;
+}
+
+export interface ProcessedContent {
+  summary: string;
+  extracts: Array<{
+    path: string;
+    content: string;
+    startLine?: number;
+    endLine?: number;
+  }>;
+  symbols?: Array<{
+    name: string;
+    type: string;
+    path: string;
+    line?: number;
+  }>;
+  metadata?: Record<string, any>;
+}
+
+export interface FileTypeHandler {
+  extensions: string[];
+  category: FileTypeCategory;
+  binary: boolean;
+  processContent?: (content: Buffer | string, filePath: string) => Promise<ProcessedContent>;
+  maxSize?: number;
 }

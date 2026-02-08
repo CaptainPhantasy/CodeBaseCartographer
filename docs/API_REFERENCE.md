@@ -1,15 +1,22 @@
 # 📚 API Reference
 
-This document provides comprehensive API documentation for the Codebase Cartographer application, including service methods, hooks, and type definitions.
+This document provides comprehensive API documentation for the Codebase Cartographer application, including service methods, hooks, type definitions, and UI components.
 
 ## Table of Contents
 
 - [LLMService](#llmservice)
   - [Public Methods](#public-methods)
   - [Usage Examples](#usage-examples)
+- [Resource Fetchers](#resource-fetchers)
+  - [fetchElevenLabsVoices](#fetchelevenlabsvoices)
+  - [fetchOpenRouterModels](#fetchopenroutermodels)
 - [Configuration API](#configuration-api)
   - [useConfig Hook](#useconfig-hook)
   - [ConfigManager](#configmanager)
+  - [Resource Caching Methods](#resource-caching-methods)
+- [UI Components](#ui-components)
+  - [VoiceSelector](#voiceselector)
+  - [ModelSelector](#modelselector)
 - [Adapter Interface](#adapter-interface)
   - [BaseLLMAdapter](#basellmadapter)
   - [Provider-Specific Adapters](#provider-specific-adapters)
@@ -305,6 +312,72 @@ Clear the adapter cache (call when API keys change).
 
 ---
 
+## Resource Fetchers
+
+### fetchElevenLabsVoices
+
+Fetch all available voices for an ElevenLabs API key.
+
+```typescript
+async function fetchElevenLabsVoices(
+  apiKey: string
+): Promise<{ voices: ElevenLabsVoice[]; error?: string }>
+```
+
+**Parameters:**
+- `apiKey` (string): Valid ElevenLabs API key
+
+**Returns:** `Promise<{ voices: ElevenLabsVoice[]; error?: string }>`
+- `voices`: Array of available ElevenLabs voices
+- `error`: Error message if request failed
+
+**Example:**
+```typescript
+import { fetchElevenLabsVoices } from '../services/resourceFetchers';
+
+const result = await fetchElevenLabsVoices('your-api-key');
+
+if (result.error) {
+  console.error('Failed to fetch voices:', result.error);
+} else {
+  console.log('Available voices:', result.voices);
+  // Use voices in UI or save to config
+}
+```
+
+### fetchOpenRouterModels
+
+Fetch all available models from OpenRouter.
+
+```typescript
+async function fetchOpenRouterModels(
+  apiKey: string
+): Promise<{ models: OpenRouterModel[]; error?: string }>
+```
+
+**Parameters:**
+- `apiKey` (string): Valid OpenRouter API key
+
+**Returns:** `Promise<{ models: OpenRouterModel[]; error?: string }>`
+- `models`: Array of available OpenRouter models
+- `error`: Error message if request failed
+
+**Example:**
+```typescript
+import { fetchOpenRouterModels } from '../services/resourceFetchers';
+
+const result = await fetchOpenRouterModels('your-api-key');
+
+if (result.error) {
+  console.error('Failed to fetch models:', result.error);
+} else {
+  console.log('Available models:', result.models);
+  // Use models in UI or save to config
+}
+```
+
+---
+
 ## Configuration API
 
 ### useConfig Hook
@@ -419,6 +492,165 @@ const mapping = configManager.getTaskMapping(TaskType.TEXT_GENERATION);
 
 // Export configuration
 const configJson = configManager.exportConfig();
+```
+
+### Resource Caching Methods
+
+The following methods manage caching of provider resources (voices and models) in the configuration:
+
+##### `setCachedVoices(providerId: 'elevenlabs', voices: ElevenLabsVoice[]): void`
+
+Cache ElevenLabs voices for a provider.
+
+**Parameters:**
+- `providerId`: Must be `'elevenlabs'`
+- `voices`: Array of ElevenLabs voices to cache
+
+##### `getCachedVoices(providerId: 'elevenlabs'): ElevenLabsVoice[]`
+
+Get cached ElevenLabs voices for a provider.
+
+**Parameters:**
+- `providerId`: Must be `'elevenlabs'`
+
+**Returns:** Array of cached voices or empty array if none cached
+
+##### `setCachedModels(providerId: 'openrouter', models: OpenRouterModel[]): void`
+
+Cache OpenRouter models for a provider.
+
+**Parameters:**
+- `providerId`: Must be `'openrouter'`
+- `models`: Array of OpenRouter models to cache
+
+##### `getCachedModels(providerId: 'openrouter'): OpenRouterModel[]`
+
+Get cached OpenRouter models for a provider.
+
+**Parameters:**
+- `providerId`: Must be `'openrouter'`
+
+**Returns:** Array of cached models or empty array if none cached
+
+##### `setSelectedVoice(providerId: 'elevenlabs', voiceId: string): void`
+
+Set the selected voice ID for ElevenLabs.
+
+**Parameters:**
+- `providerId`: Must be `'elevenlabs'`
+- `voiceId`: ID of the selected voice
+
+##### `setSelectedModel(providerId: 'openrouter', modelId: string): void`
+
+Set the selected model ID for OpenRouter.
+
+**Parameters:**
+- `providerId`: Must be `'openrouter'`
+- `modelId`: ID of the selected model
+
+##### `getSelectedResource(providerId: ProviderId): string | undefined`
+
+Get the selected resource (voice or model) ID for a provider.
+
+**Parameters:**
+- `providerId`: The provider ID
+
+**Returns:** Selected voice ID (for ElevenLabs) or model ID (for OpenRouter), or undefined if none selected
+
+---
+
+## UI Components
+
+### VoiceSelector
+
+A React component for selecting ElevenLabs voices with preview functionality.
+
+#### Props
+
+```typescript
+interface VoiceSelectorProps {
+  voices: ElevenLabsVoice[];           // Array of available voices
+  selectedVoiceId: string | undefined; // Currently selected voice ID
+  onSelectVoice: (voiceId: string) => void; // Callback when voice is selected
+  disabled?: boolean;                  // Disable interactions (default: false)
+  className?: string;                  // Additional CSS classes (default: '')
+}
+```
+
+#### Features
+- Groups voices by category (cloned, premade, generated, other)
+- Shows voice details including name, description, and labels
+- Audio preview functionality with play/stop controls
+- Visual category badges with icons
+- Responsive design with Tailwind CSS
+
+#### Example Usage
+```typescript
+import { VoiceSelector } from '../components/VoiceSelector';
+import { ElevenLabsVoice } from '../types/capabilities';
+
+function VoiceSettings() {
+  const voices: ElevenLabsVoice[] = [/* voices from fetchElevenLabsVoices */];
+  const [selectedVoiceId, setSelectedVoiceId] = useState<string>();
+
+  return (
+    <VoiceSelector
+      voices={voices}
+      selectedVoiceId={selectedVoiceId}
+      onSelectVoice={setSelectedVoiceId}
+      disabled={!voices.length}
+      className="max-w-md"
+    />
+  );
+}
+```
+
+### ModelSelector
+
+A React component for selecting OpenRouter models with pricing information.
+
+#### Props
+
+```typescript
+interface ModelSelectorProps {
+  models: OpenRouterModel[];           // Array of available models
+  selectedModelId: string | null;      // Currently selected model ID
+  onSelectModel: (modelId: string | null) => void; // Callback when model is selected
+  placeholder?: string;                // Placeholder text (default: 'Select a model...')
+  disabled?: boolean;                  // Disable interactions (default: false)
+  className?: string;                  // Additional CSS classes (default: '')
+}
+```
+
+#### Features
+- Dropdown with searchable model list
+- Pricing information (prompt, completion, total per 1M tokens)
+- Color-coded price indicators (green=cheap, red=expensive)
+- Context length display
+- Clear selection option
+- Click-outside-to-close behavior
+- Sorted by price (ascending)
+
+#### Example Usage
+```typescript
+import { ModelSelector } from '../components/ModelSelector';
+import { OpenRouterModel } from '../types/capabilities';
+
+function ModelSettings() {
+  const models: OpenRouterModel[] = [/* models from fetchOpenRouterModels */];
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
+
+  return (
+    <ModelSelector
+      models={models}
+      selectedModelId={selectedModelId}
+      onSelectModel={setSelectedModelId}
+      placeholder="Choose a model..."
+      disabled={!models.length}
+      className="max-w-lg"
+    />
+  );
+}
 ```
 
 ---
@@ -556,6 +788,10 @@ interface ProviderConfig {
   isEnabled: boolean;
   validatedAt?: string; // ISO date
   isValid?: boolean;
+  cachedVoices?: ElevenLabsVoice[]; // For ElevenLabs
+  cachedModels?: OpenRouterModel[]; // For OpenRouter
+  selectedVoiceId?: string; // For ElevenLabs
+  selectedModelId?: string; // For OpenRouter
 }
 ```
 
@@ -582,6 +818,46 @@ interface UserPreferences {
   preferredTier: 'fast' | 'balanced' | 'smart';
   preferCost: boolean;
   preferSpeed: boolean;
+}
+```
+
+#### ElevenLabsVoice
+
+Voice information from ElevenLabs.
+
+```typescript
+interface ElevenLabsVoice {
+  voice_id: string;
+  name: string;
+  category?: string;
+  description?: string;
+  labels?: Record<string, any>;
+  preview_url?: string;
+}
+```
+
+#### OpenRouterModel
+
+Model information from OpenRouter.
+
+```typescript
+interface OpenRouterModel {
+  id: string;
+  name: string;
+  created: number;
+  description?: string;
+  pricing: {
+    prompt: string;
+    completion: string;
+  };
+  context_length: number;
+  architecture: {
+    family: string;
+    top_k: number;
+    top_p: number;
+    temperature: number;
+    max_length: number;
+  };
 }
 ```
 

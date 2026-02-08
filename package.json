@@ -23,8 +23,12 @@
     "dagre": "^0.8.5",
     "diff": "^8.0.3",
     "dompurify": "^3.3.1",
+    "js-yaml": "^4.1.1",
+    "pdf-parse": "^2.4.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "sharp": "^0.34.5",
+    "toml": "^3.0.0",
     "zustand": "^5.0.11"
   },
   "devDependencies": {
@@ -32,7 +36,9 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/d3": "^7.4.3",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.14.0",
+    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^5.0.0",

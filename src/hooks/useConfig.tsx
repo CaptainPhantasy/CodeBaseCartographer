@@ -8,13 +8,15 @@ import {
   getConfigManager, 
   ConfigManager 
 } from '../config/configManager';
-import { 
-  AppConfig, 
-  ProviderConfig, 
-  TaskProviderMapping, 
-  UserPreferences, 
-  ProviderId, 
-  TaskType 
+import {
+  AppConfig,
+  ProviderConfig,
+  TaskProviderMapping,
+  UserPreferences,
+  ProviderId,
+  TaskType,
+  ElevenLabsVoice,
+  OpenRouterModel
 } from '../types/capabilities';
 
 // ============================================================================
@@ -44,6 +46,15 @@ interface ConfigContextValue {
 
   // Preferences
   setPreferences: (preferences: Partial<UserPreferences>) => void;
+
+  // Resource caching and selection
+  setCachedVoices: (providerId: 'elevenlabs', voices: ElevenLabsVoice[]) => void;
+  getCachedVoices: (providerId: 'elevenlabs') => ElevenLabsVoice[];
+  setCachedModels: (providerId: 'openrouter', models: OpenRouterModel[]) => void;
+  getCachedModels: (providerId: 'openrouter') => OpenRouterModel[];
+  setSelectedVoice: (providerId: 'elevenlabs', voiceId: string) => void;
+  setSelectedModel: (providerId: 'openrouter', modelId: string) => void;
+  getSelectedResource: (providerId: ProviderId) => string | undefined;
 
   // Config operations
   exportConfig: () => string;
@@ -127,6 +138,34 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
     configManager.setPreferences(preferences);
   }, [configManager]);
 
+  const setCachedVoices = useCallback((providerId: 'elevenlabs', voices: ElevenLabsVoice[]) => {
+    configManager.setCachedVoices(providerId, voices);
+  }, [configManager]);
+
+  const getCachedVoices = useCallback((providerId: 'elevenlabs') => {
+    return configManager.getCachedVoices(providerId);
+  }, [configManager]);
+
+  const setCachedModels = useCallback((providerId: 'openrouter', models: OpenRouterModel[]) => {
+    configManager.setCachedModels(providerId, models);
+  }, [configManager]);
+
+  const getCachedModels = useCallback((providerId: 'openrouter') => {
+    return configManager.getCachedModels(providerId);
+  }, [configManager]);
+
+  const setSelectedVoice = useCallback((providerId: 'elevenlabs', voiceId: string) => {
+    configManager.setSelectedVoice(providerId, voiceId);
+  }, [configManager]);
+
+  const setSelectedModel = useCallback((providerId: 'openrouter', modelId: string) => {
+    configManager.setSelectedModel(providerId, modelId);
+  }, [configManager]);
+
+  const getSelectedResource = useCallback((providerId: ProviderId) => {
+    return configManager.getSelectedResource(providerId);
+  }, [configManager]);
+
   const exportConfigFn = useCallback(() => {
     return configManager.exportConfig();
   }, [configManager]);
@@ -160,6 +199,13 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
     getTaskMapping,
     setTaskMapping,
     setPreferences,
+    setCachedVoices,
+    getCachedVoices,
+    setCachedModels,
+    getCachedModels,
+    setSelectedVoice,
+    setSelectedModel,
+    getSelectedResource,
     exportConfig: exportConfigFn,
     importConfig: importConfigFn,
     clearConfig,

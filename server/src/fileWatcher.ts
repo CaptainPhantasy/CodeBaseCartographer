@@ -22,11 +22,13 @@ export class FileWatcher {
   private eventCallbacks: Set<(event: FileEvent) => void> = new Set();
   private ignorePatterns: string[] = [];
   private gitignorePatterns: string[] = [];
+  private includeHidden: boolean;
 
   constructor(watchedPath: string, options: WatcherOptions = {}) {
     this.watchedPath = watchedPath;
     this.debounceTime = options.debounce ?? 500;
     this.ignorePatterns = options.ignored ?? [];
+    this.includeHidden = options.includeHidden ?? false;
     this.loadGitignore();
   }
 
@@ -52,6 +54,7 @@ export class FileWatcher {
    */
   private shouldIgnore(path: string): boolean {
     const basename = parse(path).base;
+    const pathSegments = path.split('/');
 
     // Check custom ignore patterns
     for (const pattern of this.ignorePatterns) {
@@ -76,9 +79,19 @@ export class FileWatcher {
       }
     }
 
-    // Always ignore node_modules and .git
+    // Always ignore node_modules and .git (security/privacy)
     if (path.includes('node_modules') || path.includes('.git')) {
       return true;
+    }
+
+    // Filter hidden files/directories if includeHidden is false
+    if (!this.includeHidden) {
+      // Check if any path segment starts with '.'
+      for (const segment of pathSegments) {
+        if (segment.startsWith('.')) {
+          return true;
+        }
+      }
     }
 
     return false;

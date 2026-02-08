@@ -207,16 +207,28 @@ const App: React.FC = () => {
     }
   };
 
-  const handleIngest = (filePaths: string[], source: string) => {
+  const handleIngest = (filePaths: string[], source: string, options?: any) => {
     setIsIngestOpen(false);
     const truncatedPaths = filePaths.length > 2000 ? filePaths.slice(0, 2000) : filePaths;
     const count = filePaths.length;
-    
-    const prompt = `I have loaded the file structure for the project "${source}" (${count} files). 
+
+    let filterInfo = '';
+    if (options) {
+      const filters = [];
+      if (options.includeHidden) filters.push('including hidden files');
+      if (options.fileCategories && options.fileCategories.length > 0) {
+        filters.push(`${options.fileCategories.length} file categories`);
+      }
+      if (filters.length > 0) {
+        filterInfo = ` Filters applied: ${filters.join(', ')}.`;
+      }
+    }
+
+    const prompt = `I have loaded the file structure for the project "${source}" (${count} files).${filterInfo}
 Here is the file list:
 ${truncatedPaths.join('\n')}
 
-Please perform Phase 1: Initial Repo Reconnaissance. 
+Please perform Phase 1: Initial Repo Reconnaissance.
 1. Identify likely entry points (CLI, API, UI).
 2. Map the probable architecture skeleton.
 3. Identify where LLM/AI integration might live based on file names (e.g., 'ai', 'prompts', 'services').
@@ -243,7 +255,7 @@ Please perform Phase 1: Initial Repo Reconnaissance.
   };
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden">
+    <div className="flex h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden" data-app-ready="true">
       {/* Sidebar */}
       <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col p-4">
         <div className="flex items-center gap-2 mb-8">

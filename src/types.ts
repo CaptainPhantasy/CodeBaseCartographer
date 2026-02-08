@@ -46,3 +46,37 @@ export interface VeoConfig {
     aspectRatio: '16:9' | '9:16';
     resolution: '720p' | '1080p';
 }
+
+export type FileTypeCategory = 'code' | 'config' | 'documentation' | 'image' | 'binary' | 'infrastructure' | 'style' | 'web';
+
+export interface ProcessedFile {
+  path: string;
+  content: string;
+  category: FileTypeCategory;
+  metadata?: Record<string, any>;
+  binary?: boolean;
+}
+
+export interface ProcessedContent {
+  summary: string;
+  extracts: Array<{
+    path: string;
+    content: string;
+    startLine?: number;
+    endLine?: number;
+  }>;
+  symbols?: Array<{
+    name: string;
+    type: string;
+    path: string;
+    line?: number;
+  }>;
+}
+
+export interface FileTypeHandler {
+  extensions: string[];
+  category: FileTypeCategory;
+  binary: boolean;
+  processContent?: (content: Buffer | string, filePath: string) => Promise<ProcessedContent>;
+  maxSize?: number;
+}

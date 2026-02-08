@@ -108,6 +108,7 @@ export class LLMService {
 
   /**
    * Get the best provider for a task based on user configuration
+   * For OpenRouter, uses the user's selectedModelId if available
    */
   private getProviderForTask(taskType: TaskType): { providerId: ProviderId; modelId: string } | null {
     const configManager = getConfigManager();
@@ -117,6 +118,16 @@ export class LLMService {
       // Check if primary provider has API key
       const apiKey = configManager.getApiKey(mapping.primaryProviderId);
       if (apiKey) {
+        // For OpenRouter, check if user has a selected model
+        if (mapping.primaryProviderId === 'openrouter') {
+          const selectedModelId = configManager.getSelectedResource('openrouter');
+          if (selectedModelId) {
+            return {
+              providerId: mapping.primaryProviderId,
+              modelId: selectedModelId
+            };
+          }
+        }
         return {
           providerId: mapping.primaryProviderId,
           modelId: mapping.primaryModelId
@@ -131,6 +142,17 @@ export class LLMService {
     for (const providerConfig of enabledProviders) {
       const providerDef = PROVIDERS[providerConfig.providerId];
       if (!providerDef) continue;
+
+      // For OpenRouter, use selected model if available
+      if (providerConfig.providerId === 'openrouter') {
+        const selectedModelId = configManager.getSelectedResource('openrouter');
+        if (selectedModelId) {
+          return {
+            providerId: providerConfig.providerId,
+            modelId: selectedModelId
+          };
+        }
+      }
 
       // Find a model that supports all required capabilities
       for (const model of providerDef.models) {
@@ -151,6 +173,7 @@ export class LLMService {
 
   /**
    * Get fallback provider for a task
+   * For OpenRouter, uses the user's selectedModelId if available
    */
   private getFallbackProviderForTask(taskType: TaskType, excludeProvider: ProviderId): { providerId: ProviderId; modelId: string } | null {
     const configManager = getConfigManager();
@@ -160,6 +183,16 @@ export class LLMService {
     if (mapping?.fallbackProviderId && mapping.fallbackProviderId !== excludeProvider) {
       const apiKey = configManager.getApiKey(mapping.fallbackProviderId);
       if (apiKey && mapping.fallbackModelId) {
+        // For OpenRouter fallback, check if user has a selected model
+        if (mapping.fallbackProviderId === 'openrouter') {
+          const selectedModelId = configManager.getSelectedResource('openrouter');
+          if (selectedModelId) {
+            return {
+              providerId: mapping.fallbackProviderId,
+              modelId: selectedModelId
+            };
+          }
+        }
         return {
           providerId: mapping.fallbackProviderId,
           modelId: mapping.fallbackModelId
@@ -175,6 +208,17 @@ export class LLMService {
     for (const providerConfig of enabledProviders) {
       const providerDef = PROVIDERS[providerConfig.providerId];
       if (!providerDef) continue;
+
+      // For OpenRouter fallback, use selected model if available
+      if (providerConfig.providerId === 'openrouter') {
+        const selectedModelId = configManager.getSelectedResource('openrouter');
+        if (selectedModelId) {
+          return {
+            providerId: providerConfig.providerId,
+            modelId: selectedModelId
+          };
+        }
+      }
 
       for (const model of providerDef.models) {
         const hasAllCapabilities = requiredCapabilities.every(
@@ -359,6 +403,7 @@ export class LLMService {
 
   /**
    * Get the best TTS provider based on configuration
+   * For ElevenLabs, uses the user's selectedVoiceId if available
    */
   private getTTSProvider(): { providerId: ProviderId | 'elevenlabs'; modelId: string } | null {
     const configManager = getConfigManager();
@@ -367,6 +412,16 @@ export class LLMService {
     if (mapping) {
       const apiKey = configManager.getApiKey(mapping.primaryProviderId);
       if (apiKey) {
+        // For ElevenLabs, use selected voice if available
+        if (mapping.primaryProviderId === 'elevenlabs') {
+          const selectedVoiceId = configManager.getSelectedResource('elevenlabs');
+          if (selectedVoiceId) {
+            return {
+              providerId: mapping.primaryProviderId,
+              modelId: selectedVoiceId
+            };
+          }
+        }
         return {
           providerId: mapping.primaryProviderId,
           modelId: mapping.primaryModelId
@@ -376,12 +431,19 @@ export class LLMService {
 
     // Auto-select TTS provider (prefer Google, then OpenAI)
     const ttsProviderOrder: (ProviderId | 'elevenlabs')[] = ['google', 'openai', 'elevenlabs'];
-    
+
     for (const providerId of ttsProviderOrder) {
       const apiKey = configManager.getApiKey(providerId as ProviderId);
       if (apiKey) {
         const providerDef = PROVIDERS[providerId as ProviderId];
         if (providerDef) {
+          // For ElevenLabs auto-selection, use selected voice if available
+          if (providerId === 'elevenlabs') {
+            const selectedVoiceId = configManager.getSelectedResource('elevenlabs');
+            if (selectedVoiceId) {
+              return { providerId, modelId: selectedVoiceId };
+            }
+          }
           const ttsModel = providerDef.models.find(m => m.capabilities.includes('tts' as Capability));
           if (ttsModel) {
             return { providerId, modelId: ttsModel.id };

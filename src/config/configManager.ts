@@ -11,7 +11,9 @@ import {
   ProviderId,
   TaskType,
   DEFAULT_USER_PREFERENCES,
-  CONFIG_VERSION
+  CONFIG_VERSION,
+  ElevenLabsVoice,
+  OpenRouterModel
 } from '../types/capabilities';
 
 // ============================================================================
@@ -691,6 +693,85 @@ export class ConfigManager {
     }
 
     return migratedCount;
+  }
+
+  // --------------------------------------------------------------------------
+  // RESOURCE CACHING METHODS
+  // --------------------------------------------------------------------------
+
+  /**
+   * Cache fetched voices for a provider (ElevenLabs)
+   */
+  setCachedVoices(providerId: 'elevenlabs', voices: ElevenLabsVoice[]): void {
+    const config = this.getFullConfig();
+    const provider = config.providers.find(p => p.providerId === providerId);
+    if (provider) {
+      provider.cachedVoices = voices;
+      this.saveConfig();
+    }
+  }
+
+  /**
+   * Get cached voices for a provider
+   */
+  getCachedVoices(providerId: 'elevenlabs'): ElevenLabsVoice[] {
+    const config = this.getFullConfig();
+    const provider = config.providers.find(p => p.providerId === providerId);
+    return provider?.cachedVoices || [];
+  }
+
+  /**
+   * Cache fetched models for a provider (OpenRouter)
+   */
+  setCachedModels(providerId: 'openrouter', models: OpenRouterModel[]): void {
+    const config = this.getFullConfig();
+    const provider = config.providers.find(p => p.providerId === providerId);
+    if (provider) {
+      provider.cachedModels = models;
+      this.saveConfig();
+    }
+  }
+
+  /**
+   * Get cached models for a provider
+   */
+  getCachedModels(providerId: 'openrouter'): OpenRouterModel[] {
+    const config = this.getFullConfig();
+    const provider = config.providers.find(p => p.providerId === providerId);
+    return provider?.cachedModels || [];
+  }
+
+  /**
+   * Set selected voice for ElevenLabs
+   */
+  setSelectedVoice(providerId: 'elevenlabs', voiceId: string): void {
+    const config = this.getFullConfig();
+    const provider = config.providers.find(p => p.providerId === providerId);
+    if (provider) {
+      provider.selectedVoiceId = voiceId;
+      this.saveConfig();
+    }
+  }
+
+  /**
+   * Set selected model for OpenRouter
+   */
+  setSelectedModel(providerId: 'openrouter', modelId: string): void {
+    const config = this.getFullConfig();
+    const provider = config.providers.find(p => p.providerId === providerId);
+    if (provider) {
+      provider.selectedModelId = modelId;
+      this.saveConfig();
+    }
+  }
+
+  /**
+   * Get selected resource (voice or model) for a provider
+   */
+  getSelectedResource(providerId: ProviderId): string | undefined {
+    const config = this.getFullConfig();
+    const provider = config.providers.find(p => p.providerId === providerId);
+    return provider?.selectedVoiceId || provider?.selectedModelId;
   }
 }
 

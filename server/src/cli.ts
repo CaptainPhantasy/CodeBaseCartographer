@@ -24,6 +24,7 @@ cli
   .option('-c, --complexity', 'Include complexity metrics')
   .option('-d, --depth <number>', 'Maximum dependency depth', { default: '10' })
   .option('--ignore <patterns...>', 'Ignore patterns (e.g., node_modules dist)')
+  .option('--include-hidden', 'Include hidden files and directories (starting with .)')
   .action(async (path: string = '.', options: any) => {
     try {
       const targetPath = join(process.cwd(), path);
@@ -38,7 +39,8 @@ cli
       const graphData = await analyzeCodebase(targetPath, {
         maxDepth: parseInt(options.depth) || 10,
         ignorePatterns: options.ignore || ['node_modules', 'dist', 'build', '.git'],
-        includeComplexity: options.complexity || false
+        includeComplexity: options.complexity || false,
+        includeHidden: options.includeHidden || false
       });
 
       console.log(`\nAnalysis complete:`);

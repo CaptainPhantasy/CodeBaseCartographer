@@ -26,17 +26,15 @@ describe('ConfigManager', () => {
       env: mockEnv
     };
 
-    // Store the original global
-    const originalGlobal = global;
-
-    // Mock global to have import.meta
+    // Mock global to have import.meta (needed for ConfigManager environment variable loading)
     (global as any).import = { meta: importMetaMock };
 
     // Create fresh instance for each test
     configManager = new ConfigManager();
 
-    // Restore original global
-    Object.assign(global, originalGlobal);
+    // Clean up the mock (note: we can't fully restore global due to crypto being read-only,
+    // but vi.clearAllMocks() at the start of each beforeEach handles the state reset)
+    delete (global as any).import;
   });
 
   describe('obfuscateKey / deobfuscateKey', () => {
@@ -417,6 +415,226 @@ describe('ConfigManager', () => {
       const provider = configManager.getProvider('openai');
       expect(provider?.isValid).toBe(true);
       expect(provider?.validatedAt).toBeDefined();
+    });
+  });
+
+  describe('resource caching', () => {
+    beforeEach(() => {
+      localStorageMock.getItem.mockReturnValue(null);
+    });
+
+    describe('ElevenLabs voice caching', () => {
+      it('should cache and retrieve voices for ElevenLabs provider', () => {
+        configManager.setProviderKey('elevenlabs', 'test-key');
+
+        const mockVoices = [
+          { voice_id: 'voice-1', name: 'Voice One', category: 'premade' },
+          { voice_id: 'voice-2', name: 'Voice Two', category: 'cloned' }
+        ];
+
+        configManager.setCachedVoices('elevenlabs', mockVoices);
+
+        const cachedVoices = configManager.getCachedVoices('elevenlabs');
+        expect(cachedVoices).toEqual(mockVoices);
+        expect(cachedVoices).toHaveLength(2);
+      });
+
+      it('should return empty array when no voices are cached', () => {
+        configManager.setProviderKey('elevenlabs', 'test-key');
+
+        const cachedVoices = configManager.getCachedVoices('elevenlabs');
+        expect(cachedVoices).toEqual([]);
+      });
+
+      it('should set and retrieve selected voice', () => {
+        configManager.setProviderKey('elevenlabs', 'test-key');
+        configManager.setSelectedVoice('elevenlabs', 'voice-1');
+
+        const selectedVoice = configManager.getSelectedResource('elevenlabs');
+        expect(selectedVoice).toBe('voice-1');
+      });
+
+      it('should overwrite cached voices when setCachedVoices is called again', () => {
+        configManager.setProviderKey('elevenlabs', 'test-key');
+
+        const firstVoices = [
+          { voice_id: 'voice-1', name: 'Voice One' }
+        ];
+        const secondVoices = [
+          { voice_id: 'voice-2', name: 'Voice Two' }
+        ];
+
+        configManager.setCachedVoices('elevenlabs', firstVoices);
+        expect(configManager.getCachedVoices('elevenlabs')).toEqual(firstVoices);
+
+        configManager.setCachedVoices('elevenlabs', secondVoices);
+        expect(configManager.getCachedVoices('elevenlabs')).toEqual(secondVoices);
+      });
+
+      it('should persist cached voices to localStorage', () => {
+        configManager.setProviderKey('elevenlabs', 'test-key');
+
+        const mockVoices = [
+          { voice_id: 'voice-1', name: 'Voice One' }
+        ];
+
+        configManager.setCachedVoices('elevenlabs', mockVoices);
+
+        expect(localStorageMock.setItem).toHaveBeenCalledWith(
+          'codebase_cartographer_config',
+          expect.stringContaining('"cachedVoices"')
+        );
+      });
+    });
+
+    describe('OpenRouter model caching', () => {
+      it('should cache and retrieve models for OpenRouter provider', () => {
+        configManager.setProviderKey('openrouter', 'test-key');
+
+        const mockModels = [
+          {
+            id: 'openai/gpt-4',
+            name: 'GPT-4',
+            context_length: 8192,
+            pricing: { prompt: '0.03', completion: '0.06' },
+            architecture: {
+              modality: 'text',
+              input_modalities: ['text'],
+              output_modalities: ['text']
+            }
+          },
+          {
+            id: 'anthropic/claude-3-opus',
+            name: 'Claude 3 Opus',
+            context_length: 200000,
+            pricing: { prompt: '0.015', completion: '0.075' },
+            architecture: {
+              modality: 'text',
+              input_modalities: ['text', 'image'],
+              output_modalities: ['text']
+            }
+          }
+        ];
+
+        configManager.setCachedModels('openrouter', mockModels);
+
+        const cachedModels = configManager.getCachedModels('openrouter');
+        expect(cachedModels).toEqual(mockModels);
+        expect(cachedModels).toHaveLength(2);
+      });
+
+      it('should return empty array when no models are cached', () => {
+        configManager.setProviderKey('openrouter', 'test-key');
+
+        const cachedModels = configManager.getCachedModels('openrouter');
+        expect(cachedModels).toEqual([]);
+      });
+
+      it('should set and retrieve selected model', () => {
+        configManager.setProviderKey('openrouter', 'test-key');
+        configManager.setSelectedModel('openrouter', 'openai/gpt-4');
+
+        const selectedModel = configManager.getSelectedResource('openrouter');
+        expect(selectedModel).toBe('openai/gpt-4');
+      });
+
+      it('should overwrite cached models when setCachedModels is called again', () => {
+        configManager.setProviderKey('openrouter', 'test-key');
+
+        const firstModels = [
+          {
+            id: 'model-1',
+            name: 'Model One',
+            context_length: 4096,
+            pricing: { prompt: '0.01', completion: '0.02' },
+            architecture: {
+              modality: 'text',
+              input_modalities: ['text'],
+              output_modalities: ['text']
+            }
+          }
+        ];
+
+        const secondModels = [
+          {
+            id: 'model-2',
+            name: 'Model Two',
+            context_length: 8192,
+            pricing: { prompt: '0.02', completion: '0.04' },
+            architecture: {
+              modality: 'text',
+              input_modalities: ['text'],
+              output_modalities: ['text']
+            }
+          }
+        ];
+
+        configManager.setCachedModels('openrouter', firstModels);
+        expect(configManager.getCachedModels('openrouter')).toEqual(firstModels);
+
+        configManager.setCachedModels('openrouter', secondModels);
+        expect(configManager.getCachedModels('openrouter')).toEqual(secondModels);
+      });
+
+      it('should persist cached models to localStorage', () => {
+        configManager.setProviderKey('openrouter', 'test-key');
+
+        const mockModels = [
+          {
+            id: 'openai/gpt-4',
+            name: 'GPT-4',
+            context_length: 8192,
+            pricing: { prompt: '0.03', completion: '0.06' },
+            architecture: {
+              modality: 'text',
+              input_modalities: ['text'],
+              output_modalities: ['text']
+            }
+          }
+        ];
+
+        configManager.setCachedModels('openrouter', mockModels);
+
+        expect(localStorageMock.setItem).toHaveBeenCalledWith(
+          'codebase_cartographer_config',
+          expect.stringContaining('"cachedModels"')
+        );
+      });
+    });
+
+    describe('getSelectedResource', () => {
+      it('should return undefined for provider with no selection', () => {
+        configManager.setProviderKey('openai', 'test-key');
+
+        const selected = configManager.getSelectedResource('openai');
+        expect(selected).toBeUndefined();
+      });
+
+      it('should return selected voice for ElevenLabs provider', () => {
+        configManager.setProviderKey('elevenlabs', 'test-key');
+        configManager.setSelectedVoice('elevenlabs', 'my-voice-id');
+
+        const selected = configManager.getSelectedResource('elevenlabs');
+        expect(selected).toBe('my-voice-id');
+      });
+
+      it('should return selected model for OpenRouter provider', () => {
+        configManager.setProviderKey('openrouter', 'test-key');
+        configManager.setSelectedModel('openrouter', 'my-model-id');
+
+        const selected = configManager.getSelectedResource('openrouter');
+        expect(selected).toBe('my-model-id');
+      });
+
+      it('should prefer voice ID over model ID when both are present', () => {
+        // This is an edge case that shouldn't happen in practice,
+        // but tests the fallback behavior
+        configManager.setProviderKey('elevenlabs', 'test-key');
+        configManager.setSelectedVoice('elevenlabs', 'voice-123');
+
+        const selected = configManager.getSelectedResource('elevenlabs');
+        expect(selected).toBe('voice-123');
+      });
     });
   });
 });

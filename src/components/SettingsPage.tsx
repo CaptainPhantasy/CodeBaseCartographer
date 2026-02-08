@@ -3,11 +3,21 @@
  */
 
 import React, { useState, useRef } from 'react';
-import { ProviderId, TaskType, TASK_REQUIRED_CAPABILITIES, ModelTier } from '../types/capabilities';
+import {
+  ProviderId,
+  TaskType,
+  TASK_REQUIRED_CAPABILITIES,
+  ModelTier,
+  ElevenLabsVoice,
+  OpenRouterModel
+} from '../types/capabilities';
 import { PROVIDERS, getAvailableProviders, getProvider } from '../config/providers';
 import { validateApiKey, quickValidateKeyFormat } from '../utils/apiKeyValidator';
 import { useConfig } from '../hooks/useConfig';
 import CapabilityMatrix from './CapabilityMatrix';
+import { VoiceSelector } from './VoiceSelector';
+import { ModelSelector } from './ModelSelector';
+import { fetchElevenLabsVoices, fetchOpenRouterModels } from '../services/resourceFetchers';
 
 // ============================================================================
 // TYPES
@@ -57,23 +67,33 @@ interface SettingsPageProps {
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) => {
-  const { 
-    config, 
-    getApiKey, 
-    setProviderKey, 
-    removeProvider, 
+  const {
+    config,
+    getApiKey,
+    setProviderKey,
+    removeProvider,
     setProviderValidation,
     setTaskMapping,
     setPreferences,
     exportConfig,
-    importConfig
+    importConfig,
+    setCachedVoices,
+    getCachedVoices,
+    setCachedModels,
+    getCachedModels,
+    setSelectedVoice,
+    setSelectedModel
   } = useConfig();
-  
+
   const [activeTab, setActiveTab] = useState<SettingsTab>('apikeys');
   const [editingProvider, setEditingProvider] = useState<ProviderId | null>(null);
   const [editState, setEditState] = useState<ProviderEditState>({ apiKey: '', showKey: false, validating: false, formatValid: true });
   const [importError, setImportError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Loading states for resource fetching
+  const [loadingVoices, setLoadingVoices] = useState(false);
+  const [loadingModels, setLoadingModels] = useState(false);
 
   if (!isOpen) return null;
 
@@ -111,6 +131,26 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
     if (result.isValid) {
       await setProviderKey(editingProvider, editState.apiKey, true);
       setProviderValidation(editingProvider, true);
+
+      // Fetch provider-specific resources after successful validation
+      if (editingProvider === 'elevenlabs') {
+        setLoadingVoices(true);
+        const voiceResult = await fetchElevenLabsVoices(editState.apiKey);
+        if (voiceResult.voices.length > 0) {
+          setCachedVoices('elevenlabs', voiceResult.voices);
+        }
+        setLoadingVoices(false);
+      }
+
+      if (editingProvider === 'openrouter') {
+        setLoadingModels(true);
+        const modelResult = await fetchOpenRouterModels(editState.apiKey);
+        if (modelResult.models.length > 0) {
+          setCachedModels('openrouter', modelResult.models);
+        }
+        setLoadingModels(false);
+      }
+
       setEditingProvider(null);
     } else {
       setEditState(prev => ({ ...prev, validating: false, error: result.errorMessage }));
@@ -276,6 +316,35 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                         )}
                       </div>
                     </div>
+
+                    {/* Resource Selectors */}
+                    {providerConfig.providerId === 'elevenlabs' && providerConfig.cachedVoices && (
+                      <div className="mt-3 pt-3 border-t border-slate-700/50">
+                        <VoiceSelector
+                          voices={providerConfig.cachedVoices}
+                          selectedVoiceId={providerConfig.selectedVoiceId}
+                          onSelectVoice={(voiceId) => setSelectedVoice('elevenlabs', voiceId)}
+                          disabled={loadingVoices}
+                        />
+                        {loadingVoices && (
+                          <p className="text-xs text-slate-400 mt-2">Loading voices...</p>
+                        )}
+                      </div>
+                    )}
+
+                    {providerConfig.providerId === 'openrouter' && providerConfig.cachedModels && (
+                      <div className="mt-3 pt-3 border-t border-slate-700/50">
+                        <ModelSelector
+                          models={providerConfig.cachedModels}
+                          selectedModelId={providerConfig.selectedModelId}
+                          onSelectModel={(modelId) => setSelectedModel('openrouter', modelId)}
+                          disabled={loadingModels}
+                        />
+                        {loadingModels && (
+                          <p className="text-xs text-slate-400 mt-2">Loading models...</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}

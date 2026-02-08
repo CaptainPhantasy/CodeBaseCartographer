@@ -6,11 +6,14 @@
 import { readdir, readFile, stat } from 'fs/promises';
 import { join, relative, extname } from 'path';
 import { existsSync } from 'fs';
+import { getFileTypeHandler, DEFAULT_REGISTRY, type FileTypeCategory } from './fileTypeRegistry.js';
+import { processFile } from './contentProcessors/index.js';
 
 export interface AnalysisOptions {
   maxDepth: number;
   ignorePatterns: string[];
   includeComplexity: boolean;
+  includeHidden?: boolean;
 }
 
 export interface ComplexityMetrics {
@@ -21,7 +24,7 @@ export interface ComplexityMetrics {
 
 export interface GraphNode {
   id: string;
-  type: 'entry' | 'logic' | 'storage' | 'exit' | 'external' | 'decision' | 'process';
+  type: 'entry' | 'logic' | 'storage' | 'exit' | 'external' | 'decision' | 'process' | 'infrastructure' | 'documentation' | 'image' | 'config' | 'style' | 'web';
   position: { x: number; y: number };
   data: {
     label: string;
@@ -65,7 +68,7 @@ export async function analyzeCodebase(
   let nodeCount = 0;
 
   // Collect all files
-  const files = await collectFiles(rootPath, options.ignorePatterns);
+  const files = await collectFiles(rootPath, options.ignorePatterns, [], options.includeHidden);
 
   // Calculate node positions in a layered layout
   const layers = organizeByDepth(files, rootPath, options.maxDepth);
@@ -81,22 +84,11 @@ export async function analyzeCodebase(
       let nodeType: GraphNode['type'] = 'process';
       let color = '#3b82f6';
 
-      // Determine node type and color based on file type
-      if (ext === '.tsx' || ext === '.jsx') {
-        nodeType = 'logic';
-        color = '#8b5cf6';
-      } else if (ext === '.ts' || ext === '.js') {
-        nodeType = 'logic';
-        color = '#06b6d4';
-      } else if (ext === '.json') {
-        nodeType = 'storage';
-        color = '#10b981';
-      } else if (ext === '.css' || ext === '.scss') {
-        nodeType = 'external';
-        color = '#ec4899';
-      } else if (ext === '.md') {
-        nodeType = 'external';
-        color = '#6b7280';
+      // Determine node type and color based on file type from registry
+      const handler = getFileTypeHandler(ext);
+      if (handler) {
+        nodeType = mapCategoryToNodeType(handler.category);
+        color = getColorForCategory(handler.category);
       }
 
       const node: GraphNode = {
@@ -133,9 +125,19 @@ export async function analyzeCodebase(
 
     if (!sourceNode) continue;
 
+    // Check if file is binary before attempting to read
+    const ext = extname(file);
+    const handler = getFileTypeHandler(ext);
+
+    // Skip binary files for import extraction
+    if (handler?.binary) continue;
+
+    // Only process code files for import extraction
+    if (handler?.category !== 'code') continue;
+
     try {
       const content = await readFile(file, 'utf-8');
-      const imports = extractImports(content, extname(file));
+      const imports = extractImports(content, ext);
 
       for (const imp of imports) {
         // Try to find the imported file
@@ -177,21 +179,30 @@ export async function analyzeCodebase(
 async function collectFiles(
   dirPath: string,
   ignorePatterns: string[],
-  files: string[] = []
+  files: string[] = [],
+  includeHidden: boolean = false
 ): Promise<string[]> {
   const entries = await readdir(dirPath, { withFileTypes: true });
 
   for (const entry of entries) {
+    // Always exclude .git directory for security/privacy
+    if (entry.name === '.git') continue;
+
+    // Skip hidden files unless explicitly included
+    if (!includeHidden && entry.name.startsWith('.')) continue;
+
     if (ignorePatterns.includes(entry.name)) continue;
 
     const fullPath = join(dirPath, entry.name);
 
     if (entry.isDirectory()) {
-      await collectFiles(fullPath, ignorePatterns, files);
+      await collectFiles(fullPath, ignorePatterns, files, includeHidden);
     } else if (entry.isFile()) {
       const ext = extname(entry.name);
-      const validExtensions = ['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.scss', '.md'];
-      if (validExtensions.includes(ext)) {
+      const handler = getFileTypeHandler(ext);
+
+      // Include file if it has a registered handler
+      if (handler) {
         files.push(fullPath);
       }
     }
@@ -306,6 +317,56 @@ function getFileDescription(filePath: string): string {
   }
 
   return 'Source file';
+}
+
+/**
+ * Map file type category to graph node type
+ */
+function mapCategoryToNodeType(category: FileTypeCategory): GraphNode['type'] {
+  switch (category) {
+    case 'code':
+      return 'logic';
+    case 'config':
+      return 'config';
+    case 'documentation':
+      return 'documentation';
+    case 'image':
+      return 'image';
+    case 'infrastructure':
+      return 'infrastructure';
+    case 'style':
+      return 'style';
+    case 'web':
+      return 'web';
+    case 'binary':
+    default:
+      return 'process';
+  }
+}
+
+/**
+ * Get color for a file type category
+ */
+function getColorForCategory(category: FileTypeCategory): string {
+  switch (category) {
+    case 'code':
+      return '#06b6d4'; // Cyan for TypeScript/JavaScript
+    case 'config':
+      return '#10b981'; // Green for JSON/YAML
+    case 'documentation':
+      return '#6b7280'; // Gray for markdown
+    case 'image':
+      return '#ec4899'; // Pink for images
+    case 'infrastructure':
+      return '#f59e0b'; // Amber for infrastructure
+    case 'style':
+      return '#8b5cf6'; // Purple for CSS/SCSS
+    case 'web':
+      return '#3b82f6'; // Blue for HTML
+    case 'binary':
+    default:
+      return '#9ca3af'; // Gray for binary
+  }
 }
 
 /**

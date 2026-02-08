@@ -1,3 +1,16 @@
+---
+
+# ⚠️  ARCHIVED DOCUMENTATION
+
+**Status:** ARCHIVAL - NOT RELEVANT TO CURRENT CODE WORK  
+**Archived:** February 8, 2026  
+**Location:** docs/archive/
+
+This document is preserved for historical reference only. For current documentation, see:
+- [Current Docs Index](../README.md)
+- [Main README](../../README.md)
+
+---
 # Phase 4: Focus Mode + Search Navigation - Implementation Guide
 
 ## Overview

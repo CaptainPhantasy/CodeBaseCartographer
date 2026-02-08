@@ -200,7 +200,7 @@ describe('SetupWizard', () => {
     });
   });
 
-  it('allows assigning tasks to providers', () => {
+  it('allows assigning tasks to providers', async () => {
     renderWithProvider(<SetupWizard onComplete={vi.fn()} />);
 
     // Navigate to tasks step

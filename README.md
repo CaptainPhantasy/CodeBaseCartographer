@@ -12,6 +12,8 @@ An AI-powered tool for mapping, visualizing, and understanding complex codebases
 - **🎙️ Real-time Voice** - Live audio conversations with your AI assistant
 - **🔊 Text-to-Speech** - Read AI responses aloud with natural voices
 - **🎬 Video Generation** - Create animated architecture walkthroughs with Veo
+- **🎵 Voice Selection** - Choose from your ElevenLabs voice library with preview functionality
+- **🔍 Model Selection** - Select from OpenRouter's model catalog with pricing information
 - **📁 Codebase Ingestion** - Load and analyze project file structures
 - **⚙️ Graceful Degradation** - Features automatically adapt based on configured providers
 
@@ -73,6 +75,25 @@ On first launch, you'll see the **Setup Wizard** which guides you through:
 | Thinking Mode | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Search Grounding | ✅ | ❌ | ❌ | ❌ | ❌ |
 
+### Resource Selection Features
+
+After adding your API keys in the Settings → API Keys tab, the application automatically fetches and displays available resources:
+
+**🎵 ElevenLabs Voice Selection**
+- Automatically fetches your available voices after API key validation
+- Categorizes voices by type (Cloned, Premade, Generated, Other)
+- Play voice previews directly in the UI
+- View detailed voice information including descriptions and labels
+- Select your preferred voice for TTS tasks
+
+**🔍 OpenRouter Model Selection**
+- Fetches available models from your OpenRouter account
+- Sort models by price (most affordable first)
+- View detailed pricing per 1M tokens for both input and output
+- Search through hundreds of models by name or ID
+- See context length and model capabilities
+- Real-time model selection with visual feedback
+
 ### Recommended Configuration
 
 For the **best experience**, we recommend:
@@ -107,6 +128,8 @@ codebase-cartographer/
     ├── components/
     │   ├── SetupWizard.tsx   # First-run configuration wizard
     │   ├── SettingsPage.tsx  # Settings management UI
+    │   ├── VoiceSelector.tsx  # ElevenLabs voice selection UI
+    │   ├── ModelSelector.tsx # OpenRouter model selection UI
     │   └── CapabilityMatrix.tsx # Visual capability display
     ├── config/
     │   ├── configManager.ts  # Persistent config storage
@@ -123,6 +146,9 @@ codebase-cartographer/
     │       ├── anthropic.ts  # Anthropic adapter
     │       ├── openrouter.ts # OpenRouter adapter
     │       └── elevenlabs.ts # ElevenLabs adapter
+    ├── services/
+    │   ├── resourceFetchers.ts # API resource fetching
+    │   └── adapters/         # Provider-specific adapters
     ├── types/
     │   └── capabilities.ts   # Capability type definitions
     └── utils/
@@ -156,6 +182,7 @@ All configuration is stored in browser localStorage:
 - API keys are obfuscated (not encrypted - don't use in shared environments)
 - Task mappings and preferences are JSON-stored
 - Config can be exported/imported via Settings
+- Voice and model selections are cached for faster loading
 
 ## 📚 Documentation
 

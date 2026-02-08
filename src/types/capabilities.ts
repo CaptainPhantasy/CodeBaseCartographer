@@ -10,7 +10,7 @@
 /**
  * All possible capabilities that an LLM model can have
  */
-export type Capability = 
+export type Capability =
   | 'text'              // Basic text generation/chat
   | 'code'              // Code generation/analysis
   | 'structured_output' // JSON schema-based structured output
@@ -20,6 +20,36 @@ export type Capability =
   | 'realtime_audio'    // Real-time bidirectional audio
   | 'thinking'          // Extended reasoning/thinking mode
   | 'search_grounding'; // Web search grounding
+
+/**
+ * ElevenLabs voice information from API
+ */
+export interface ElevenLabsVoice {
+  voice_id: string;
+  name: string;
+  category?: string;         // 'cloned', 'generated', 'premade', etc.
+  labels?: Record<string, string>;
+  description?: string;
+  preview_url?: string;
+}
+
+/**
+ * OpenRouter model information from API
+ */
+export interface OpenRouterModel {
+  id: string;                // e.g., "openai/gpt-4"
+  name: string;
+  context_length: number;
+  pricing: {
+    prompt: string;          // per token as string decimal
+    completion: string;
+  };
+  architecture: {
+    modality: string;
+    input_modalities: string[];
+    output_modalities: string[];
+  };
+}
 
 /**
  * Task types that the application needs to perform
@@ -114,6 +144,14 @@ export interface ProviderConfig {
   isEnabled: boolean;
   validatedAt?: string; // ISO date string
   isValid?: boolean;
+
+  // Provider-specific cached resources
+  cachedVoices?: ElevenLabsVoice[];      // elevenlabs only
+  cachedModels?: OpenRouterModel[];      // openrouter only
+
+  // User selections
+  selectedVoiceId?: string;              // elevenlabs only
+  selectedModelId?: string;              // openrouter only
 }
 
 /**

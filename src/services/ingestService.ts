@@ -1,6 +1,15 @@
 // Simple service to handle codebase ingestion
+import { FileFilterOptions, getFileCategory, isHiddenFile } from '../types/fileTypes';
 
-export const fetchGithubTree = async (repoUrl: string): Promise<string[]> => {
+export interface IngestOptions {
+  includeHidden: boolean;
+  fileCategories: string[];
+}
+
+export const fetchGithubTree = async (
+  repoUrl: string,
+  options?: Partial<IngestOptions>
+): Promise<string[]> => {
   try {
     // Basic parsing for github.com/owner/repo
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
@@ -30,24 +39,60 @@ export const fetchGithubTree = async (repoUrl: string): Promise<string[]> => {
   }
 };
 
-const parseTreeResponse = (data: any): string[] => {
+const parseTreeResponse = (data: any, options?: Partial<IngestOptions>): string[] => {
     if (!data.tree || !Array.isArray(data.tree)) return [];
-    // Filter for blobs (files) and return paths
+
+    const includeHidden = options?.includeHidden ?? false;
+    const fileCategories = options?.fileCategories;
+
+    // Filter for blobs (files) and apply filters
     return data.tree
         .filter((item: any) => item.type === 'blob')
-        .map((item: any) => item.path);
+        .map((item: any) => item.path)
+        .filter((path: string) => {
+            // Filter hidden files
+            if (!includeHidden && isHiddenFile(path)) {
+                return false;
+            }
+
+            // Filter by category if specified
+            if (fileCategories && fileCategories.length > 0) {
+                const category = getFileCategory(path);
+                if (!category || !fileCategories.includes(category)) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
 };
 
-export const processFileSelect = (files: FileList): string[] => {
+export const processFileSelect = (
+    files: FileList,
+    options?: Partial<IngestOptions>
+): string[] => {
+    const includeHidden = options?.includeHidden ?? false;
+    const fileCategories = options?.fileCategories;
+
     const paths: string[] = [];
     for (let i = 0; i < files.length; i++) {
-        // webkitRelativePath gives us the relative path in the folder
         const file = files[i];
-        if (file.webkitRelativePath) {
-            paths.push(file.webkitRelativePath);
-        } else {
-            paths.push(file.name);
+        const path = file.webkitRelativePath || file.name;
+
+        // Filter hidden files
+        if (!includeHidden && isHiddenFile(path)) {
+            continue;
         }
+
+        // Filter by category if specified
+        if (fileCategories && fileCategories.length > 0) {
+            const category = getFileCategory(path);
+            if (!category || !fileCategories.includes(category)) {
+                continue;
+            }
+        }
+
+        paths.push(path);
     }
     return paths;
 };

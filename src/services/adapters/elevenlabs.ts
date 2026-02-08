@@ -102,9 +102,17 @@ export class ElevenLabsAdapter extends BaseLLMAdapter {
     text: string,
     options: TTSOptions = {}
   ): Promise<TTSResult> {
-    // Get voice ID from name or use as-is if it's already an ID
-    const voiceName = options.voice || 'rachel';
-    const voiceId = ELEVENLABS_VOICES[voiceName as keyof typeof ELEVENLABS_VOICES] || voiceName;
+    // Use voice ID directly if provided (new behavior)
+    // Fall back to name mapping for backward compatibility
+    let voiceId = options.voice;
+
+    if (!voiceId) {
+      voiceId = '21m00Tcm4TlvDq8ikWAM'; // Default to Rachel
+    } else if (voiceId in ELEVENLABS_VOICES) {
+      // Legacy voice name - map to ID
+      voiceId = ELEVENLABS_VOICES[voiceId as keyof typeof ELEVENLABS_VOICES];
+    }
+    // Otherwise assume voiceId is already a valid voice ID
 
     const response = await fetch(`${API_BASE}/text-to-speech/${voiceId}`, {
       method: 'POST',
