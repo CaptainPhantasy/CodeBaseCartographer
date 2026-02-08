@@ -41,8 +41,8 @@ async function runTests() {
   try {
     const serverModule = await import(resolve(__dirname, './server.ts'));
     console.log('✓ Server module imported successfully');
-  } catch (error) {
-    console.error('✗ Failed to import server:', error.message);
+  } catch (error: any) {
+    console.error('✗ Failed to import server:', error?.message || error);
     process.exit(1);
   }
 
@@ -56,8 +56,8 @@ async function runTests() {
     const content = readFileSync(TEST_FILE, 'utf-8');
     console.log(`✓ Test file created with content: "${content.trim()}"`);
     cleanupTestEnvironment();
-  } catch (error) {
-    console.error('✗ File operations failed:', error.message);
+  } catch (error: any) {
+    console.error('✗ File operations failed:', error?.message || error);
   }
 
   // Test 3: Task store
@@ -83,8 +83,8 @@ async function runTests() {
 
     await store.deleteTask(task.id);
     console.log('✓ Task deleted');
-  } catch (error) {
-    console.error('✗ Task store failed:', error.message);
+  } catch (error: any) {
+    console.error('✗ Task store failed:', error?.message || error);
   }
 
   // Test 4: Change journal
@@ -104,8 +104,8 @@ async function runTests() {
 
     const changes = journal.listChanges();
     console.log(`✓ Retrieved ${changes.length} changes`);
-  } catch (error) {
-    console.error('✗ Change journal failed:', error.message);
+  } catch (error: any) {
+    console.error('✗ Change journal failed:', error?.message || error);
   }
 
   console.log('\n=== All Tests Complete ===\n');

@@ -4,15 +4,20 @@
   "description": "Backend service for CodeBaseCartographer - file operations, watching, and task persistence",
   "main": "dist/server.js",
   "type": "module",
+  "bin": {
+    "codebase-cartographer": "./dist/cli.js"
+  },
   "scripts": {
     "dev": "nodemon --exec tsx src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test:server": "tsx src/testServer.ts",
     "test": "vitest",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "cli": "tsx src/cli.ts"
   },
   "dependencies": {
+    "cac": "^6.7.14",
     "chokidar": "^3.5.3",
     "cors": "^2.8.5",
     "express": "^4.18.2",
