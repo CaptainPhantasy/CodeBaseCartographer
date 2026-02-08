@@ -16,6 +16,7 @@ export type Capability =
   | 'structured_output' // JSON schema-based structured output
   | 'vision'            // Image understanding
   | 'tts'               // Text-to-speech
+  | 'stt'               // Speech-to-text
   | 'video'             // Video generation
   | 'realtime_audio'    // Real-time bidirectional audio
   | 'thinking'          // Extended reasoning/thinking mode

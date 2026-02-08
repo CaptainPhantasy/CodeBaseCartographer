@@ -47,6 +47,19 @@ export interface TTSResult {
   format: string;
 }
 
+export interface STTOptions {
+  model?: string;
+  language?: string;
+  detect_language?: boolean;
+}
+
+export interface STTResult {
+  text: string;
+  language?: string;
+  confidence?: number;
+  word_count?: number;
+}
+
 export interface VideoGenerationOptions {
   imageBase64?: string;
   imageMimeType?: string;
@@ -58,6 +71,12 @@ export interface VideoGenerationOptions {
 export interface VideoResult {
   videoUrl: string;
   duration?: number;
+}
+
+export interface STSConfig extends RealtimeConfig {
+  model?: string;
+  temperature?: number;
+  prompt_prefix?: string;
 }
 
 export interface RealtimeConfig {
@@ -200,6 +219,27 @@ export abstract class BaseLLMAdapter {
     _config: RealtimeConfig
   ): Promise<RealtimeConnection> {
     throw new UnsupportedCapabilityError(this.providerId, 'realtime_audio');
+  }
+
+  /**
+   * Transcribe audio to text (if supported)
+   * @throws UnsupportedCapabilityError if STT not supported
+   */
+  async transcribeAudio(
+    _audioData: ArrayBuffer | string,
+    _options?: STTOptions
+  ): Promise<STTResult> {
+    throw new UnsupportedCapabilityError(this.providerId, 'stt');
+  }
+
+  /**
+   * Connect to STS WebSocket for bidirectional audio (if supported)
+   * @throws UnsupportedCapabilityError if STS not supported
+   */
+  async connectSTS(
+    _config: STSConfig
+  ): Promise<RealtimeConnection> {
+    throw new UnsupportedCapabilityError(this.providerId, 'stt');
   }
 
   /**

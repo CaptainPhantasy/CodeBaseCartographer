@@ -19,6 +19,7 @@ import WatchModeToggle from './components/WatchModeToggle';
 import FileChangeNotification from './components/FileChangeNotification';
 import DiffModal from './components/DiffModal';
 import { useConfig } from './hooks/useConfig';
+import { getConfigManager } from './config/configManager';
 import DOMPurify from 'dompurify';
 import { sanitizeError } from './utils/errorSanitizer';
 
@@ -35,17 +36,18 @@ const FeatureTooltip: React.FC<{ message: string; children: React.ReactNode }> =
 
 const App: React.FC = () => {
   const { isFirstRun, config } = useConfig();
-  const { 
-    isTextAvailable, 
-    isTTSAvailable, 
-    isVideoAvailable, 
+  const {
+    isTextAvailable,
+    isTTSAvailable,
+    isSTTAvailable,
+    isVideoAvailable,
     isRealtimeAvailable,
     isThinkingAvailable,
     isSearchGroundingAvailable,
     getConfigureMessage,
-    loading: featuresLoading 
+    loading: featuresLoading
   } = useFeatureAvailability();
-  
+
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [mode, setMode] = useState<AppMode>(AppMode.CHAT);
@@ -71,6 +73,11 @@ const App: React.FC = () => {
   const [useSearch, setUseSearch] = useState(false);
   const [autoMap, setAutoMap] = useState(true);
   const [autoTTS, setAutoTTS] = useState(false);
+
+  // Microphone recording
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Watch Mode hooks
   const {
@@ -257,16 +264,95 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
       console.warn("TTS not available - configure a TTS provider");
       return;
     }
-    
+
     try {
       const llmService = getLLMService();
-      const result = await llmService.generateSpeech(text);
+      const configManager = getConfigManager();
+
+      // Get user's selected voice for ElevenLabs
+      let voiceOption: string | undefined;
+      const elevenlabsConfig = configManager.getEnabledProviders().find(p => p.providerId === 'elevenlabs');
+      if (elevenlabsConfig?.selectedVoiceId) {
+        voiceOption = elevenlabsConfig.selectedVoiceId;
+      }
+
+      const result = await llmService.generateSpeech(text, voiceOption ? { voice: voiceOption } : undefined);
       if (result.audioData) {
         const audio = new Audio("data:audio/mp3;base64," + result.audioData);
         audio.play();
       }
     } catch (e) {
       console.error("TTS Failed", e);
+    }
+  };
+
+  const handleToggleRecording = async () => {
+    if (!isSTTAvailable) {
+      setMessages(prev => [...prev, {
+        id: Date.now().toString(),
+        role: 'model',
+        text: '⚠️ Speech-to-Text not available. Please configure OpenAI (Whisper), Google, or ElevenLabs in Settings.',
+        timestamp: new Date()
+      }]);
+      return;
+    }
+
+    if (isRecording) {
+      // Stop recording
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+        setIsRecording(false);
+      }
+    } else {
+      // Start recording
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const arrayBuffer = await audioBlob.arrayBuffer();
+
+          // Stop all tracks to release microphone
+          stream.getTracks().forEach(track => track.stop());
+
+          try {
+            const llmService = getLLMService();
+            const result = await llmService.transcribeAudio(arrayBuffer);
+
+            if (result.text) {
+              setInputText(prev => prev + (prev ? ' ' : '') + result.text);
+            }
+          } catch (e) {
+            console.error('STT Failed:', e);
+            setMessages(prev => [...prev, {
+              id: Date.now().toString(),
+              role: 'model',
+              text: `⚠️ Transcription failed: ${e instanceof Error ? e.message : String(e)}`,
+              timestamp: new Date()
+            }]);
+          }
+        };
+
+        mediaRecorder.start();
+        setIsRecording(true);
+      } catch (e) {
+        console.error('Microphone access failed:', e);
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          role: 'model',
+          text: '⚠️ Microphone access denied. Please allow microphone access in your browser settings.',
+          timestamp: new Date()
+        }]);
+      }
     }
   };
 
@@ -540,22 +626,50 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
             
             <div className="p-6 bg-slate-900 border-t border-slate-800">
               <div className="relative max-w-4xl mx-auto">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder={isTextAvailable ? "Describe a flow to map, or ask for optimization..." : "Configure an LLM provider in Settings to enable chat"}
                   disabled={!isTextAvailable}
-                  className="w-full bg-slate-800 text-slate-200 rounded-xl pl-6 pr-14 py-4 focus:ring-2 focus:ring-cyan-500 focus:outline-none border border-slate-700 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-slate-800 text-slate-200 rounded-xl pl-6 pr-28 py-4 focus:ring-2 focus:ring-cyan-500 focus:outline-none border border-slate-700 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-                <button 
-                  onClick={() => handleSendMessage()}
-                  disabled={isLoading || !isTextAvailable}
-                  className="absolute right-2 top-2 bottom-2 aspect-square bg-cyan-600 hover:bg-cyan-500 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  ➤
-                </button>
+                <div className="absolute right-2 top-2 bottom-2 flex items-center gap-1">
+                  {/* Microphone button */}
+                  {isSTTAvailable ? (
+                    <button
+                      onClick={handleToggleRecording}
+                      disabled={isLoading}
+                      className={`aspect-square w-10 rounded-lg flex items-center justify-center transition-colors ${
+                        isRecording
+                          ? 'bg-red-500 hover:bg-red-600 animate-pulse'
+                          : 'bg-slate-700 hover:bg-slate-600'
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      title={isRecording ? 'Stop recording' : 'Record voice'}
+                    >
+                      {isRecording ? '⏹️' : '🎤'}
+                    </button>
+                  ) : (
+                    <FeatureTooltip message={getConfigureMessage('isSTTAvailable') || 'Speech-to-Text unavailable'}>
+                      <button
+                        disabled
+                        className="aspect-square w-10 rounded-lg flex items-center justify-center bg-slate-700 opacity-50 cursor-not-allowed"
+                        title="Speech-to-Text unavailable"
+                      >
+                        🎤
+                      </button>
+                    </FeatureTooltip>
+                  )}
+                  <button
+                    onClick={() => handleSendMessage()}
+                    disabled={isLoading || !isTextAvailable}
+                    className="aspect-square w-10 bg-cyan-600 hover:bg-cyan-500 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Send"
+                  >
+                    ➤
+                  </button>
+                </div>
               </div>
             </div>
           </div>

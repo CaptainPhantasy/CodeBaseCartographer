@@ -1,6 +1,6 @@
 /**
  * OpenAI Adapter
- * Supports: Text, Structured Output, TTS, Realtime Audio
+ * Supports: Text, Structured Output, TTS, STT, Realtime Audio
  */
 
 import { TaskType } from '../../types/capabilities';
@@ -11,6 +11,8 @@ import {
   StructuredOutputOptions,
   TTSOptions,
   TTSResult,
+  STTOptions,
+  STTResult,
   RealtimeConfig,
   RealtimeConnection,
   AdapterError,
@@ -26,6 +28,7 @@ const MODELS = {
   O3_MINI: 'o3-mini',
   TTS: 'tts-1',
   TTS_HD: 'tts-1-hd',
+  WHISPER: 'whisper-1',
   REALTIME: 'gpt-4o-realtime-preview'
 };
 
@@ -43,7 +46,7 @@ export class OpenAIAdapter extends BaseLLMAdapter {
   }
 
   supportsCapability(capability: string): boolean {
-    const supported = ['text', 'code', 'structured_output', 'vision', 'tts', 'realtime_audio', 'thinking'];
+    const supported = ['text', 'code', 'structured_output', 'vision', 'tts', 'stt', 'realtime_audio', 'thinking'];
     return supported.includes(capability);
   }
 
@@ -222,6 +225,74 @@ export class OpenAIAdapter extends BaseLLMAdapter {
       audioData: arrayBufferToBase64(audioBuffer),
       format: options.format || 'mp3'
     };
+  }
+
+  /**
+   * Transcribe audio to text using Whisper API
+   */
+  async transcribeAudio(
+    audioData: ArrayBuffer | string,
+    options: STTOptions = {}
+  ): Promise<STTResult> {
+    try {
+      // Convert base64 to Blob if needed
+      let audioBlob: Blob;
+      if (typeof audioData === 'string') {
+        // Decode base64 to binary
+        const binaryString = atob(audioData);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        audioBlob = new Blob([bytes], { type: 'audio/wav' });
+      } else {
+        audioBlob = new Blob([audioData], { type: 'audio/wav' });
+      }
+
+      // Create FormData for multipart upload
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'audio.wav');
+      formData.append('model', options.model || MODELS.WHISPER);
+
+      if (options.language) {
+        formData.append('language', options.language);
+      }
+
+      if (options.detect_language) {
+        // Let Whisper auto-detect the language (default behavior when language is not specified)
+      }
+
+      const response = await fetch(`${API_BASE}/audio/transcriptions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw parseAPIError(this.providerId, response.status, body);
+      }
+
+      const result = await response.json();
+
+      return {
+        text: result.text,
+        language: result.language,
+        // Whisper doesn't return confidence by default, but we can include it if available
+        confidence: result.confidence,
+        word_count: result.text ? result.text.split(/\s+/).length : undefined
+      };
+    } catch (error) {
+      if (error instanceof AdapterError) throw error;
+      throw new AdapterError(
+        `STT failed: ${error instanceof Error ? error.message : String(error)}`,
+        'STT_ERROR',
+        this.providerId,
+        false
+      );
+    }
   }
 
   async connectRealtime(config: RealtimeConfig): Promise<RealtimeConnection> {

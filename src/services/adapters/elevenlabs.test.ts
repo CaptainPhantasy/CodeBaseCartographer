@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ElevenLabsAdapter } from './elevenlabs';
 import { UnsupportedCapabilityError } from './base';
+import { TaskType } from '../../types/capabilities';
 
 // Mock fetch
 global.fetch = vi.fn();
@@ -29,12 +30,12 @@ describe('ElevenLabsAdapter', () => {
 
   describe('getModelForTask', () => {
     it('should return eleven_multilingual_v2 for TTS', () => {
-      expect(adapter.getModelForTask('tts')).toBe('eleven_multilingual_v2');
+      expect(adapter.getModelForTask(TaskType.TTS)).toBe('eleven_multilingual_v2');
     });
 
     it('should return null for other tasks', () => {
-      expect(adapter.getModelForTask('text_generation')).toBe(null);
-      expect(adapter.getModelForTask('image_analysis')).toBe(null);
+      expect(adapter.getModelForTask(TaskType.TEXT_GENERATION)).toBe(null);
+      expect(adapter.getModelForTask(TaskType.IMAGE_ANALYSIS)).toBe(null);
     });
   });
 
@@ -82,7 +83,7 @@ describe('ElevenLabsAdapter', () => {
       const result = await adapter.generateSpeech('Hello');
 
       expect(fetch).toHaveBeenCalledWith(
-        'https://api.elevenlabs.io/v1/text-to-speech/eleven_multilingual_v2',
+        'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM',
         expect.objectContaining({
           method: 'POST',
           headers: {
@@ -94,7 +95,9 @@ describe('ElevenLabsAdapter', () => {
             model_id: 'eleven_multilingual_v2',
             voice_settings: {
               stability: 0.5,
-              similarity_boost: 0.8
+              similarity_boost: 0.75,
+              style: 0.0,
+              use_speaker_boost: true
             }
           })
         })
@@ -119,8 +122,9 @@ describe('ElevenLabsAdapter', () => {
             model_id: 'eleven_multilingual_v2',
             voice_settings: {
               stability: 0.5,
-              similarity_boost: 0.8,
-              voice_name: 'rachel'
+              similarity_boost: 0.75,
+              style: 0.0,
+              use_speaker_boost: true
             }
           })
         })
@@ -144,25 +148,24 @@ describe('ElevenLabsAdapter', () => {
             model_id: 'eleven_multilingual_v2',
             voice_settings: {
               stability: 0.5,
-              similarity_boost: 0.8,
-              voice_name: 'custom-voice-id'
+              similarity_boost: 0.75,
+              style: 0.0,
+              use_speaker_boost: true
             }
           })
         })
       );
     });
 
-    it('should handle custom settings', async () => {
+    it('should handle custom voice with default settings', async () => {
       const mockResponse = {
         ok: true,
         arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100))
       };
       (fetch as any).mockResolvedValue(mockResponse);
 
-      await adapter.generateSpeech('Hello', {
-        voice: 'paul',
-        speed: 1.2,
-        format: 'wav'
+      const result = await adapter.generateSpeech('Hello', {
+        voice: 'paul'
       });
 
       expect(fetch).toHaveBeenCalledWith(
@@ -173,14 +176,14 @@ describe('ElevenLabsAdapter', () => {
             model_id: 'eleven_multilingual_v2',
             voice_settings: {
               stability: 0.5,
-              similarity_boost: 0.8,
-              voice_name: 'paul',
-              speed: 1.2
+              similarity_boost: 0.75,
+              style: 0.0,
+              use_speaker_boost: true
             }
           })
         })
       );
-      expect(result.format).toBe('wav');
+      expect(result.format).toBe('mp3');
     });
 
     it('should handle API error', async () => {

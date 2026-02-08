@@ -17,6 +17,7 @@ import { PROVIDERS } from '../config/providers';
 export interface FeatureAvailability {
   isTextAvailable: boolean;
   isTTSAvailable: boolean;
+  isSTTAvailable: boolean;
   isVideoAvailable: boolean;
   isRealtimeAvailable: boolean;
   isGraphAvailable: boolean;
@@ -48,6 +49,7 @@ export interface UseFeatureAvailabilityResult extends FeatureAvailability {
 const FEATURE_CONFIGURE_MESSAGES: Record<keyof FeatureAvailability, string> = {
   isTextAvailable: 'Configure any LLM provider to enable chat',
   isTTSAvailable: 'Configure OpenAI, Google, or ElevenLabs to enable Text-to-Speech',
+  isSTTAvailable: 'Configure OpenAI (Whisper), Google, or ElevenLabs to enable Speech-to-Text',
   isVideoAvailable: 'Configure Google AI (Gemini) to enable video generation with Veo',
   isRealtimeAvailable: 'Configure Google AI or OpenAI to enable real-time voice',
   isGraphAvailable: 'Configure any provider with structured output to enable graph generation',
@@ -60,6 +62,7 @@ const FEATURE_CONFIGURE_MESSAGES: Record<keyof FeatureAvailability, string> = {
 const FEATURE_NAMES: Record<keyof FeatureAvailability, string> = {
   isTextAvailable: 'Chat',
   isTTSAvailable: 'Text-to-Speech',
+  isSTTAvailable: 'Speech-to-Text',
   isVideoAvailable: 'Video Generation',
   isRealtimeAvailable: 'Real-time Voice',
   isGraphAvailable: 'Graph Generation',
@@ -102,20 +105,23 @@ function getDetailedAvailability(): FeatureAvailability & {
 } {
   const llmService = getLLMService();
   const baseAvailability = llmService.getFeatureAvailability();
-  
+
   // Additional capability checks
   const searchGrounding = isCapabilityAvailable('search_grounding');
   const thinking = isCapabilityAvailable('thinking');
   const codeAnalysis = isCapabilityAvailable('code');
+  const stt = isCapabilityAvailable('stt');
 
   return {
     ...baseAvailability,
     isCodeAnalysisAvailable: codeAnalysis.available,
     isSearchGroundingAvailable: searchGrounding.available,
     isThinkingAvailable: thinking.available,
+    isSTTAvailable: stt.available,
     providers: {
       isTextAvailable: isCapabilityAvailable('text'),
       isTTSAvailable: isCapabilityAvailable('tts'),
+      isSTTAvailable: stt,
       isVideoAvailable: isCapabilityAvailable('video'),
       isRealtimeAvailable: isCapabilityAvailable('realtime_audio'),
       isGraphAvailable: isCapabilityAvailable('structured_output'),
@@ -204,6 +210,7 @@ export function useFeatureAvailability(): UseFeatureAvailabilityResult {
   const defaultAvailability: FeatureAvailability = useMemo(() => ({
     isTextAvailable: false,
     isTTSAvailable: false,
+    isSTTAvailable: false,
     isVideoAvailable: false,
     isRealtimeAvailable: false,
     isGraphAvailable: false,

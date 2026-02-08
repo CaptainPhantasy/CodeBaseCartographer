@@ -1,6 +1,6 @@
 /**
  * Google/Gemini Adapter
- * Supports: Text, Structured Output, TTS, Video, Realtime Audio
+ * Supports: Text, Structured Output, TTS, STT, Video, Realtime Audio
  */
 
 import { GoogleGenAI, Modality, Type } from '@google/genai';
@@ -12,6 +12,8 @@ import {
   StructuredOutputOptions,
   TTSOptions,
   TTSResult,
+  STTOptions,
+  STTResult,
   VideoGenerationOptions,
   VideoResult,
   RealtimeConfig,
@@ -50,7 +52,7 @@ export class GoogleAdapter extends BaseLLMAdapter {
   supportsCapability(capability: string): boolean {
     const supported = [
       'text', 'code', 'structured_output', 'vision',
-      'tts', 'video', 'realtime_audio', 'thinking', 'search_grounding'
+      'tts', 'stt', 'video', 'realtime_audio', 'thinking', 'search_grounding'
     ];
     return supported.includes(capability);
   }
@@ -202,6 +204,55 @@ export class GoogleAdapter extends BaseLLMAdapter {
       audioData,
       format: 'wav'
     };
+  }
+
+  /**
+   * Transcribe audio to text using Gemini's native audio support
+   */
+  async transcribeAudio(
+    audioData: ArrayBuffer | string,
+    options: STTOptions = {}
+  ): Promise<STTResult> {
+    try {
+      // Convert base64 to string if needed
+      const audioBase64 = typeof audioData === 'string' ? audioData : arrayBufferToBase64(audioData);
+
+      const response = await this.ai.models.generateContent({
+        model: MODELS.FLASH,
+        contents: {
+          parts: [
+            {
+              inlineData: {
+                data: audioBase64,
+                mimeType: 'audio/webm' // Gemini can auto-detect from most audio formats
+              }
+            },
+            {
+              text: options.language
+                ? `Transcribe this audio to text. The audio is in ${options.language}. Return only the transcription.`
+                : 'Transcribe this audio to text. Return only the transcription.'
+            }
+          ]
+        }
+      });
+
+      if (!response.text) {
+        throw new AdapterError('No transcription returned', 'NO_TRANSCRIPTION', this.providerId, false);
+      }
+
+      return {
+        text: response.text.trim(),
+        language: options.language
+      };
+    } catch (error) {
+      if (error instanceof AdapterError) throw error;
+      throw new AdapterError(
+        `STT failed: ${error instanceof Error ? error.message : String(error)}`,
+        'STT_ERROR',
+        this.providerId,
+        false
+      );
+    }
   }
 
   async generateVideo(

@@ -2,11 +2,43 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { GoogleAdapter } from './google';
 import { GoogleGenAI, Modality } from '@google/genai';
 import { AdapterError } from './base';
+import { TaskType } from '../../types/capabilities';
+
+// Create mock functions outside so they can be referenced in tests
+const mockChatsCreate = vi.fn();
+const mockGenerateContent = vi.fn();
+const mockGenerateVideos = vi.fn();
+const mockGetVideosOperation = vi.fn();
+const mockLiveConnect = vi.fn();
 
 // Mock @google/genai
-vi.mock('@google/genai');
-
-const MockedGoogleGenAI = GoogleGenAI as any;
+vi.mock('@google/genai', () => ({
+  GoogleGenAI: class {
+    constructor() {
+      return {
+        chats: {
+          create: mockChatsCreate
+        },
+        models: {
+          generateContent: mockGenerateContent,
+          generateVideos: mockGenerateVideos
+        },
+        operations: {
+          getVideosOperation: mockGetVideosOperation
+        },
+        live: {
+          connect: mockLiveConnect
+        }
+      };
+    }
+  },
+  Modality: {
+    AUDIO: 'AUDIO'
+  },
+  Type: {
+    TEXT: 'TEXT'
+  }
+}));
 
 describe('GoogleAdapter', () => {
   let adapter: GoogleAdapter;
@@ -14,22 +46,7 @@ describe('GoogleAdapter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockAI = {
-      chats: {
-        create: vi.fn()
-      },
-      models: {
-        generateContent: vi.fn(),
-        generateVideos: vi.fn()
-      },
-      operations: {
-        getVideosOperation: vi.fn()
-      },
-      live: {
-        connect: vi.fn()
-      }
-    };
-    MockedGoogleGenAI.mockImplementation(() => mockAI);
+    mockAI = new GoogleGenAI();
     adapter = new GoogleAdapter('test-api-key');
   });
 
@@ -58,27 +75,27 @@ describe('GoogleAdapter', () => {
 
   describe('getModelForTask', () => {
     it('should return flash model for text generation', () => {
-      expect(adapter.getModelForTask('text_generation')).toBe('gemini-3-flash-preview');
+      expect(adapter.getModelForTask(TaskType.TEXT_GENERATION)).toBe('gemini-3-flash-preview');
     });
 
     it('should return flash model for image analysis', () => {
-      expect(adapter.getModelForTask('image_analysis')).toBe('gemini-3-flash-preview');
+      expect(adapter.getModelForTask(TaskType.IMAGE_ANALYSIS)).toBe('gemini-3-flash-preview');
     });
 
     it('should return flash model for code analysis', () => {
-      expect(adapter.getModelForTask('code_analysis')).toBe('gemini-3-flash-preview');
+      expect(adapter.getModelForTask(TaskType.CODE_ANALYSIS)).toBe('gemini-3-flash-preview');
     });
 
     it('should return tts model for TTS', () => {
-      expect(adapter.getModelForTask('tts')).toBe('gemini-2.5-flash-preview-tts');
+      expect(adapter.getModelForTask(TaskType.TTS)).toBe('gemini-2.5-flash-preview-tts');
     });
 
     it('should return video model for video', () => {
-      expect(adapter.getModelForTask('video')).toBe('veo-3.1-fast-generate-preview');
+      expect(adapter.getModelForTask(TaskType.VIDEO)).toBe('veo-3.1-fast-generate-preview');
     });
 
     it('should return live audio model for realtime voice', () => {
-      expect(adapter.getModelForTask('realtime_voice')).toBe('gemini-2.5-flash-native-audio-preview-12-2025');
+      expect(adapter.getModelForTask(TaskType.REALTIME_VOICE)).toBe('gemini-2.5-flash-native-audio-preview-12-2025');
     });
   });
 
@@ -328,10 +345,7 @@ describe('GoogleAdapter', () => {
       });
       global.fetch = mockFetch as any;
 
-      mockAI.models.generateVideos.mockResolvedValue({
-        operationId: 'op123'
-      });
-      mockAI.operations.getVideosOperation.mockResolvedValue(mockOperation);
+      mockAI.models.generateVideos.mockResolvedValue(mockOperation);
 
       const result = await adapter.generateVideo('Create a video');
 
@@ -362,10 +376,7 @@ describe('GoogleAdapter', () => {
       });
       global.fetch = mockFetch as any;
 
-      mockAI.models.generateVideos.mockResolvedValue({
-        operationId: 'op123'
-      });
-      mockAI.operations.getVideosOperation.mockResolvedValue(mockOperation);
+      mockAI.models.generateVideos.mockResolvedValue(mockOperation);
 
       await adapter.generateVideo('Animate this', {
         imageBase64: 'base64-image',
@@ -400,10 +411,7 @@ describe('GoogleAdapter', () => {
       };
 
       (window as any).aistudio.hasSelectedApiKey.mockResolvedValue(true);
-      mockAI.models.generateVideos.mockResolvedValue({
-        operationId: 'op123'
-      });
-      mockAI.operations.getVideosOperation.mockResolvedValue(mockOperation);
+      mockAI.models.generateVideos.mockResolvedValue(mockOperation);
 
       await adapter.generateVideo('Create a video');
 
@@ -421,10 +429,7 @@ describe('GoogleAdapter', () => {
       };
 
       (window as any).aistudio.hasSelectedApiKey.mockResolvedValue(false);
-      mockAI.models.generateVideos.mockResolvedValue({
-        operationId: 'op123'
-      });
-      mockAI.operations.getVideosOperation.mockResolvedValue(mockOperation);
+      mockAI.models.generateVideos.mockResolvedValue(mockOperation);
 
       await adapter.generateVideo('Create a video');
 

@@ -9,11 +9,13 @@ import {
   TASK_REQUIRED_CAPABILITIES,
   ModelTier,
   ElevenLabsVoice,
-  OpenRouterModel
+  OpenRouterModel,
+  AppConfig
 } from '../types/capabilities';
 import { PROVIDERS, getAvailableProviders, getProvider } from '../config/providers';
 import { validateApiKey, quickValidateKeyFormat } from '../utils/apiKeyValidator';
 import { useConfig } from '../hooks/useConfig';
+import { getConfigManager } from '../config/configManager';
 import CapabilityMatrix from './CapabilityMatrix';
 import { VoiceSelector } from './VoiceSelector';
 import { ModelSelector } from './ModelSelector';
@@ -82,8 +84,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
     setCachedModels,
     getCachedModels,
     setSelectedVoice,
-    setSelectedModel
+    setSelectedModel,
+    setConfig
   } = useConfig();
+
+  const configManager = getConfigManager();
 
   const [activeTab, setActiveTab] = useState<SettingsTab>('apikeys');
   const [editingProvider, setEditingProvider] = useState<ProviderId | null>(null);
@@ -137,7 +142,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
         setLoadingVoices(true);
         const voiceResult = await fetchElevenLabsVoices(editState.apiKey);
         if (voiceResult.voices.length > 0) {
-          setCachedVoices('elevenlabs', voiceResult.voices);
+          await setCachedVoices('elevenlabs', voiceResult.voices);
+          // Trigger re-render to show the voice selector
+          setConfig(configManager.getFullConfig());
         }
         setLoadingVoices(false);
       }
@@ -146,7 +153,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
         setLoadingModels(true);
         const modelResult = await fetchOpenRouterModels(editState.apiKey);
         if (modelResult.models.length > 0) {
-          setCachedModels('openrouter', modelResult.models);
+          await setCachedModels('openrouter', modelResult.models);
+          // Trigger re-render to show the model selector
+          setConfig(configManager.getFullConfig());
         }
         setLoadingModels(false);
       }

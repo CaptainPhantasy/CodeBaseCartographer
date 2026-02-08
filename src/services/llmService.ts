@@ -14,6 +14,8 @@ import {
   StructuredOutputOptions,
   TTSOptions,
   TTSResult,
+  STTOptions,
+  STTResult,
   VideoGenerationOptions,
   VideoResult,
   RealtimeConfig,
@@ -484,6 +486,32 @@ Return ONLY valid JSON.`;
   }
 
   /**
+   * Get the best STT provider based on configuration
+   */
+  private getSTTProvider(): { providerId: ProviderId | 'elevenlabs'; modelId: string } | null {
+    const configManager = getConfigManager();
+    const enabledProviders = configManager.getEnabledProviders();
+
+    // Auto-select STT provider (prefer ElevenLabs, then OpenAI, then Google)
+    const sttProviderOrder: (ProviderId | 'elevenlabs')[] = ['elevenlabs', 'openai', 'google'];
+
+    for (const providerId of sttProviderOrder) {
+      const apiKey = configManager.getApiKey(providerId as ProviderId);
+      if (apiKey) {
+        const providerDef = PROVIDERS[providerId as ProviderId];
+        if (providerDef) {
+          const sttModel = providerDef.models.find(m => m.capabilities.includes('stt' as Capability));
+          if (sttModel) {
+            return { providerId, modelId: sttModel.id };
+          }
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
    * Generate speech from text
    */
   async generateSpeech(
@@ -491,13 +519,30 @@ Return ONLY valid JSON.`;
     options: TTSOptions = {}
   ): Promise<TTSResult> {
     const provider = this.getTTSProvider();
-    
+
     if (!provider) {
       throw new UnsupportedCapabilityError('openai' as ProviderId, 'tts');
     }
 
     const adapter = this.getAdapter(provider.providerId, provider.modelId);
     return adapter.generateSpeech(text, options);
+  }
+
+  /**
+   * Transcribe audio to text
+   */
+  async transcribeAudio(
+    audioData: ArrayBuffer | string,
+    options: STTOptions = {}
+  ): Promise<STTResult> {
+    const provider = this.getSTTProvider();
+
+    if (!provider) {
+      throw new UnsupportedCapabilityError('openai' as ProviderId, 'stt');
+    }
+
+    const adapter = this.getAdapter(provider.providerId, provider.modelId);
+    return adapter.transcribeAudio(audioData, options);
   }
 
   /**
@@ -564,6 +609,7 @@ Return ONLY valid JSON.`;
   getFeatureAvailability(): {
     isTextAvailable: boolean;
     isTTSAvailable: boolean;
+    isSTTAvailable: boolean;
     isVideoAvailable: boolean;
     isRealtimeAvailable: boolean;
     isGraphAvailable: boolean;
@@ -572,6 +618,7 @@ Return ONLY valid JSON.`;
     return {
       isTextAvailable: this.isTaskAvailable(TaskType.TEXT_GENERATION),
       isTTSAvailable: this.getTTSProvider() !== null,
+      isSTTAvailable: this.getSTTProvider() !== null,
       isVideoAvailable: this.isTaskAvailable(TaskType.VIDEO),
       isRealtimeAvailable: this.isTaskAvailable(TaskType.REALTIME_VOICE),
       isGraphAvailable: this.isTaskAvailable(TaskType.GRAPH_GENERATION),

@@ -43,9 +43,9 @@ import {
 
 /**
  * Legacy obfuscation for backward compatibility
- * DEPRECATED: Used only for migrating old keys
+ * DEPRECATED: Used only for migrating old keys and testing
  */
-function obfuscateKeyLegacy(key: string): string {
+export function obfuscateKeyLegacy(key: string): string {
   if (!key) return '';
   const prefixed = `OBF:${key}`;
   const rotated = prefixed.split('').map(c =>
@@ -56,9 +56,9 @@ function obfuscateKeyLegacy(key: string): string {
 
 /**
  * Legacy deobfuscation for backward compatibility
- * DEPRECATED: Used only for migrating old keys
+ * DEPRECATED: Used only for migrating old keys and testing
  */
-function deobfuscateKeyLegacy(obfuscatedKey: string): string {
+export function deobfuscateKeyLegacy(obfuscatedKey: string): string {
   if (!obfuscatedKey) return '';
   try {
     const rotated = atob(obfuscatedKey);

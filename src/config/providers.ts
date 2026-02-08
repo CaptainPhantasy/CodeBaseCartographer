@@ -110,7 +110,7 @@ const openRouterProvider: ProviderDefinition = {
 const openAIProvider: ProviderDefinition = {
   id: 'openai',
   name: 'OpenAI',
-  description: 'Direct access to OpenAI models including GPT-4, TTS, and Realtime API',
+  description: 'Direct access to OpenAI models including GPT-4, TTS, STT (Whisper), and Realtime API',
   apiEndpoint: 'https://api.openai.com/v1',
   authHeaderFormat: 'Authorization: Bearer {apiKey}',
   docsUrl: 'https://platform.openai.com/docs',
@@ -170,6 +170,13 @@ const openAIProvider: ProviderDefinition = {
       capabilities: ['tts'] as Capability[],
       tier: 'smart',
       costPerMillionTokens: { input: 30, output: 0 } // $30 per 1M chars
+    },
+    {
+      id: 'whisper-1',
+      name: 'Whisper V1',
+      capabilities: ['stt'] as Capability[],
+      tier: 'smart',
+      costPerMillionTokens: { input: 6, output: 0 } // ~$0.006 per minute
     },
     {
       id: 'gpt-4o-realtime-preview',
@@ -236,7 +243,7 @@ const anthropicProvider: ProviderDefinition = {
 const googleProvider: ProviderDefinition = {
   id: 'google',
   name: 'Google AI (Gemini)',
-  description: 'Direct access to Google Gemini models including TTS, Video, and Live API',
+  description: 'Direct access to Google Gemini models including TTS, STT, Video, and Live API',
   apiEndpoint: 'https://generativelanguage.googleapis.com/v1beta',
   authHeaderFormat: 'x-goog-api-key: {apiKey}',
   docsUrl: 'https://ai.google.dev/docs',
@@ -269,6 +276,13 @@ const googleProvider: ProviderDefinition = {
       supportsStreaming: true
     },
     {
+      id: 'gemini-3-flash-preview',
+      name: 'Gemini STT',
+      capabilities: ['stt'] as Capability[],
+      tier: 'smart',
+      costPerMillionTokens: { input: 1, output: 0 } // Included with Flash pricing
+    },
+    {
       id: 'veo-3.1-fast-generate-preview',
       name: 'Veo 3.1 (Video)',
       capabilities: ['video'] as Capability[],
@@ -285,13 +299,13 @@ const googleProvider: ProviderDefinition = {
 };
 
 // ============================================================================
-// ELEVENLABS PROVIDER (TTS ONLY)
+// ELEVENLABS PROVIDER (TTS, STT, STS)
 // ============================================================================
 
 const elevenLabsProvider: ProviderDefinition = {
   id: 'elevenlabs',
   name: 'ElevenLabs',
-  description: 'Premium text-to-speech with natural, expressive voices',
+  description: 'Premium TTS, STT, and real-time voice with natural, expressive voices',
   apiEndpoint: 'https://api.elevenlabs.io/v1',
   authHeaderFormat: 'xi-api-key: {apiKey}',
   docsUrl: 'https://docs.elevenlabs.io',
@@ -311,6 +325,13 @@ const elevenLabsProvider: ProviderDefinition = {
       capabilities: ['tts'] as Capability[],
       tier: 'fast',
       costPerMillionTokens: { input: 15, output: 0 }
+    },
+    {
+      id: 'scribe_v2',
+      name: 'Scribe V2',
+      capabilities: ['stt'] as Capability[],
+      tier: 'smart',
+      costPerMillionTokens: { input: 10, output: 0 } // ~$0.10 per minute
     }
   ]
 };

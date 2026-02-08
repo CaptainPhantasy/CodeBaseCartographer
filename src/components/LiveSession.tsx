@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { getLLMService } from '../services/llmService';
 import { useFeatureAvailability } from '../hooks/useFeatureAvailability';
+import { getConfigManager } from '../config/configManager';
 import { CARTOGRAPHER_SYSTEM_INSTRUCTION } from '../constants';
 import { sanitizeError } from '../utils/errorSanitizer';
 
@@ -57,17 +58,25 @@ const LiveSession: React.FC<LiveSessionProps> = ({ onClose }) => {
         const startSession = async () => {
             try {
                 const llmService = getLLMService();
-                
+                const configManager = getConfigManager();
+
+                // Get user's selected voice for ElevenLabs
+                let selectedVoice: string | undefined;
+                const elevenlabsConfig = configManager.getEnabledProviders().find(p => p.providerId === 'elevenlabs');
+                if (elevenlabsConfig?.selectedVoiceId) {
+                    selectedVoice = elevenlabsConfig.selectedVoiceId;
+                }
+
                 // Setup Audio Contexts
                 inputContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
                 outputContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-                
+
                 stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                
+
                 // Connect to realtime API through the service layer
                 const connection = await llmService.connectRealtime({
                     systemPrompt: CARTOGRAPHER_SYSTEM_INSTRUCTION,
-                    voice: 'Zephyr',
+                    voice: selectedVoice || 'Kore', // Use user's selected voice or default
                     onOpen: () => {
                         if (!mounted) return;
                         setStatus('connected');

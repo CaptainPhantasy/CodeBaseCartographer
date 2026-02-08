@@ -1,7 +1,7 @@
 /**
  * ElevenLabs Adapter
- * Premium TTS provider with natural voices
- * Supports: TTS only
+ * Premium TTS, STT, and STS provider with natural voices
+ * Supports: TTS, STT, Realtime Audio (STS)
  */
 
 import { TaskType } from '../../types/capabilities';
@@ -12,6 +12,10 @@ import {
   StructuredOutputOptions,
   TTSOptions,
   TTSResult,
+  STTOptions,
+  STTResult,
+  STSConfig,
+  RealtimeConnection,
   UnsupportedCapabilityError,
   AdapterError,
   parseAPIError,
@@ -69,7 +73,7 @@ export class ElevenLabsAdapter extends BaseLLMAdapter {
   }
 
   supportsCapability(capability: string): boolean {
-    return capability === 'tts';
+    return ['tts', 'stt', 'realtime_audio'].includes(capability);
   }
 
   getModelForTask(taskType: TaskType): string | null {
@@ -142,6 +146,150 @@ export class ElevenLabsAdapter extends BaseLLMAdapter {
       audioData: arrayBufferToBase64(audioBuffer),
       format: 'mp3'
     };
+  }
+
+  /**
+   * Transcribe audio to text using ElevenLabs Scribe V2
+   */
+  async transcribeAudio(
+    audioData: ArrayBuffer | string,
+    options: STTOptions = {}
+  ): Promise<STTResult> {
+    try {
+      // Convert base64 to ArrayBuffer if needed
+      let audioBuffer: ArrayBuffer;
+      if (typeof audioData === 'string') {
+        audioBuffer = this.base64ToArrayBuffer(audioData);
+      } else {
+        audioBuffer = audioData;
+      }
+
+      const formData = new FormData();
+      const blob = new Blob([audioBuffer]);
+      formData.append('file', blob, 'audio.wav');
+      formData.append('model_id', options.model || 'scribe_v2');
+
+      if (options.language) {
+        formData.append('language', options.language);
+      }
+
+      if (options.detect_language) {
+        formData.append('detect_language', 'true');
+      }
+
+      const response = await fetch(`${API_BASE}/speech-to-text/v2`, {
+        method: 'POST',
+        headers: {
+          'xi-api-key': this.apiKey
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw parseAPIError(this.providerId, response.status, body);
+      }
+
+      const result = await response.json();
+
+      return {
+        text: result.text,
+        language: result.language,
+        confidence: result.confidence,
+        word_count: result.word_count
+      };
+    } catch (error) {
+      throw new AdapterError(
+        `STT failed: ${error instanceof Error ? error.message : String(error)}`,
+        'STT_ERROR',
+        this.providerId,
+        false
+      );
+    }
+  }
+
+  /**
+   * Connect to ElevenLabs STS WebSocket for real-time voice conversation
+   */
+  async connectSTS(config: STSConfig): Promise<RealtimeConnection> {
+    const voiceId = config.voice || '21m00Tcm4TlvDq8ikWAM'; // Default Rachel
+
+    return new Promise((resolve, reject) => {
+      const ws = new WebSocket(`wss://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream-input`);
+
+      let isConnected = false;
+
+      ws.onopen = () => {
+        isConnected = true;
+        if (config.onOpen) config.onOpen();
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+
+          if (message.type === 'audio' && config.onAudio) {
+            // Audio data is base64 encoded
+            config.onAudio(message.audio);
+          } else if (message.type === 'text' && config.onMessage) {
+            config.onMessage(message);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+      ws.onerror = (error) => {
+        const err = new Error(`WebSocket error: ${error}`);
+        if (config.onError) {
+          config.onError(err);
+        } else {
+          reject(err);
+        }
+      };
+
+      ws.onclose = () => {
+        isConnected = false;
+        if (config.onClose) config.onClose();
+      };
+
+      // Wait briefly for connection to establish
+      setTimeout(() => {
+        if (!isConnected) {
+          reject(new Error('Failed to connect to ElevenLabs STS WebSocket'));
+        } else {
+          resolve({
+            send: (data: any) => {
+              ws.send(JSON.stringify({
+                text: data.text,
+                voice_settings: {
+                  stability: config.stability || 0.5,
+                  similarity_boost: config.similarity_boost || 0.75
+                }
+              }));
+            },
+            sendAudio: (audioData: ArrayBuffer) => {
+              const base64 = arrayBufferToBase64(audioData);
+              ws.send(JSON.stringify({
+                audio: base64
+              }));
+            },
+            close: () => ws.close(),
+            isConnected: isConnected
+          });
+        }
+      }, 3000);
+    });
+  }
+
+  private base64ToArrayBuffer(base64: string): ArrayBuffer {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
   }
 }
 
