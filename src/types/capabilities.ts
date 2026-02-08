@@ -26,12 +26,13 @@ export type Capability =
  */
 export enum TaskType {
   TEXT_GENERATION = 'TEXT_GENERATION',
-  GRAPH_GENERATION = 'GRAPH_GENERATION', 
+  GRAPH_GENERATION = 'GRAPH_GENERATION',
   TTS = 'TTS',
   VIDEO = 'VIDEO',
   REALTIME_VOICE = 'REALTIME_VOICE',
   IMAGE_ANALYSIS = 'IMAGE_ANALYSIS',
-  CODE_ANALYSIS = 'CODE_ANALYSIS'
+  CODE_ANALYSIS = 'CODE_ANALYSIS',
+  TASK_GENERATION = 'TASK_GENERATION'
 }
 
 /**
@@ -44,7 +45,8 @@ export const TASK_REQUIRED_CAPABILITIES: Record<TaskType, Capability[]> = {
   [TaskType.VIDEO]: ['video'],
   [TaskType.REALTIME_VOICE]: ['realtime_audio'],
   [TaskType.IMAGE_ANALYSIS]: ['vision', 'text'],
-  [TaskType.CODE_ANALYSIS]: ['code', 'text']
+  [TaskType.CODE_ANALYSIS]: ['code', 'text'],
+  [TaskType.TASK_GENERATION]: ['code', 'text', 'structured_output']
 };
 
 // ============================================================================

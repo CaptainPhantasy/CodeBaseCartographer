@@ -1,7 +1,9 @@
 export enum AppMode {
   CHAT = 'CHAT',
   MAP = 'MAP',
-  ASSETS = 'ASSETS'
+  ASSETS = 'ASSETS',
+  TASKS = 'TASKS',
+  FLOW_CHART = 'FLOW_CHART'
 }
 
 export interface Message {

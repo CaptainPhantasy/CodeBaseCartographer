@@ -10,14 +10,13 @@ import LiveSession from './components/LiveSession';
 import RepoIngest from './components/RepoIngest';
 import DiagramView from './components/DiagramView';
 import ViewToggle from './components/ViewToggle';
-import TasksView from './components/TasksView';
 import { INITIAL_GRAPH_DATA, CARTOGRAPHER_SYSTEM_INSTRUCTION } from './constants';
 import { SetupWizard } from './components/SetupWizard';
 import { SettingsPage } from './components/SettingsPage';
 import { NoApiKeyWarning } from './components/NoApiKeyWarning';
-import WatchModeToggle from './components/WatchModeToggle';
-import FileChangeNotification from './components/FileChangeNotification';
-import DiffModal from './components/DiffModal';
+import { WatchModeToggle } from './components/WatchModeToggle';
+import { FileChangeNotification } from './components/FileChangeNotification';
+import { DiffModal } from './components/DiffModal';
 import { useConfig } from './hooks/useConfig';
 import DOMPurify from 'dompurify';
 import { sanitizeError } from './utils/errorSanitizer';
@@ -278,13 +277,6 @@ Please perform Phase 1: Initial Repo Reconnaissance.
             className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.FLOW_CHART ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'hover:bg-slate-800'}`}
           >
             <span>📊</span> Flow Chart
-
-          <button
-            onClick={() => setMode(AppMode.TASKS)}
-            className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.TASKS ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'hover:bg-slate-800'}`}
-          >
-            <span>✅</span> Tasks
-          </button>
           </button>
 
           {/* Video/Asset Studio - conditionally show based on availability */}
@@ -409,7 +401,6 @@ Please perform Phase 1: Initial Repo Reconnaissance.
               {mode === AppMode.MAP && "Data Flow Visualization"}
               {mode === AppMode.ASSETS && "Generative Assets"}
               {mode === AppMode.FLOW_CHART && "Flow Chart Editor"}
-              {mode === AppMode.TASKS && "Task Management"}
             </h2>
             {/* View Toggle for Flow Chart */}
             {(mode === AppMode.CHAT || mode === AppMode.FLOW_CHART) && (
@@ -524,11 +515,6 @@ Please perform Phase 1: Initial Repo Reconnaissance.
           {/* Flow Chart View */}
           <div className={`absolute inset-0 ${mode === AppMode.FLOW_CHART ? 'z-10' : '-z-10 opacity-0 pointer-events-none'}`}>
             <DiagramView />
-          </div>
-
-          {/* Tasks View */}
-          <div className={`absolute inset-0 ${mode === AppMode.TASKS ? 'z-10' : '-z-10 opacity-0 pointer-events-none'}`}>
-            <TasksView />
           </div>
 
         </main>

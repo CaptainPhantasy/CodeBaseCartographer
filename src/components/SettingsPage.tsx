@@ -43,7 +43,8 @@ const TASK_INFO: Record<TaskType, { name: string; icon: string }> = {
   [TaskType.VIDEO]: { name: 'Video Generation', icon: '🎬' },
   [TaskType.REALTIME_VOICE]: { name: 'Live Voice', icon: '🎙️' },
   [TaskType.IMAGE_ANALYSIS]: { name: 'Image Analysis', icon: '🖼️' },
-  [TaskType.CODE_ANALYSIS]: { name: 'Code Analysis', icon: '💻' }
+  [TaskType.CODE_ANALYSIS]: { name: 'Code Analysis', icon: '💻' },
+  [TaskType.TASK_GENERATION]: { name: 'Task Generation', icon: '✅' }
 };
 
 // ============================================================================

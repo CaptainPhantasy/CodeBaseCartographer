@@ -15,10 +15,12 @@
   },
   "dependencies": {
     "@google/genai": "^1.40.0",
+    "@types/diff": "^7.0.2",
     "@types/dompurify": "^3.0.5",
     "@xyflow/react": "^12.10.0",
     "d3": "^7.9.0",
     "dagre": "^0.8.5",
+    "diff": "^8.0.3",
     "dompurify": "^3.3.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

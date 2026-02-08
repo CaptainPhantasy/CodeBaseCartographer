@@ -69,7 +69,8 @@ const TASK_INFO: Record<TaskType, { name: string; icon: string; description: str
   [TaskType.VIDEO]: { name: 'Video Generation', icon: '🎬', description: 'Generate videos from prompts' },
   [TaskType.REALTIME_VOICE]: { name: 'Live Voice', icon: '🎙️', description: 'Real-time voice conversations' },
   [TaskType.IMAGE_ANALYSIS]: { name: 'Image Analysis', icon: '🖼️', description: 'Analyze and understand images' },
-  [TaskType.CODE_ANALYSIS]: { name: 'Code Analysis', icon: '💻', description: 'Analyze and understand code' }
+  [TaskType.CODE_ANALYSIS]: { name: 'Code Analysis', icon: '💻', description: 'Analyze and understand code' },
+  [TaskType.TASK_GENERATION]: { name: 'Task Generation', icon: '✅', description: 'AI-powered task suggestions' }
 };
 
 // ============================================================================
