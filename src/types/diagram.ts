@@ -14,6 +14,10 @@ export interface DiagramNodeData extends Record<string, unknown> {
   color?: string;
   editable?: boolean;
   onLabelChange?: (id: string, label: string) => void;
+  // Pneumatic tube visualization properties
+  filePath?: string;      // Path to source file for click-to-open
+  functionName?: string;  // Entry point function name
+  line?: number;          // Line number if specific
 }
 
 /**

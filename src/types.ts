@@ -22,6 +22,10 @@ export interface Node {
   x?: number;
   y?: number;
   description?: string;
+  // Pneumatic tube visualization properties
+  filePath?: string;      // Path to source file for click-to-open
+  functionName?: string;  // Entry point function name
+  line?: number;          // Line number if specific
 }
 
 export interface Link {
@@ -29,6 +33,7 @@ export interface Link {
   target: string;
   value: number;
   label?: string;
+  highlight?: boolean;  // Marks this edge as part of the main flow path (will be red)
 }
 
 export interface GraphData {

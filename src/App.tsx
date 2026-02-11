@@ -4,6 +4,7 @@ import { getLLMService, TaskType } from './services/llmService';
 import { useFeatureAvailability } from './hooks/useFeatureAvailability';
 import { useFileChanges } from './hooks/useFileChanges';
 import { useGraphUpdates } from './hooks/useGraphUpdates';
+import { useTTSQueue } from './services/ttsQueueService';
 import FlowMap from './components/FlowMap';
 import AssetGenerator from './components/AssetGenerator';
 import LiveSession from './components/LiveSession';
@@ -74,6 +75,9 @@ const App: React.FC = () => {
   const [autoMap, setAutoMap] = useState(true);
   const [autoTTS, setAutoTTS] = useState(false);
 
+  // TTS Queue for playback controls
+  const ttsQueue = useTTSQueue();
+
   // Microphone recording
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -113,7 +117,14 @@ const App: React.FC = () => {
             }
           }
         } catch (err) {
-          console.warn('Auto graph update failed:', err);
+          // Non-critical error - auto graph update is optional
+          const sanitizedError = err instanceof Error ? err.message : String(err);
+          setMessages(prev => [...prev.slice(-9), {
+            id: Date.now().toString(),
+            role: 'model',
+            text: `⚠️ Auto graph update failed (non-critical): ${sanitizedError}`,
+            timestamp: new Date()
+          }]);
         }
       }
     }
@@ -184,9 +195,12 @@ const App: React.FC = () => {
 
       // Auto-TTS: Speak responses automatically if enabled
       if (autoTTS && isTTSAvailable) {
-        // Speak without blocking
+        // Speak without blocking - fail silently
         handleSpeak(botMsg.text).catch(err => {
-          console.warn('Auto-TTS failed:', err);
+          // Non-critical: TTS failure shouldn't interrupt chat
+          const sanitizedError = err instanceof Error ? err.message : String(err);
+          // Only log to console for debugging, don't spam user
+          console.debug(`Auto-TTS skipped: ${sanitizedError}`);
         });
       }
 
@@ -204,7 +218,9 @@ const App: React.FC = () => {
               }
             }
           } catch (graphErr) {
-            console.warn("Graph generation failed (non-critical):", graphErr);
+            // Non-critical: auto graph generation is optional
+            const sanitizedError = graphErr instanceof Error ? graphErr.message : String(graphErr);
+            console.debug(`Auto graph generation skipped: ${sanitizedError}`);
           }
         }
       }
@@ -265,25 +281,16 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
       return;
     }
 
-    try {
-      const llmService = getLLMService();
-      const configManager = getConfigManager();
-
-      // Get user's selected voice for ElevenLabs
-      let voiceOption: string | undefined;
-      const elevenlabsConfig = configManager.getEnabledProviders().find(p => p.providerId === 'elevenlabs');
-      if (elevenlabsConfig?.selectedVoiceId) {
-        voiceOption = elevenlabsConfig.selectedVoiceId;
-      }
-
-      const result = await llmService.generateSpeech(text, voiceOption ? { voice: voiceOption } : undefined);
-      if (result.audioData) {
-        const audio = new Audio("data:audio/mp3;base64," + result.audioData);
-        audio.play();
-      }
-    } catch (e) {
-      console.error("TTS Failed", e);
+    // Get user's selected voice for ElevenLabs
+    let voiceOption: string | undefined;
+    const configManager = getConfigManager();
+    const elevenlabsConfig = configManager.getEnabledProviders().find(p => p.providerId === 'elevenlabs');
+    if (elevenlabsConfig?.selectedVoiceId) {
+      voiceOption = elevenlabsConfig.selectedVoiceId;
     }
+
+    // Add to queue - will play sequentially
+    ttsQueue.enqueue(text, voiceOption);
   };
 
   const handleToggleRecording = async () => {
@@ -499,6 +506,53 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
             </FeatureTooltip>
           )}
 
+          {/* TTS Playback Controls - show when TTS is available and queue is active */}
+          {isTTSAvailable && (ttsQueue.isPlaying || ttsQueue.isPaused || ttsQueue.queueLength > 0) && (
+            <div className="bg-slate-800/50 rounded-lg p-2 border border-slate-700">
+              <div className="text-xs text-slate-400 mb-2 flex items-center justify-between">
+                <span>
+                  {ttsQueue.isLoading && 'Loading...'}
+                  {ttsQueue.isPlaying && '🔊 Speaking...'}
+                  {ttsQueue.isPaused && '⏸️ Paused'}
+                  {!ttsQueue.isPlaying && !ttsQueue.isPaused && !ttsQueue.isLoading && ttsQueue.queueLength > 0 && `Queued: ${ttsQueue.queueLength}`}
+                </span>
+              </div>
+              <div className="flex gap-1">
+                <button
+                  onClick={ttsQueue.togglePause}
+                  disabled={!ttsQueue.isPlaying && !ttsQueue.isPaused}
+                  className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors ${
+                    ttsQueue.isPlaying || ttsQueue.isPaused
+                      ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                      : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                  }`}
+                  title={ttsQueue.isPlaying ? 'Pause' : 'Resume'}
+                >
+                  {ttsQueue.isPlaying ? '⏸' : '▶️'}
+                </button>
+                <button
+                  onClick={ttsQueue.skip}
+                  disabled={!ttsQueue.isPlaying && !ttsQueue.isPaused && ttsQueue.queueLength === 0}
+                  className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors ${
+                    ttsQueue.isPlaying || ttsQueue.isPaused || ttsQueue.queueLength > 0
+                      ? 'bg-slate-600 hover:bg-slate-500 text-white'
+                      : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                  }`}
+                  title="Skip to next"
+                >
+                  ⏭
+                </button>
+                <button
+                  onClick={ttsQueue.stop}
+                  className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors bg-red-600/50 hover:bg-red-600/70 text-white`}
+                  title="Stop all"
+                >
+                  ⏹
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Real-time Voice Button - with availability check */}
           {isRealtimeAvailable ? (
             <button 
@@ -686,7 +740,7 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
 
           {/* Flow Chart View */}
           <div className={`absolute inset-0 ${mode === AppMode.FLOW_CHART ? 'z-10' : '-z-10 opacity-0 pointer-events-none'}`}>
-            <DiagramView graphData={graphData} />
+            <DiagramView graphData={graphData} onGraphDataChange={setGraphData} />
           </div>
 
           {/* Tasks View */}

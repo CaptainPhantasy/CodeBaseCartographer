@@ -1,6 +1,6 @@
 /**
  * useTasks hook - Task CRUD operations
- * Communicates with backend API at localhost:3000
+ * Communicates with backend API at localhost:4000
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -12,8 +12,8 @@ import type {
   TaskStats,
 } from '../types/task';
 
-// Use backend server port (3000 by default)
-const API_BASE = 'http://localhost:3000/api';
+// Use backend server port (4000 by default)
+const API_BASE = 'http://localhost:4000/api';
 
 export interface UseTasksResult {
   tasks: Task[];

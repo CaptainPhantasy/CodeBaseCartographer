@@ -13,7 +13,7 @@ import type { RollbackRequest, RollbackResult, FileChange } from '../types/subag
 /**
  * API base URL
  */
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = 'http://localhost:4000/api';
 
 /**
  * Rollback service for undoing changes

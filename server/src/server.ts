@@ -12,12 +12,28 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { resolve } from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 import { FileWatcher } from './fileWatcher.js';
 import { FileOperator } from './fileOperator.js';
 import { ChangeJournal } from './changeJournal.js';
 import { TaskStore } from './taskStore.js';
 import { WebSocketServerManager } from './webSocketServer.js';
 import type { CreateTaskInput, UpdateTaskInput } from './types.js';
+import {
+  requestIdMiddleware,
+  errorHandler,
+  notFoundHandler,
+  asyncHandler,
+  FileNotFoundError,
+  FileOperationError,
+  ValidationError,
+  sendSuccess,
+  sendError,
+  logError
+} from './errorHandler.js';
 
 export class Server {
   private app: express.Application;
@@ -63,6 +79,9 @@ export class Server {
    * Setup Express middleware
    */
   private setupMiddleware(): void {
+    // Add request ID middleware first
+    this.app.use(requestIdMiddleware);
+
     this.app.use(cors());
     this.app.use(express.json());
     this.app.use((req, res, next) => {
@@ -105,110 +124,98 @@ export class Server {
 
     // ElevenLabs proxy routes (for voice preview)
     this.app.get('/api/elevenlabs/preview', this.proxyElevenLabsPreview.bind(this));
+
+    // File open routes (for click-to-open-file in flow chart)
+    this.app.get('/api/open-file', this.openFile.bind(this));
   }
 
   /**
-   * Setup error handling middleware
+   * Setup error handling middleware (must be last)
    */
   private setupErrorHandling(): void {
-    this.app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-      console.error('Error:', err);
-      const errorResponse = FileOperator.handleError(err);
-      res.status(500).json(errorResponse);
-    });
+    // 404 handler
+    this.app.use(notFoundHandler);
+    // Global error handler
+    this.app.use(errorHandler);
   }
 
   /**
    * GET /api/files - List watched files
    */
-  private listFiles(req: Request, res: Response): void {
-    try {
-      const paths = this.fileWatcher.getWatchedPaths();
-      res.json({
-        files: paths,
-        count: paths.length,
-      });
-    } catch (error) {
-      res.status(500).json(FileOperator.handleError(error));
-    }
-  }
+  private listFiles = asyncHandler(async (req: Request, res: Response) => {
+    const paths = this.fileWatcher.getWatchedPaths();
+    sendSuccess(res, {
+      files: paths,
+      count: paths.length,
+    });
+  });
 
   /**
    * GET /api/files/:path - Read file content
    */
-  private readFile(req: Request, res: Response): void {
+  private readFile = asyncHandler(async (req: Request, res: Response) => {
+    const path = req.params[0];
     try {
-      const path = req.params[0];
       const file = this.fileOperator.readFile(path);
-      res.json(file);
+      sendSuccess(res, file);
     } catch (error) {
-      res.status(500).json(FileOperator.handleError(error));
+      throw new FileNotFoundError(path);
     }
-  }
+  });
 
   /**
    * POST /api/files/:path - Write file content
    */
-  private writeFile(req: Request, res: Response): void {
-    try {
-      const path = req.params[0];
-      const { content } = req.body;
+  private writeFile = asyncHandler(async (req: Request, res: Response) => {
+    const path = req.params[0];
+    const { content } = req.body;
 
-      if (typeof content !== 'string') {
-        res.status(400).json({ error: 'Content must be a string' });
-        return;
-      }
-
-      // Record old content for change journal
-      let oldContent: string | null = null;
-      try {
-        const existingFile = this.fileOperator.readFile(path);
-        oldContent = existingFile.content;
-      } catch {
-        // File doesn't exist, that's okay
-      }
-
-      // Write file
-      const writtenPath = this.fileOperator.writeFile(path, content);
-
-      // Record in change journal
-      this.changeJournal.record({
-        path: writtenPath,
-        oldContent,
-        newContent: content,
-        timestamp: Date.now(),
-      });
-
-      res.json({
-        path: writtenPath,
-        message: 'File written successfully',
-      });
-    } catch (error) {
-      res.status(500).json(FileOperator.handleError(error));
+    if (typeof content !== 'string') {
+      throw new ValidationError('Content must be a string', { contentType: typeof content });
     }
-  }
+
+    // Record old content for change journal
+    let oldContent: string | null = null;
+    try {
+      const existingFile = this.fileOperator.readFile(path);
+      oldContent = existingFile.content;
+    } catch {
+      // File doesn't exist, that's okay
+    }
+
+    // Write file
+    const writtenPath = this.fileOperator.writeFile(path, content);
+
+    // Record in change journal
+    this.changeJournal.record({
+      path: writtenPath,
+      oldContent,
+      newContent: content,
+      timestamp: Date.now(),
+    });
+
+    sendSuccess(res, {
+      path: writtenPath,
+      message: 'File written successfully',
+    });
+  });
 
   /**
    * DELETE /api/files/:path - Delete a file
    */
-  private deleteFile(req: Request, res: Response): void {
-    try {
-      const path = req.params[0];
-      const deleted = this.fileOperator.deleteFile(path);
+  private deleteFile = asyncHandler(async (req: Request, res: Response) => {
+    const path = req.params[0];
+    const deleted = this.fileOperator.deleteFile(path);
 
-      if (!deleted) {
-        res.status(404).json({ error: 'File not found' });
-        return;
-      }
-
-      res.json({
-        path,
-        message: 'File deleted successfully',
-      });
-    } catch (error) {
-      res.status(500).json(FileOperator.handleError(error));
+    if (!deleted) {
+      throw new FileNotFoundError(path);
     }
-  }
+
+    sendSuccess(res, {
+      path,
+      message: 'File deleted successfully',
+    });
+  });
 
   /**
    * GET /api/tasks - List tasks
@@ -388,8 +395,10 @@ export class Server {
       if (rollback.content !== null) {
         this.fileOperator.writeFile(rollback.path, rollback.content, false);
       } else {
-        // File didn't exist before, delete it
-        this.fileOperator.deleteFile(rollback.path);
+        // File didn't exist before, delete it if it exists
+        const deleted = this.fileOperator.deleteFile(rollback.path);
+        // If file doesn't exist, that's fine - it was a new file creation
+        // No error needed as this is the expected state
       }
 
       res.json({
@@ -439,6 +448,54 @@ export class Server {
   }
 
   /**
+   * GET /api/open-file - Open a file in the native editor
+   */
+  private async openFile(req: Request, res: Response): Promise<void> {
+    try {
+      const { path } = req.query;
+
+      if (!path || typeof path !== 'string') {
+        res.status(400).json({ error: 'Path parameter required' });
+        return;
+      }
+
+      // Determine the OS-specific open command
+      const platform = process.platform;
+      let command: string;
+
+      switch (platform) {
+        case 'darwin':
+          command = `open "${path}"`;
+          break;
+        case 'win32':
+          command = `start "" "${path}"`;
+          break;
+        case 'linux':
+          command = `xdg-open "${path}"`;
+          break;
+        default:
+          res.status(500).json({ error: `Unsupported platform: ${platform}` });
+          return;
+      }
+
+      // Execute the open command
+      await execAsync(command);
+
+      res.json({
+        success: true,
+        path,
+        message: `File opened successfully`,
+      });
+    } catch (error) {
+      console.error('Open file error:', error);
+      res.status(500).json({
+        error: 'Failed to open file',
+        details: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  /**
    * Start the server
    */
   public async start(): Promise<void> {
@@ -457,11 +514,22 @@ export class Server {
       // Start WebSocket server
       this.wsManager.start(this.httpServer);
 
-      // Start HTTP server
-      this.httpServer.listen(this.port, () => {
-        console.log(`HTTP server listening on port ${this.port}`);
-        console.log(`WebSocket server listening on port ${this.wsPort}`);
-        console.log(`Watching directory: ${this.watchPath}`);
+      // Start HTTP server - wait for server to be listening
+      await new Promise<void>((resolve, reject) => {
+        const handleError = (error: Error) => {
+          this.httpServer.off('error', handleError);
+          reject(error);
+        };
+
+        this.httpServer.once('error', handleError);
+
+        this.httpServer.listen(this.port, () => {
+          this.httpServer.off('error', handleError);
+          console.log(`HTTP server listening on port ${this.port}`);
+          console.log(`WebSocket server listening on port ${this.wsPort}`);
+          console.log(`Watching directory: ${this.watchPath}`);
+          resolve();
+        });
       });
     } catch (error) {
       console.error('Failed to start server:', error);

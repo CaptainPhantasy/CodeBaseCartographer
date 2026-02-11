@@ -114,8 +114,8 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
     setPreviewError(null);
 
     try {
-      // Use proxy to avoid CORS issues - use backend server on port 3000
-      const backendUrl = 'http://localhost:3000';
+      // Use proxy to avoid CORS issues - use backend server on port 4000
+      const backendUrl = 'http://localhost:4000';
       const proxyUrl = `${backendUrl}/api/elevenlabs/preview?url=${encodeURIComponent(voice.preview_url)}`;
 
       setPreviewingVoice(voice.voice_id);
