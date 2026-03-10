@@ -308,7 +308,7 @@
 
 ## SESSION METADATA
 
-**Session Duration:** 45m 0s
+**Session Duration:** 8h 0m
 **Compaction Count:** [Number of times context was compacted]
 **Primary Focus:** [Main area of work this session]
 **Secondary Items:** [Other things addressed]

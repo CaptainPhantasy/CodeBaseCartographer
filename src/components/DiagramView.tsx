@@ -2,7 +2,7 @@
  * React Flow-based diagram canvas component
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ReactFlow,
   Background,
@@ -29,13 +29,19 @@ import { getLLMService, TaskType } from '../services/llmService';
 
 /**
  * Algorithm: Detect main flow path from inputs to outputs
- * Finds shortest path(s) from entry nodes to exit nodes and marks those edges as highlighted
+ * Returns an ORDERED array of edges representing the primary flow path
  */
-function detectMainFlowPath(graphData: GraphData): Set<string> {
+interface FlowPathEdge {
+  edgeId: string;
+  sourceId: string;
+  targetId: string;
+}
+
+function detectMainFlowPath(graphData: GraphData): FlowPathEdge[] {
   const { nodes, links } = graphData;
 
   if (!nodes.length || !links.length) {
-    return new Set();
+    return [];
   }
 
   // Find all node IDs
@@ -72,33 +78,29 @@ function detectMainFlowPath(graphData: GraphData): Set<string> {
     (outgoingEdges.get(n.id)?.length || 0) === 0 || n.type === 'exit'
   );
 
-  // If no clear outputs, use the last nodes in the graph (by position or just those with most incoming)
+  // If no clear outputs, use the last nodes in the graph
   const actualOutputs = outputNodes.length > 0 ? outputNodes :
     nodes.filter(n => (incomingCount.get(n.id) || 0) >= 2).slice(-3);
 
-  // BFS from each input to find paths to outputs
-  const highlightedEdges = new Set<string>();
+  const outputIds = new Set(actualOutputs.map(n => n.id));
 
+  // BFS from first input to find the main path to an output
+  // Store the actual path as we go
   for (const inputNode of inputNodes) {
-    const queue: Array<{ nodeId: string; path: string[] }> = [
+    const queue: Array<{ nodeId: string; path: FlowPathEdge[] }> = [
       { nodeId: inputNode.id, path: [] }
     ];
     const visited = new Set<string>();
-    let foundPath = false;
 
-    // Find first path to any output
-    while (queue.length > 0 && !foundPath) {
+    while (queue.length > 0) {
       const { nodeId, path } = queue.shift()!;
 
       if (visited.has(nodeId)) continue;
       visited.add(nodeId);
 
       // Check if we reached an output
-      if (actualOutputs.some(o => o.id === nodeId) && path.length > 0) {
-        // Mark all edges in this path as highlighted
-        path.forEach(edgeId => highlightedEdges.add(edgeId));
-        foundPath = true;
-        break;
+      if (outputIds.has(nodeId) && path.length > 0) {
+        return path;  // Return the ordered path
       }
 
       // Explore outgoing edges
@@ -108,13 +110,13 @@ function detectMainFlowPath(graphData: GraphData): Set<string> {
         const edgeId = `edge-${sourceId}-${target}`;
         queue.push({
           nodeId: target,
-          path: [...path, edgeId]
+          path: [...path, { edgeId, sourceId, targetId: target }]
         });
       }
     }
   }
 
-  return highlightedEdges;
+  return [];  // No path found
 }
 
 interface LoadedFile {
@@ -200,13 +202,10 @@ function getNodeColorHexFromType(type: string): string {
 }
 
 // Helper to convert GraphData links to ReactFlow edges
-function graphDataToEdges(graphData: GraphData): Edge[] {
+function graphDataToEdges(graphData: GraphData, flowPathEdgeIds?: Set<string>): Edge[] {
   if (!graphData.links || graphData.links.length === 0) {
     return [];
   }
-
-  // Detect main flow path - edges that should be highlighted red
-  const highlightedEdgeIds = detectMainFlowPath(graphData);
 
   // Build node lookup by both ID and by reference (for D3-mutated data)
   const nodeIds = new Set(graphData.nodes.map(n => n.id));
@@ -231,7 +230,7 @@ function graphDataToEdges(graphData: GraphData): Edge[] {
     const edgeId = `edge-${sourceId}-${targetId}`;
 
     // Check if this edge should be highlighted (main flow path)
-    const isHighlighted = highlightedEdgeIds.has(edgeId) || link.highlight;
+    const isHighlighted = flowPathEdgeIds?.has(edgeId) || link.highlight;
 
     return {
       id: edgeId,
@@ -240,7 +239,7 @@ function graphDataToEdges(graphData: GraphData): Edge[] {
       animated: false,  // Disabled - using particles instead
       label: link.label || undefined,
       style: {
-        stroke: 'rgba(255, 255, 255, 0.15)',  // Translucent pipe - 15% opacity white
+        stroke: isHighlighted ? 'rgba(6, 182, 212, 0.4)' : 'rgba(255, 255, 255, 0.15)',  // Highlighted edges more visible
         strokeWidth: 8,                        // Thick, like a tube
         strokeLinecap: 'round' as const,
         strokeLinejoin: 'round' as const,
@@ -283,6 +282,7 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
   const [particlesEnabled, setParticlesEnabled] = useState(true);
   const [activeLayerId, setActiveLayerId] = useState<string>();
   const [currentParticleType, setCurrentParticleType] = useState<'request' | 'response' | null>(null);
+  const lastLayerUpdateRef = useRef<number>(0);  // For debouncing layer updates
 
   // Generate dialog state
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
@@ -292,8 +292,20 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
 
   // Use graphData if provided and has actual nodes, otherwise use store
   const hasGraphData = graphData?.nodes && graphData.nodes.length > 0;
+
+  // Compute ordered flow path for particle animation
+  const flowPathEdges = useMemo(() => {
+    if (!hasGraphData || !graphData) return [];
+    return detectMainFlowPath(graphData);
+  }, [graphData, hasGraphData]);
+
+  // Compute Set of edge IDs for highlighting
+  const flowPathEdgeIds = useMemo(() => {
+    return new Set(flowPathEdges.map(e => e.edgeId));
+  }, [flowPathEdges]);
+
   const sourceNodes = hasGraphData ? graphDataToNodes(graphData) : storeNodes as Node[];
-  const sourceEdges = hasGraphData ? graphDataToEdges(graphData) : storeEdges;
+  const sourceEdges = hasGraphData ? graphDataToEdges(graphData, flowPathEdgeIds) : storeEdges;
 
   const [nodes, setNodes, onNodesChange] = useNodesState(sourceNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(sourceEdges);
@@ -302,14 +314,25 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
   useEffect(() => {
     if (hasGraphData) {
       const newNodes = graphDataToNodes(graphData);
-      const newEdges = graphDataToEdges(graphData);
+      const newEdges = graphDataToEdges(graphData, flowPathEdgeIds);
       setNodes(newNodes);
       setEdges(newEdges);
       // Also update store for persistence
       setStoreNodes(newNodes as unknown as any);
       setStoreEdges(newEdges as any);
     }
-  }, [graphData, hasGraphData, setNodes, setEdges, setStoreNodes, setStoreEdges]);
+  }, [graphData, hasGraphData, flowPathEdgeIds, setNodes, setEdges, setStoreNodes, setStoreEdges]);
+
+  // Handle particle entering a node - with debouncing to prevent flicker
+  const handleNodeEnter = useCallback((nodeId: string, particleType: 'request' | 'response') => {
+    const now = Date.now();
+    // Debounce: only update if 100ms has passed since last update
+    if (now - lastLayerUpdateRef.current < 100) return;
+    lastLayerUpdateRef.current = now;
+
+    setActiveLayerId(nodeId);
+    setCurrentParticleType(particleType);
+  }, []);
 
   // Sync store state with local state (for manual editing)
   useEffect(() => {
@@ -573,14 +596,20 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
       </div>
 
       {/* Particle System */}
-      {hasGraphData && particlesEnabled && (
+      {hasGraphData && particlesEnabled && flowPathEdges.length > 0 && (
         <FlowParticles
           edges={edges}
+          nodes={nodes}
+          flowPathEdges={flowPathEdges}
           isActive={particlesEnabled}
           onRequestStart={() => setCurrentParticleType('request')}
           onProcessing={() => setCurrentParticleType(null)}
           onResponse={() => setCurrentParticleType('response')}
-          onIdle={() => setCurrentParticleType(null)}
+          onIdle={() => {
+            setCurrentParticleType(null);
+            setActiveLayerId(undefined);  // Clear inspector when idle
+          }}
+          onNodeEnter={handleNodeEnter}
         />
       )}
 
