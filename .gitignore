@@ -35,6 +35,8 @@ coverage/
 .claude/data/logs/
 server/:memory:
 ws-server-state.json
+*.bak
+test-integration-temp-*/
 
 # Misc
 .abacus.donotdelete
