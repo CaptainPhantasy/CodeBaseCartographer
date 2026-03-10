@@ -104,12 +104,13 @@ export async function obfuscateKey(key: string): Promise<string> {
       const result = await encryptData(key, pin);
       return result.storageString;
     } catch (error) {
-      console.warn('Encryption failed, falling back to obfuscation:', error);
-      // Fall through to legacy obfuscation
+      const errorMsg = `Encryption failed: ${error instanceof Error ? error.message : 'Unknown error'}. Falling back to obfuscation (less secure)`;
+      console.warn(errorMsg);
+      // Fall through to legacy obfuscation but warn about reduced security
     }
   }
 
-  // Fallback to legacy obfuscation
+  // Fallback to legacy obfuscation (less secure)
   return obfuscateKeyLegacy(key);
 }
 
@@ -135,8 +136,10 @@ export async function deobfuscateKey(obfuscatedKey: string): Promise<string> {
     try {
       return await decryptData(obfuscatedKey, pin);
     } catch (error) {
-      console.error('Decryption failed:', error);
-      throw new Error('Failed to decrypt API key. Incorrect PIN?');
+      const errorMsg = `Failed to decrypt API key: ${error instanceof Error ? error.message : 'Unknown error'}. Incorrect PIN?`;
+      console.error(errorMsg);
+      // Propagate with more context
+      throw new Error(errorMsg);
     }
   }
 
@@ -188,9 +191,65 @@ export class ConfigManager {
   private listeners: Set<(config: AppConfig) => void> = new Set();
   private isUnlocked: boolean = false;
   private decryptedKeysCache: Map<ProviderId, string> = new Map();
+  private sessionOnlyKeys: Map<ProviderId, string> = new Map();
+  private autoLockTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly AUTO_LOCK_DELAY_MS = 15 * 60 * 1000; // 15 minutes
+  private lastActivityTime: number = Date.now();
 
   constructor() {
     this.config = this.loadConfig();
+    this.startActivityMonitoring();
+  }
+
+  // --------------------------------------------------------------------------
+  // ACTIVITY MONITORING FOR AUTO-LOCK
+  // --------------------------------------------------------------------------
+
+  /**
+   * Start monitoring user activity for auto-lock
+   */
+  private startActivityMonitoring(): void {
+    if (typeof window === 'undefined') return;
+
+    // Reset activity timer on user interaction
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    const resetTimer = () => this.recordActivity();
+
+    events.forEach(event => {
+      window.addEventListener(event, resetTimer, { passive: true });
+    });
+
+    // Check for inactivity every minute
+    setInterval(() => this.checkInactivity(), 60 * 1000);
+  }
+
+  /**
+   * Record user activity and reset auto-lock timer
+   */
+  private recordActivity(): void {
+    this.lastActivityTime = Date.now();
+
+    // Reset the auto-lock timer
+    if (this.autoLockTimer) {
+      clearTimeout(this.autoLockTimer);
+    }
+
+    // Only set auto-lock if we're unlocked and PIN is set up
+    if (this.isUnlocked && isPinSetUp()) {
+      this.autoLockTimer = setTimeout(() => {
+        this.lock();
+      }, this.AUTO_LOCK_DELAY_MS);
+    }
+  }
+
+  /**
+   * Check if user has been inactive and should be locked
+   */
+  private checkInactivity(): void {
+    const inactiveTime = Date.now() - this.lastActivityTime;
+    if (inactiveTime >= this.AUTO_LOCK_DELAY_MS && this.isUnlocked && isPinSetUp()) {
+      this.lock();
+    }
   }
 
   // --------------------------------------------------------------------------
@@ -209,18 +268,33 @@ export class ConfigManager {
 
     // Decrypt all encrypted keys and cache them
     for (const provider of this.config.providers) {
+      // Skip session-only keys (they're already in memory)
+      if (provider.sessionOnly) {
+        continue;
+      }
+
       if (provider.apiKey && isEncryptedFormat(provider.apiKey)) {
         try {
           const decryptedKey = await decryptData(provider.apiKey, pin);
           this.decryptedKeysCache.set(provider.providerId, decryptedKey);
         } catch (error) {
-          console.error(`Failed to decrypt key for ${provider.providerId}:`, error);
-          throw error;
+          const errorMsg = `Failed to decrypt key for ${provider.providerId}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+          console.error(errorMsg);
+          // Notify user of decryption failure
+          this.listeners.forEach(listener => {
+            try {
+              listener(this.config);
+            } catch (e) {
+              console.error('Error in config listener during notification:', e);
+            }
+          });
+          throw new Error(errorMsg);
         }
       }
     }
 
     this.isUnlocked = true;
+    this.recordActivity(); // Start auto-lock timer
   }
 
   /**
@@ -228,7 +302,12 @@ export class ConfigManager {
    */
   lock(): void {
     this.decryptedKeysCache.clear();
+    this.sessionOnlyKeys.clear();
     this.isUnlocked = false;
+    if (this.autoLockTimer) {
+      clearTimeout(this.autoLockTimer);
+      this.autoLockTimer = null;
+    }
   }
 
   /**
@@ -375,7 +454,6 @@ export class ConfigManager {
   private migrateConfig(oldConfig: AppConfig): AppConfig {
     // For now, just update version and return
     // Add migration logic as needed when schema changes
-    console.log('Migrating config from version', oldConfig.version, 'to', CONFIG_VERSION);
     return {
       ...this.getDefaultConfig(),
       ...oldConfig,
@@ -419,13 +497,29 @@ export class ConfigManager {
       if (!imported.version || !Array.isArray(imported.providers)) {
         throw new Error('Invalid config format');
       }
-      this.config = imported.version !== CONFIG_VERSION 
-        ? this.migrateConfig(imported) 
+      this.config = imported.version !== CONFIG_VERSION
+        ? this.migrateConfig(imported)
         : imported;
       this.saveConfig();
       return true;
     } catch (e) {
-      console.error('Failed to import config:', e);
+      // Provide specific error messages based on error type
+      if (e instanceof SyntaxError) {
+        console.error('Failed to import config: Invalid JSON syntax', {
+          position: (e as SyntaxError).message?.match(/position (\d+)/)?.[1],
+          hint: 'Check for missing commas, quotes, or trailing commas'
+        });
+      } else if (e instanceof Error && e.message === 'Invalid config format') {
+        console.error('Failed to import config: Structure validation failed', {
+          required: ['version', 'providers (array)'],
+          received: typeof jsonString === 'string' ? 'string input' : 'unknown'
+        });
+      } else {
+        console.error('Failed to import config: Unexpected error', {
+          error: e instanceof Error ? e.message : String(e),
+          type: e?.constructor?.name
+        });
+      }
       return false;
     }
   }
@@ -466,12 +560,25 @@ export class ConfigManager {
     const provider = this.getProvider(providerId);
     if (!provider?.apiKey) return undefined;
 
+    // Check for session-only key first
+    if (provider.sessionOnly) {
+      const sessionKey = this.sessionOnlyKeys.get(providerId);
+      if (!sessionKey) {
+        throw new Error(`API key for ${providerId} is session-only and has been cleared. Please re-enter the key.`);
+      }
+      return sessionKey;
+    }
+
     // If key is encrypted, check cache first
     if (isEncryptedFormat(provider.apiKey)) {
       if (!this.isUnlocked) {
         throw new Error('Config is locked. Please unlock by entering your PIN.');
       }
-      return this.decryptedKeysCache.get(providerId);
+      const key = this.decryptedKeysCache.get(providerId);
+      if (!key) {
+        throw new Error(`API key for ${providerId} not found in cache. Please re-lock and unlock.`);
+      }
+      return key;
     }
 
     // Legacy obfuscated key - decrypt synchronously
@@ -481,14 +588,26 @@ export class ConfigManager {
   /**
    * Set or update a provider's API key
    * Encrypts the key before storing if PIN is available
+   *
+   * @param providerId - Provider identifier
+   * @param apiKey - API key to store
+   * @param isEnabled - Whether the provider is enabled
+   * @param sessionOnly - If true, key is never persisted (session-only)
    */
-  async setProviderKey(providerId: ProviderId, apiKey: string, isEnabled = true): Promise<void> {
+  async setProviderKey(
+    providerId: ProviderId,
+    apiKey: string,
+    isEnabled = true,
+    sessionOnly = false
+  ): Promise<void> {
     const existingIndex = this.config.providers.findIndex(p => p.providerId === providerId);
-    const encryptedKey = await obfuscateKey(apiKey);
+    const encryptedKey = sessionOnly ? '' : await obfuscateKey(apiKey);
+
     const providerConfig: ProviderConfig = {
       providerId,
       apiKey: encryptedKey,
       isEnabled,
+      sessionOnly,
       validatedAt: undefined,
       isValid: undefined
     };
@@ -499,12 +618,17 @@ export class ConfigManager {
       this.config.providers.push(providerConfig);
     }
 
-    // Update cache if unlocked
-    if (this.isUnlocked) {
+    // Store in appropriate cache
+    if (sessionOnly) {
+      this.sessionOnlyKeys.set(providerId, apiKey);
+    } else if (this.isUnlocked) {
       this.decryptedKeysCache.set(providerId, apiKey);
     }
 
-    this.saveConfig();
+    // Only save if not session-only
+    if (!sessionOnly) {
+      this.saveConfig();
+    }
   }
 
   /**
@@ -539,14 +663,17 @@ export class ConfigManager {
     this.config.taskMappings = this.config.taskMappings.filter(
       m => m.primaryProviderId !== providerId && m.fallbackProviderId !== providerId
     );
+    // Clear from session-only cache
+    this.sessionOnlyKeys.delete(providerId);
     this.saveConfig();
   }
 
   /**
    * Get all enabled providers with valid API keys
+   * Includes both persistent keys and session-only keys
    */
   getEnabledProviders(): ProviderConfig[] {
-    return this.config.providers.filter(p => p.isEnabled && p.apiKey);
+    return this.config.providers.filter(p => p.isEnabled && (p.apiKey || p.sessionOnly));
   }
 
   // --------------------------------------------------------------------------
@@ -629,7 +756,17 @@ export class ConfigManager {
    * Check if any providers are configured
    */
   hasAnyProvider(): boolean {
-    return this.config.providers.some(p => p.isEnabled && p.apiKey);
+    return this.config.providers.some(p => p.isEnabled && (p.apiKey || p.sessionOnly));
+  }
+
+  /**
+   * Check if a specific provider has a key configured
+   * @param providerId - Provider ID to check
+   * @returns true if provider has an API key (persistent or session-only)
+   */
+  hasProviderKey(providerId: ProviderId): boolean {
+    const provider = this.getProvider(providerId);
+    return provider?.isEnabled === true && (provider?.apiKey || provider?.sessionOnly) === true;
   }
 
   /**
@@ -772,6 +909,127 @@ export class ConfigManager {
     const config = this.getFullConfig();
     const provider = config.providers.find(p => p.providerId === providerId);
     return provider?.selectedVoiceId || provider?.selectedModelId;
+  }
+
+  // --------------------------------------------------------------------------
+  // SECURITY: SESSION-ONLY STORAGE
+  // --------------------------------------------------------------------------
+
+  /**
+   * Check if a provider key is stored in encrypted format
+   * @param providerId - Provider ID to check
+   * @returns true if key is encrypted, false if legacy obfuscated or not found
+   */
+  isKeyEncrypted(providerId: ProviderId): boolean {
+    const provider = this.getProvider(providerId);
+    return provider?.apiKey ? isEncryptedFormat(provider.apiKey) : false;
+  }
+
+  /**
+   * Check if a provider key is session-only (never persisted)
+   * @param providerId - Provider ID to check
+   * @returns true if key is session-only
+   */
+  isKeySessionOnly(providerId: ProviderId): boolean {
+    const provider = this.getProvider(providerId);
+    return provider?.sessionOnly ?? false;
+  }
+
+  /**
+   * Get security status for all providers
+   * @returns Map of provider ID to security status
+   */
+  getSecurityStatus(): Map<ProviderId, { encrypted: boolean; sessionOnly: boolean }> {
+    const status = new Map<ProviderId, { encrypted: boolean; sessionOnly: boolean }>();
+    for (const provider of this.config.providers) {
+      if (provider.apiKey || provider.sessionOnly) {
+        status.set(provider.providerId, {
+          encrypted: provider.apiKey ? isEncryptedFormat(provider.apiKey) : false,
+          sessionOnly: provider.sessionOnly ?? false
+        });
+      }
+    }
+    return status;
+  }
+
+  /**
+   * Clear sensitive data from memory (all decrypted keys)
+   * Call this when leaving the application or after period of inactivity
+   */
+  clearSensitiveData(): void {
+    this.decryptedKeysCache.clear();
+    this.sessionOnlyKeys.clear();
+    this.isUnlocked = false;
+  }
+
+  // --------------------------------------------------------------------------
+  // SECURITY: KEY ROTATION (PIN CHANGE)
+  // --------------------------------------------------------------------------
+
+  /**
+   * Re-encrypt all keys with a new PIN
+   * Call this after the user changes their PIN
+   *
+   * @param newPin - The new PIN to use for encryption
+   * @returns Number of keys re-encrypted
+   * @throws Error if config is locked or if encryption fails
+   */
+  async reEncryptAllKeys(newPin: string): Promise<number> {
+    if (!this.isUnlocked) {
+      throw new Error('Config must be unlocked to re-encrypt keys');
+    }
+
+    let reEncryptedCount = 0;
+
+    for (const provider of this.config.providers) {
+      // Skip session-only keys
+      if (provider.sessionOnly || !provider.apiKey) {
+        continue;
+      }
+
+      // Get the decrypted key
+      let decryptedKey: string;
+      if (isEncryptedFormat(provider.apiKey)) {
+        decryptedKey = this.decryptedKeysCache.get(provider.providerId)!;
+        if (!decryptedKey) {
+          console.warn(`Skipping ${provider.providerId}: not in cache`);
+          continue;
+        }
+      } else {
+        // Legacy key - decrypt it
+        decryptedKey = deobfuscateKeyLegacy(provider.apiKey);
+      }
+
+      // Re-encrypt with new PIN
+      try {
+        const result = await encryptData(decryptedKey, newPin);
+        provider.apiKey = result.storageString;
+        reEncryptedCount++;
+      } catch (error) {
+        console.error(`Failed to re-encrypt key for ${provider.providerId}:`, error);
+        throw error;
+      }
+    }
+
+    if (reEncryptedCount > 0) {
+      this.saveConfig();
+    }
+
+    return reEncryptedCount;
+  }
+
+  /**
+   * Get auto-lock delay in milliseconds
+   */
+  getAutoLockDelay(): number {
+    return this.AUTO_LOCK_DELAY_MS;
+  }
+
+  /**
+   * Check if auto-lock is enabled (PIN is set up)
+   */
+  isAutoLockEnabled(): boolean {
+    return isPinSetUp();
   }
 }
 

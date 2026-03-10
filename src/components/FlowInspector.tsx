@@ -18,6 +18,10 @@ interface InspectorData {
   file?: string;
   functionName?: string;
   line?: number;
+  layer?: number;
+  inputType?: string;
+  outputType?: string;
+  transforms?: string[];
   payload?: Record<string, unknown>;
   influences?: Influence[];
   nextHop?: string;
@@ -30,93 +34,6 @@ interface FlowInspectorProps {
   activeLayerId?: string;
   particleType?: 'request' | 'response' | null;
   onClose?: () => void;
-}
-
-// Generate simulated payload based on layer type
-function generateSimulatedPayload(layerId: string, particleType: 'request' | 'response'): Record<string, unknown> {
-  const basePayload: Record<string, unknown> = {
-    timestamp: Date.now(),
-    traceId: `trace-${Math.random().toString(36).substring(7)}`,
-  };
-
-  if (particleType === 'request') {
-    return {
-      ...basePayload,
-      type: 'REQUEST',
-      query: 'Analyze codebase structure',
-      context: {
-        path: '/Volumes/Storage/CodeBaseCartographer',
-        depth: 3,
-      },
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Request-ID': Math.random().toString(36).substring(7),
-      },
-    };
-  } else {
-    return {
-      ...basePayload,
-      type: 'RESPONSE',
-      status: 'success',
-      result: {
-        nodes: 42,
-        edges: 87,
-        layers: 4,
-      },
-      metadata: {
-        processingTime: 245,
-        model: 'gemini-3-flash-preview',
-      },
-    };
-  }
-}
-
-// Generate influences based on layer position
-function generateInfluences(layerIndex: number, particleType: 'request' | 'response'): Influence[] {
-  const influences: Influence[] = [];
-
-  if (particleType === 'request') {
-    // Accumulate influences as we go down
-    if (layerIndex > 0) {
-      influences.push({
-        id: 'ctx-merge',
-        description: '+ Merged user context from session',
-        type: 'added',
-      });
-    }
-    if (layerIndex > 1) {
-      influences.push({
-        id: 'env-load',
-        description: '+ Loaded .env configuration',
-        type: 'added',
-      });
-    }
-    if (layerIndex > 2) {
-      influences.push({
-        id: 'auth-add',
-        description: '+ Added authentication headers',
-        type: 'added',
-      });
-    }
-  } else {
-    // Different influences for response
-    if (layerIndex > 0) {
-      influences.push({
-        id: 'result-format',
-        description: '+ Formatted JSON response',
-        type: 'added',
-      });
-    }
-    if (layerIndex > 1) {
-      influences.push({
-        id: 'cache-check',
-        description: '+ Checked response cache',
-        type: 'modified',
-      });
-    }
-  }
-
-  return influences;
 }
 
 export default function FlowInspector({
@@ -144,13 +61,44 @@ export default function FlowInspector({
     const data = activeNode.data as DiagramNodeData;
     const layerIndex = nodes.findIndex(n => n.id === activeLayerId);
 
+    // Build payload from real node data
+    const payload: Record<string, unknown> = {
+      timestamp: Date.now(),
+      traceId: `trace-${Math.random().toString(36).substring(7)}`,
+      type: particleType === 'request' ? 'REQUEST' : 'RESPONSE',
+    };
+
+    // Add input/output type if available
+    if (particleType === 'request' && data.inputType) {
+      payload.inputType = data.inputType;
+    }
+    if (particleType === 'response' && data.outputType) {
+      payload.outputType = data.outputType;
+    }
+
+    // Build influences from transforms
+    const influences: Influence[] = [];
+    if (data.transforms && data.transforms.length > 0) {
+      data.transforms.forEach((transform, idx) => {
+        influences.push({
+          id: `transform-${idx}`,
+          description: `• ${transform}`,
+          type: 'added',
+        });
+      });
+    }
+
     setInspectorData({
       currentLayer: data.label,
       file: data.filePath,
       functionName: data.functionName,
       line: data.line,
-      payload: generateSimulatedPayload(activeLayerId, particleType),
-      influences: generateInfluences(layerIndex, particleType),
+      layer: data.layer,
+      inputType: data.inputType,
+      outputType: data.outputType,
+      transforms: data.transforms,
+      payload,
+      influences,
       nextHop: getNextHop(activeLayerId, nodes, particleType),
       latency: Math.floor(Math.random() * 100) + 20, // Simulated latency 20-120ms
       timestamp: Date.now(),
@@ -169,7 +117,15 @@ export default function FlowInspector({
 
   if (!isVisible) return null;
 
-  const { currentLayer, file, functionName, line, payload, influences, nextHop, latency } = inspectorData;
+  const { currentLayer, file, functionName, line, layer, inputType, outputType, transforms, payload, influences, nextHop, latency } = inspectorData;
+
+  // Layer name mapping
+  const layerNames: Record<number, string> = {
+    1: 'Entry / User Interface',
+    2: 'API / Orchestration',
+    3: 'Services / Business Logic',
+    4: 'Storage / External',
+  };
 
   return (
     <div className="absolute right-0 top-0 bottom-0 w-[30%] bg-slate-900/95 backdrop-blur border-l border-slate-700 shadow-2xl z-20 overflow-y-auto">
@@ -193,6 +149,11 @@ export default function FlowInspector({
         <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
           <div className="text-xs text-slate-400 mb-1">Current Layer</div>
           <div className="text-lg font-semibold text-slate-200">{currentLayer || 'Unknown'}</div>
+          {layer !== undefined && (
+            <div className="text-xs text-purple-400 mt-1">
+              Layer {layer}: {layerNames[layer] || 'Unknown'}
+            </div>
+          )}
           {file && (
             <div className="mt-2 text-xs font-mono text-cyan-400 truncate" title={file}>
               {file}
@@ -201,6 +162,42 @@ export default function FlowInspector({
             </div>
           )}
         </div>
+
+        {/* Data Transformation */}
+        {(inputType || outputType) && (
+          <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
+            <div className="text-xs text-slate-400 mb-2">⚙️ Data Transformation</div>
+            <div className="space-y-2">
+              {inputType && (
+                <div className="flex items-start gap-2">
+                  <span className="text-xs text-cyan-400">📥 Input:</span>
+                  <span className="text-xs text-slate-300">{inputType}</span>
+                </div>
+              )}
+              {outputType && (
+                <div className="flex items-start gap-2">
+                  <span className="text-xs text-green-400">📤 Output:</span>
+                  <span className="text-xs text-slate-300">{outputType}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Transforms */}
+        {transforms && transforms.length > 0 && (
+          <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
+            <div className="text-xs text-slate-400 mb-2">🔧 Transforms Applied</div>
+            <ul className="space-y-1">
+              {transforms.map((transform, idx) => (
+                <li key={idx} className="text-xs text-green-400 flex items-start gap-2">
+                  <span className="flex-shrink-0">•</span>
+                  <span className="break-words">{transform}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Request/Response Payload */}
         {payload && (

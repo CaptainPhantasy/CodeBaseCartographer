@@ -542,6 +542,197 @@ Return ONLY valid JSON.`;
     return this.generateStructuredOutput<GraphData>(prompt, schema);
   }
 
+  /**
+   * Generate graph data with actual codebase context
+   * This produces much more accurate graphs by analyzing real files
+   */
+  async generateGraphDataWithContext(
+    description: string,
+    context: {
+      files?: Array<{ path: string; content: string }>;
+      codebasePath?: string;
+    },
+    options: {
+      maxAttempts?: number;
+      validateOutput?: boolean;
+    } = {}
+  ): Promise<GraphData> {
+    const { maxAttempts = 3, validateOutput = true } = options;
+
+    // Import validators dynamically to avoid circular deps
+    const { validateGraph, formatValidationFeedback } = await import('./graphValidator');
+    const { buildGraphContext, formatContextForLLM } = await import('./graphContextExtractor');
+
+    // Build context from files if provided
+    let contextPrompt = '';
+    if (context.files && context.files.length > 0) {
+      const graphContext = buildGraphContext(context.files, context.codebasePath || '/');
+      contextPrompt = formatContextForLLM(graphContext, 30);
+    }
+
+    const schema = {
+      type: 'object',
+      required: ['nodes', 'links'],
+      properties: {
+        nodes: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['id', 'label', 'type'],
+            properties: {
+              id: { type: 'string' },
+              group: { type: 'integer' },
+              label: { type: 'string' },
+              type: {
+                type: 'string',
+                enum: ['entry', 'logic', 'storage', 'exit', 'external', 'decision', 'process']
+              },
+              filePath: { type: 'string' },
+              functionName: { type: 'string' },
+              line: { type: 'integer' },
+              // Extended properties for data transformation tracking
+              inputType: { type: 'string', description: 'Type of data this node receives' },
+              outputType: { type: 'string', description: 'Type of data this node produces' },
+              transforms: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'List of transformations applied to data'
+              }
+            }
+          }
+        },
+        links: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['source', 'target'],
+            properties: {
+              source: { type: 'string' },
+              target: { type: 'string' },
+              value: { type: 'integer' },
+              label: { type: 'string' },
+              // Extended properties for bidirectional flow
+              flowType: {
+                type: 'string',
+                enum: ['request', 'response', 'bidirectional'],
+                description: 'Direction of data flow'
+              }
+            }
+          }
+        }
+      }
+    };
+
+    let attempt = 0;
+    let lastFeedback: string | null = null;
+
+    while (attempt < maxAttempts) {
+      // Build prompt with context and feedback from previous attempts
+      let prompt = '';
+
+      if (contextPrompt) {
+        prompt += contextPrompt + '\n\n';
+      }
+
+      prompt += `Generate a JSON object representing a node-link graph for a system described as: "${description}".
+
+CRITICAL REQUIREMENTS:
+1. You MUST include BOTH "nodes" AND "links" arrays in your response
+2. Each link's "source" and "target" MUST reference an existing node's "id" value
+3. Create edges that show data flow, control flow, or dependencies between components
+4. Include at least 1 link for every 2 nodes (show connections!)
+5. For nodes representing actual code components, INCLUDE the "filePath" property with the path to the source file
+6. Include "functionName" when the node represents a specific function or method
+7. Include "line" number when referencing a specific line in code
+8. Set "group" based on architectural layer: 1=entry/user, 2=API/orchestration, 3=services/logic, 4=storage/external
+9. Include "inputType" and "outputType" to show data transformation at each node
+10. Include "transforms" array listing how data changes at this node
+11. Set "flowType" on links: "request" for downstream (user→system), "response" for upstream (system→user)
+
+${lastFeedback ? `\nPREVIOUS ATTEMPT FAILED VALIDATION:\n${lastFeedback}\n\nPlease fix these issues.\n` : ''}
+
+The JSON must adhere to this schema:
+{
+  "nodes": [
+    {
+      "id": "string",
+      "group": number (1-4 based on layer),
+      "label": "string",
+      "type": "entry|logic|storage|exit|external|decision|process",
+      "filePath": "string (optional)",
+      "functionName": "string (optional)",
+      "line": number (optional),
+      "inputType": "string (optional)",
+      "outputType": "string (optional)",
+      "transforms": ["string"] (optional)
+    }
+  ],
+  "links": [
+    {
+      "source": "string",
+      "target": "string",
+      "value": number,
+      "label": "string (optional)",
+      "flowType": "request|response|bidirectional" (optional)
+    }
+  ]
+}
+
+EXAMPLE of a valid response with data transformations:
+{
+  "nodes": [
+    {"id": "user", "group": 1, "label": "User", "type": "entry", "inputType": "natural language", "outputType": "query object"},
+    {"id": "api", "group": 2, "label": "API Gateway", "type": "logic", "filePath": "src/api/gateway.ts", "functionName": "handleRequest", "inputType": "HTTP request", "outputType": "validated request", "transforms": ["parse JSON", "validate schema", "add auth context"]},
+    {"id": "service", "group": 3, "label": "User Service", "type": "logic", "filePath": "src/services/user.ts", "functionName": "getUser", "transforms": ["query database", "map to DTO"]},
+    {"id": "db", "group": 4, "label": "Database", "type": "storage", "filePath": "src/db/connection.ts"}
+  ],
+  "links": [
+    {"source": "user", "target": "api", "value": 1, "label": "HTTP POST", "flowType": "request"},
+    {"source": "api", "target": "service", "value": 1, "flowType": "request"},
+    {"source": "service", "target": "db", "value": 1, "label": "query", "flowType": "request"},
+    {"source": "db", "target": "service", "value": 1, "label": "result", "flowType": "response"},
+    {"source": "service", "target": "api", "value": 1, "flowType": "response"},
+    {"source": "api", "target": "user", "value": 1, "label": "JSON", "flowType": "response"}
+  ]
+}
+
+Return ONLY valid JSON.`;
+
+      try {
+        const graphData = await this.generateStructuredOutput<GraphData>(prompt, schema);
+
+        // Validate the result
+        if (validateOutput) {
+          const validation = validateGraph(graphData, { autoRepair: true });
+
+          if (validation.isValid && validation.repaired) {
+            return validation.repaired;
+          } else if (validation.repaired) {
+            // Return repaired version even if there were warnings
+            console.warn('Graph had validation issues but was auto-repaired:', validation.warnings);
+            return validation.repaired;
+          }
+
+          // Not valid, prepare feedback for retry
+          lastFeedback = formatValidationFeedback(validation);
+          attempt++;
+          console.warn(`Graph validation failed (attempt ${attempt}/${maxAttempts}):`, validation.errors);
+        } else {
+          return graphData;
+        }
+      } catch (error) {
+        console.error(`Graph generation failed (attempt ${attempt + 1}/${maxAttempts}):`, error);
+        attempt++;
+
+        if (attempt >= maxAttempts) {
+          throw error;
+        }
+      }
+    }
+
+    throw new Error(`Failed to generate valid graph after ${maxAttempts} attempts`);
+  }
+
   // --------------------------------------------------------------------------
   // TEXT TO SPEECH
   // --------------------------------------------------------------------------

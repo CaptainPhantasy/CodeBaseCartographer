@@ -12,8 +12,8 @@ import { useConfig } from '../hooks/useConfig';
 // ============================================================================
 
 const ALL_CAPABILITIES: Capability[] = [
-  'text', 'code', 'structured_output', 'vision', 
-  'tts', 'video', 'realtime_audio', 'thinking', 'search_grounding'
+  'text', 'code', 'structured_output', 'vision',
+  'tts', 'stt', 'video', 'realtime_audio', 'thinking', 'search_grounding'
 ];
 
 const CAPABILITY_INFO: Record<Capability, { label: string; icon: string; description: string }> = {
@@ -22,6 +22,7 @@ const CAPABILITY_INFO: Record<Capability, { label: string; icon: string; descrip
   structured_output: { label: 'JSON', icon: '📋', description: 'Structured JSON output' },
   vision: { label: 'Vision', icon: '👁️', description: 'Image understanding' },
   tts: { label: 'TTS', icon: '🔊', description: 'Text-to-speech synthesis' },
+  stt: { label: 'STT', icon: '🎤', description: 'Speech-to-text transcription' },
   video: { label: 'Video', icon: '🎬', description: 'Video generation' },
   realtime_audio: { label: 'Live', icon: '🎙️', description: 'Real-time audio/voice' },
   thinking: { label: 'Think', icon: '🧠', description: 'Extended reasoning mode' },

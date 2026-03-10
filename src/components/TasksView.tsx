@@ -38,8 +38,7 @@ const TasksView: React.FC<TasksViewProps> = ({
    * Handle node click from task card
    */
   const handleNodeClick = (filePaths: string[]) => {
-    // For now, just log. Could be enhanced to highlight files in graph
-    console.log('Node click requested for files:', filePaths);
+    // Future enhancement: highlight files in graph view
   };
 
   return (

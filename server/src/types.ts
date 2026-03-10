@@ -65,9 +65,22 @@ export interface UpdateTaskInput {
 }
 
 export interface WebSocketMessage {
-  type: 'file:changed' | 'file:added' | 'file:deleted' | 'task:updated' | 'error';
+  type: 'file:changed' | 'file:added' | 'file:deleted' | 'task:updated' | 'error' | 'ping' | 'pong' | 'reconnecting' | 'welcome';
   data: unknown;
   timestamp: number;
+}
+
+export interface WelcomeMessageData {
+  sessionId: string;
+  serverStartTime: number;
+  heartbeatInterval: number;
+  message: string;
+}
+
+export interface ReconnectingMessageData {
+  reason: 'server_restart' | 'connection_lost' | 'manual';
+  retryAfter: number;
+  message: string;
 }
 
 export interface ErrorResponse {

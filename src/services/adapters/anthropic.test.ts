@@ -36,21 +36,25 @@ describe('AnthropicAdapter', () => {
 
   describe('getModelForTask', () => {
     it('should return haiku for text generation', () => {
-      expect(adapter.getModelForTask('text_generation')).toBe('claude-3-5-haiku-20241022');
+      expect(adapter.getModelForTask('TEXT_GENERATION')).toBe('claude-3-5-haiku-20241022');
     });
 
     it('should return haiku for code analysis', () => {
-      expect(adapter.getModelForTask('code_analysis')).toBe('claude-3-5-haiku-20241022');
+      expect(adapter.getModelForTask('CODE_ANALYSIS')).toBe('claude-3-5-haiku-20241022');
     });
 
     it('should return sonnet for image analysis', () => {
-      expect(adapter.getModelForTask('image_analysis')).toBe('claude-sonnet-4-20250514');
+      expect(adapter.getModelForTask('IMAGE_ANALYSIS')).toBe('claude-sonnet-4-20250514');
+    });
+
+    it('should return haiku for graph generation', () => {
+      expect(adapter.getModelForTask('GRAPH_GENERATION')).toBe('claude-3-5-haiku-20241022');
     });
 
     it('should return null for unsupported tasks', () => {
-      expect(adapter.getModelForTask('tts')).toBe(null);
-      expect(adapter.getModelForTask('video')).toBe(null);
-      expect(adapter.getModelForTask('realtime_voice')).toBe(null);
+      expect(adapter.getModelForTask('TTS')).toBe(null);
+      expect(adapter.getModelForTask('VIDEO')).toBe(null);
+      expect(adapter.getModelForTask('REALTIME_VOICE')).toBe(null);
     });
   });
 
@@ -105,7 +109,10 @@ describe('AnthropicAdapter', () => {
             model: 'claude-sonnet-4-20250514',
             messages: [{ role: 'user', content: 'Hello' }],
             max_tokens: 4096,
-            stop_sequences: ['\n\nHuman:']
+            thinking: {
+              type: 'enabled',
+              budget_tokens: 16000
+            }
           })
         })
       );
@@ -170,20 +177,9 @@ describe('AnthropicAdapter', () => {
         expect.objectContaining({
           body: JSON.stringify({
             model: 'claude-3-5-haiku-20241022',
-            max_tokens: 4096,
-            messages: [
-              {
-                role: 'user',
-                content: [
-                  {
-                    type: 'text',
-                    text: `You must respond with valid JSON matching this schema:\n${JSON.stringify(schema, null, 2)}\nRespond ONLY with valid JSON, no explanations.`
-                  }
-                ]
-              },
-              { role: 'assistant', content: [{ type: 'text', text: '' }] },
-              { role: 'user', content: [{ type: 'text', text: 'Generate a name' }] }
-            ]
+            system: `You must respond with valid JSON matching this schema:\n${JSON.stringify(schema, null, 2)}\nRespond ONLY with valid JSON, no explanations or markdown code blocks.`,
+            messages: [{ role: 'user', content: 'Generate a name' }],
+            max_tokens: 4096
           })
         })
       );

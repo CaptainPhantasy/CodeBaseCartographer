@@ -26,6 +26,11 @@ export interface Node {
   filePath?: string;      // Path to source file for click-to-open
   functionName?: string;  // Entry point function name
   line?: number;          // Line number if specific
+  // Data transformation tracking
+  layer?: number;         // Architectural layer (1=entry, 2=API, 3=service, 4=storage)
+  inputType?: string;     // Type of data this node receives
+  outputType?: string;    // Type of data this node produces
+  transforms?: string[];  // List of transformations applied to data
 }
 
 export interface Link {
@@ -34,6 +39,8 @@ export interface Link {
   value: number;
   label?: string;
   highlight?: boolean;  // Marks this edge as part of the main flow path (will be red)
+  // Bidirectional flow tracking
+  flowType?: 'request' | 'response' | 'bidirectional';  // Direction of data flow
 }
 
 export interface GraphData {

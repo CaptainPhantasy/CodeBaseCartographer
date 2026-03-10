@@ -117,9 +117,16 @@ function detectMainFlowPath(graphData: GraphData): Set<string> {
   return highlightedEdges;
 }
 
+interface LoadedFile {
+  path: string;
+  content: string;
+}
+
 interface DiagramViewProps {
   graphData?: GraphData;
   onGraphDataChange?: (data: GraphData) => void;
+  loadedFiles?: LoadedFile[];
+  loadedFilesSource?: string;
 }
 
 // Helper to convert GraphData to ReactFlow nodes
@@ -152,7 +159,12 @@ function graphDataToNodes(graphData: GraphData): Node[] {
         // Pneumatic tube visualization properties
         filePath: node.filePath,
         functionName: node.functionName,
-        line: node.line
+        line: node.line,
+        // Data transformation tracking
+        layer: node.layer ?? node.group,
+        inputType: node.inputType,
+        outputType: node.outputType,
+        transforms: node.transforms
       }
     };
   });
@@ -255,7 +267,7 @@ const defaultEdgeOptions = {
   }
 };
 
-export default function DiagramView({ graphData, onGraphDataChange }: DiagramViewProps) {
+export default function DiagramView({ graphData, onGraphDataChange, loadedFiles, loadedFilesSource }: DiagramViewProps) {
   const {
     nodes: storeNodes,
     edges: storeEdges,
@@ -403,13 +415,33 @@ export default function DiagramView({ graphData, onGraphDataChange }: DiagramVie
         throw new Error('Graph generation requires an LLM provider. Please configure API keys in Settings.');
       }
 
-      const newData = await llmService.generateGraphData(generatePrompt);
-      if (newData.nodes && newData.links) {
-        onGraphDataChange?.(newData);
-        setIsGenerateOpen(false);
-        setGeneratePrompt('');
+      // Use context-aware generation if we have loaded files
+      if (loadedFiles && loadedFiles.length > 0) {
+        const newData = await llmService.generateGraphDataWithContext(
+          generatePrompt,
+          { 
+            files: loadedFiles, 
+            codebasePath: loadedFilesSource 
+          },
+          { maxAttempts: 3, validateOutput: true }
+        );
+        if (newData.nodes && newData.links) {
+          onGraphDataChange?.(newData);
+          setIsGenerateOpen(false);
+          setGeneratePrompt('');
+        } else {
+          throw new Error('Invalid graph data received from LLM');
+        }
       } else {
-        throw new Error('Invalid graph data received from LLM');
+        // Fallback to simple generation without context
+        const newData = await llmService.generateGraphData(generatePrompt);
+        if (newData.nodes && newData.links) {
+          onGraphDataChange?.(newData);
+          setIsGenerateOpen(false);
+          setGeneratePrompt('');
+        } else {
+          throw new Error('Invalid graph data received from LLM');
+        }
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to generate graph';
@@ -417,7 +449,7 @@ export default function DiagramView({ graphData, onGraphDataChange }: DiagramVie
     } finally {
       setIsGenerating(false);
     }
-  }, [generatePrompt, onGraphDataChange]);
+  }, [generatePrompt, onGraphDataChange, loadedFiles, loadedFilesSource]);
 
   // MiniMap node colors
   const minimapNodeColor = useCallback((node: Node) => {
@@ -581,6 +613,29 @@ export default function DiagramView({ graphData, onGraphDataChange }: DiagramVie
               </button>
             </div>
             <div className="p-4">
+              {/* Context indicator */}
+              {loadedFiles && loadedFiles.length > 0 ? (
+                <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
+                    <span>📂</span>
+                    <span>Using {loadedFiles.length} loaded files for context-aware generation</span>
+                  </div>
+                  <p className="text-xs text-green-300/70 mt-1">
+                    Source: {loadedFilesSource || 'Local files'} — Graphs will include real file paths and transformations
+                  </p>
+                </div>
+              ) : (
+                <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                  <div className="flex items-center gap-2 text-amber-400 text-sm font-medium">
+                    <span>⚠️</span>
+                    <span>No files loaded — using description only</span>
+                  </div>
+                  <p className="text-xs text-amber-300/70 mt-1">
+                    Connect a codebase first for accurate flow charts with real file paths
+                  </p>
+                </div>
+              )}
+              
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Describe the architecture or flow:
               </label>

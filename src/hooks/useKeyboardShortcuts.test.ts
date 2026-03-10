@@ -15,10 +15,10 @@ describe('useKeyboardShortcuts', () => {
 
   beforeEach(() => {
     mockHandlers = {
-      onOpenQuickActions: jest.fn(),
-      onFocusNode: jest.fn(),
-      onClearFocus: jest.fn(),
-      onCloseModals: jest.fn()
+      onOpenQuickActions: vi.fn(),
+      onFocusNode: vi.fn(),
+      onClearFocus: vi.fn(),
+      onCloseModals: vi.fn()
     };
   });
 
@@ -83,7 +83,7 @@ describe('useKeyboardShortcuts', () => {
   });
 
   it('ignores events from input fields', () => {
-    const handler = jest.fn();
+    const handler = vi.fn();
     const shortcuts = [
       {
         key: 'k',

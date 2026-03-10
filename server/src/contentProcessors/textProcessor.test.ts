@@ -20,7 +20,7 @@ describe('Text Processor', () => {
 
         const result = await processTextFile(buffer, 'test.txt');
 
-        expect(result.content).toBe(content);
+        expect(result.extracts[0].content).toBe(content);
         expect(result.metadata.lineCount).toBe(3);
         expect(result.metadata.encoding).toBe('UTF-8');
         expect(result.metadata.bom).toBe('UTF8');
@@ -32,7 +32,7 @@ describe('Text Processor', () => {
 
         const result = await processTextFile(buffer, 'test.txt');
 
-        expect(result.content).toBe('Test');
+        expect(result.extracts[0].content).toBe('Test');
         expect(result.metadata.bom).toBe('UTF8');
       });
     });
@@ -44,7 +44,7 @@ describe('Text Processor', () => {
 
         const result = await processTextFile(buffer, 'test.txt');
 
-        expect(result.content).toBe(content);
+        expect(result.extracts[0].content).toBe(content);
         expect(result.metadata.encoding).toBe('UTF-16LE');
         expect(result.metadata.bom).toBe('UTF16LE');
       });
@@ -64,7 +64,7 @@ describe('Text Processor', () => {
 
         expect(result.metadata.bom).toBe('UTF16BE');
         // Content should still be processed
-        expect(result.content.length).toBeGreaterThan(0);
+        expect(result.extracts[0].content.length).toBeGreaterThan(0);
       });
     });
 
@@ -75,7 +75,7 @@ describe('Text Processor', () => {
 
         const result = await processTextFile(buffer, 'test.txt');
 
-        expect(result.content).toBe(content);
+        expect(result.extracts[0].content).toBe(content);
         expect(result.metadata.lineCount).toBe(3);
         expect(result.metadata.encoding).toBe('UTF-8');
         expect(result.metadata.bom).toBeUndefined();
@@ -143,7 +143,7 @@ describe('Text Processor', () => {
 
         const result = await processTextFile(buffer, 'test.txt');
 
-        expect(result.content).toBe('');
+        expect(result.extracts[0].content).toBe('');
         expect(result.metadata.lineCount).toBe(0);
         expect(result.metadata.encoding).toBe('UTF-8');
         expect(result.metadata.size).toBe(0);
@@ -155,7 +155,7 @@ describe('Text Processor', () => {
 
         const result = await processTextFile(buffer, 'test.txt');
 
-        expect(result.content).toBe(content);
+        expect(result.extracts[0].content).toBe(content);
         expect(result.metadata.lineCount).toBe(3);
       });
 
@@ -165,7 +165,7 @@ describe('Text Processor', () => {
 
         const result = await processTextFile(buffer, 'test.txt');
 
-        expect(result.content).toBe(content);
+        expect(result.extracts[0].content).toBe(content);
         expect(result.metadata.lineCount).toBe(3);
       });
     });
@@ -176,7 +176,7 @@ describe('Text Processor', () => {
 
         const result = await processTextFile(buffer, 'test.txt');
 
-        expect(result.content).toBe('Test content');
+        expect(result.extracts[0].content).toBe('Test content');
       });
 
       it('should process .rst files', async () => {
@@ -184,7 +184,7 @@ describe('Text Processor', () => {
 
         const result = await processTextFile(buffer, 'test.rst');
 
-        expect(result.content).toBe('RST Content');
+        expect(result.extracts[0].content).toBe('RST Content');
       });
 
       it('should process .log files', async () => {
@@ -192,7 +192,7 @@ describe('Text Processor', () => {
 
         const result = await processTextFile(buffer, 'test.log');
 
-        expect(result.content).toBe('Log entry');
+        expect(result.extracts[0].content).toBe('Log entry');
       });
 
       it('should handle uppercase extensions', async () => {
@@ -200,7 +200,7 @@ describe('Text Processor', () => {
 
         const result = await processTextFile(buffer, 'test.TXT');
 
-        expect(result.content).toBe('Test');
+        expect(result.extracts[0].content).toBe('Test');
       });
 
       it('should reject unsupported file extensions', async () => {
@@ -285,7 +285,7 @@ describe('Text Processor', () => {
 
       const result = await textFileHandler.process(buffer, 'test.txt');
 
-      expect(result.content).toBe('Test content');
+      expect(result.extracts[0].content).toBe('Test content');
       expect(result.metadata.lineCount).toBe(1);
     });
   });
@@ -370,7 +370,7 @@ describe('Text Processor', () => {
 
       const result = await processTextFile(buffer, 'app.log');
 
-      expect(result.content).toBe(logContent);
+      expect(result.extracts[0].content).toBe(logContent);
       expect(result.metadata.lineCount).toBe(4);
       expect(result.metadata.encoding).toBe('UTF-8');
     });
@@ -390,7 +390,7 @@ describe('Text Processor', () => {
 
       const result = await processTextFile(buffer, 'doc.rst');
 
-      expect(result.content).toBe(rstContent);
+      expect(result.extracts[0].content).toBe(rstContent);
       expect(result.metadata.lineCount).toBe(7);
     });
 
@@ -400,7 +400,7 @@ describe('Text Processor', () => {
 
       const result = await processTextFile(buffer, 'test.txt');
 
-      expect(result.content).toBe(content);
+      expect(result.extracts[0].content).toBe(content);
       expect(result.metadata.encoding).toBe('UTF-16LE');
       expect(result.metadata.bom).toBe('UTF16LE');
     });
@@ -413,7 +413,7 @@ describe('Text Processor', () => {
       const result = await processTextFile(buffer, 'large.txt');
 
       expect(result.metadata.lineCount).toBe(1000);
-      expect(result.content).toBe(content);
+      expect(result.extracts[0].content).toBe(content);
     });
   });
 });

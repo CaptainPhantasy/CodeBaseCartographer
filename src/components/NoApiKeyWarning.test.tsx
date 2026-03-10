@@ -1,9 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { NoApiKeyWarning } from './NoApiKeyWarning';
 
 // Mock the useConfig hook
-vi.mock('../hooks/useConfig');
+vi.mock('../hooks/useConfig', () => ({
+  useConfig: vi.fn()
+}));
+
+import { useConfig } from '../hooks/useConfig';
 
 describe('NoApiKeyWarning', () => {
   const mockOnOpenSetup = vi.fn();
@@ -14,8 +18,7 @@ describe('NoApiKeyWarning', () => {
   });
 
   it('does not render when API keys are configured', () => {
-    const { useConfig } = require('../hooks/useConfig');
-    useConfig.mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       config: {
         providers: [
           { providerId: 'openai', apiKey: 'sk-test123', isEnabled: true }
@@ -36,8 +39,7 @@ describe('NoApiKeyWarning', () => {
   });
 
   it('renders warning banner when no API keys are configured', () => {
-    const { useConfig } = require('../hooks/useConfig');
-    useConfig.mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       config: {
         providers: [
           { providerId: 'openai', apiKey: '', isEnabled: true }
@@ -59,8 +61,7 @@ describe('NoApiKeyWarning', () => {
   });
 
   it('renders warning when providers array is empty', () => {
-    const { useConfig } = require('../hooks/useConfig');
-    useConfig.mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       config: {
         providers: [],
         taskMappings: [],
@@ -79,8 +80,7 @@ describe('NoApiKeyWarning', () => {
   });
 
   it('calls onOpenSetup when setup button is clicked', () => {
-    const { useConfig } = require('../hooks/useConfig');
-    useConfig.mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       config: {
         providers: [],
         taskMappings: [],
@@ -101,8 +101,7 @@ describe('NoApiKeyWarning', () => {
   });
 
   it('calls onOpenSettings when settings button is clicked', () => {
-    const { useConfig } = require('../hooks/useConfig');
-    useConfig.mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       config: {
         providers: [],
         taskMappings: [],
@@ -123,8 +122,7 @@ describe('NoApiKeyWarning', () => {
   });
 
   it('shows security reminder at the bottom', () => {
-    const { useConfig } = require('../hooks/useConfig');
-    useConfig.mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       config: {
         providers: [],
         taskMappings: [],
@@ -139,12 +137,13 @@ describe('NoApiKeyWarning', () => {
       />
     );
 
-    expect(screen.getByText('Keys are stored locally in your browser. Never share your API keys.')).toBeInTheDocument();
+    // The text includes a lock emoji at the beginning
+    expect(screen.getByText(/Keys are stored locally in your browser/)).toBeInTheDocument();
+    expect(screen.getByText(/Never share your API keys/)).toBeInTheDocument();
   });
 
   it('has proper styling classes', () => {
-    const { useConfig } = require('../hooks/useConfig');
-    useConfig.mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       config: {
         providers: [],
         taskMappings: [],
@@ -164,8 +163,7 @@ describe('NoApiKeyWarning', () => {
   });
 
   it('displays warning icon', () => {
-    const { useConfig } = require('../hooks/useConfig');
-    useConfig.mockReturnValue({
+    vi.mocked(useConfig).mockReturnValue({
       config: {
         providers: [],
         taskMappings: [],

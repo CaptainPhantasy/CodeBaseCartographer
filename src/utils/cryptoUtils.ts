@@ -201,7 +201,18 @@ export async function decryptData(storageString: string, pin: string): Promise<s
     const decoder = new TextDecoder();
     return decoder.decode(decryptedBuffer);
   } catch (error) {
-    throw new Error('Decryption failed - incorrect PIN or corrupted data');
+    // Provide more specific error information
+    let errorMsg = 'Decryption failed';
+    if (error instanceof Error) {
+      if (error.name === 'OperationError') {
+        errorMsg += ' - incorrect PIN or corrupted data';
+      } else {
+        errorMsg += ` - ${error.message}`;
+      }
+    } else {
+      errorMsg += ' - unknown error';
+    }
+    throw new Error(errorMsg);
   }
 }
 
@@ -209,7 +220,7 @@ export async function decryptData(storageString: string, pin: string): Promise<s
  * Check if a string is in the new encrypted format
  */
 export function isEncryptedFormat(data: string): boolean {
-  return data?.startsWith(ENCRYPTION_PREFIX) ?? false;
+  return data ? data.startsWith(ENCRYPTION_PREFIX) : false;
 }
 
 /**

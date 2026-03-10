@@ -18,6 +18,11 @@ export interface DiagramNodeData extends Record<string, unknown> {
   filePath?: string;      // Path to source file for click-to-open
   functionName?: string;  // Entry point function name
   line?: number;          // Line number if specific
+  // Data transformation tracking
+  layer?: number;         // Architectural layer (1=entry, 2=API, 3=service, 4=storage)
+  inputType?: string;     // Type of data this node receives
+  outputType?: string;    // Type of data this node produces
+  transforms?: string[];  // List of transformations applied to data
 }
 
 /**

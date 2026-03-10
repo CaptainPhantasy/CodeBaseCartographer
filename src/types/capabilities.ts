@@ -146,6 +146,9 @@ export interface ProviderConfig {
   validatedAt?: string; // ISO date string
   isValid?: boolean;
 
+  // Security options
+  sessionOnly?: boolean; // If true, key is never persisted to localStorage (session-only)
+
   // Provider-specific cached resources
   cachedVoices?: ElevenLabsVoice[];      // elevenlabs only
   cachedModels?: OpenRouterModel[];      // openrouter only

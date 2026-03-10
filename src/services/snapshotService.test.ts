@@ -138,9 +138,10 @@ describe('snapshotService', () => {
       expect(list).toHaveLength(2);
     });
 
-    it('should sort by timestamp descending', () => {
+    it('should sort by timestamp descending', async () => {
       const snapshot1 = snapshotService.saveSnapshot('first', mockDiagramData);
       // Small delay to ensure different timestamp
+      await new Promise(resolve => setTimeout(resolve, 10));
       const snapshot2 = snapshotService.saveSnapshot('second', mockDiagramData);
 
       const list = snapshotService.listSnapshots();

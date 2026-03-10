@@ -4,11 +4,9 @@
  */
 
 import { extname } from 'path';
+import type { ProcessedContent } from '../types.js';
 
-// TODO: These types should be imported from '../fileTypeRegistry' once available
-// Defining locally for now to enable independent implementation
-export interface ProcessedContent {
-  content: string;
+export interface TextProcessedContent extends ProcessedContent {
   metadata: {
     lineCount: number;
     encoding: string;
@@ -20,7 +18,7 @@ export interface ProcessedContent {
 export interface FileTypeHandler {
   extensions: string[];
   mimeTypes: string[];
-  process: (buffer: Buffer, filePath: string) => Promise<ProcessedContent>;
+  process: (buffer: Buffer, filePath: string) => Promise<TextProcessedContent>;
 }
 
 /**
@@ -138,7 +136,7 @@ function countLines(content: string): number {
  * @returns Processed content with metadata
  * @throws Error if file cannot be decoded or is not a supported text file
  */
-export async function processTextFile(buffer: Buffer, filePath: string): Promise<ProcessedContent> {
+export async function processTextFile(buffer: Buffer, filePath: string): Promise<TextProcessedContent> {
   // Validate file extension
   const ext = extname(filePath).toLowerCase();
   const supportedExtensions = ['.txt', '.rst', '.log'];
@@ -156,7 +154,11 @@ export async function processTextFile(buffer: Buffer, filePath: string): Promise
 
   if (buffer.length === 0) {
     return {
-      content: '',
+      summary: 'Empty text file',
+      extracts: [{
+        path: filePath,
+        content: '',
+      }],
       metadata: {
         lineCount: 0,
         encoding: 'UTF-8',
@@ -187,8 +189,15 @@ export async function processTextFile(buffer: Buffer, filePath: string): Promise
     // Calculate metadata
     const lineCount = countLines(content);
 
+    // Build summary
+    const summary = `Text file with ${lineCount} line${lineCount !== 1 ? 's' : ''} (${buffer.length} bytes, ${normalizeEncoding(encoding)} encoding${bomName ? `, ${bomName} BOM` : ''})`;
+
     return {
-      content,
+      summary,
+      extracts: [{
+        path: filePath,
+        content,
+      }],
       metadata: {
         lineCount,
         encoding: normalizeEncoding(encoding),

@@ -22,6 +22,3 @@ root.render(
     </ErrorBoundary>
   </React.StrictMode>
 );
-
-// APP_BOOT_OK marker for automated testing verification
-console.log('APP_BOOT_OK');

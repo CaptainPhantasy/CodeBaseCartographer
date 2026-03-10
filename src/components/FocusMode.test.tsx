@@ -5,6 +5,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
 import FocusMode from './FocusMode';
 import { GraphData } from '../types';
 
@@ -24,7 +25,7 @@ const mockData: GraphData = {
 
 describe('FocusMode', () => {
   it('renders all data when no node is focused', () => {
-    const renderSpy = jest.fn();
+    const renderSpy = vi.fn();
     render(
       <FocusMode
         data={mockData}
@@ -43,7 +44,7 @@ describe('FocusMode', () => {
   });
 
   it('filters to focused node and its dependencies', () => {
-    const renderSpy = jest.fn();
+    const renderSpy = vi.fn();
     render(
       <FocusMode
         data={mockData}
@@ -63,7 +64,7 @@ describe('FocusMode', () => {
   });
 
   it('filters links to only those between visible nodes', () => {
-    const renderSpy = jest.fn();
+    const renderSpy = vi.fn();
     render(
       <FocusMode
         data={mockData}
@@ -93,11 +94,14 @@ describe('FocusMode', () => {
     );
 
     expect(screen.getByText(/Focus:/)).toBeInTheDocument();
-    expect(screen.getByText('Node 2')).toBeInTheDocument();
+    // The text "Node 2" is split across elements, so we use a more flexible matcher
+    expect(screen.getByText((content, element) => {
+      return element?.textContent === 'Focus: Node 2';
+    })).toBeInTheDocument();
   });
 
   it('calls onClearFocus when clear button is clicked', () => {
-    const clearSpy = jest.fn();
+    const clearSpy = vi.fn();
     render(
       <FocusMode
         data={mockData}
@@ -137,7 +141,7 @@ describe('FocusMode', () => {
       links: []
     };
 
-    const renderSpy = jest.fn();
+    const renderSpy = vi.fn();
     render(
       <FocusMode
         data={isolatedData}

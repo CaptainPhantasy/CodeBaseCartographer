@@ -34,10 +34,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
             // Check if we have legacy keys to migrate
             if (configManager.hasLegacyKeys()) {
               setIsMigrating(true);
-              const count = await configManager.migrateAllKeys();
-              if (count > 0) {
-                console.log(`Migrated ${count} keys to encrypted storage`);
-              }
+              await configManager.migrateAllKeys();
               setIsMigrating(false);
             }
 
@@ -69,10 +66,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
       // Migrate legacy keys if needed
       if (configManager.hasLegacyKeys()) {
         setIsMigrating(true);
-        const count = await configManager.migrateAllKeys();
-        if (count > 0) {
-          console.log(`Migrated ${count} keys to encrypted storage`);
-        }
+        await configManager.migrateAllKeys();
         setIsMigrating(false);
       }
 

@@ -77,6 +77,8 @@ export interface STSConfig extends RealtimeConfig {
   model?: string;
   temperature?: number;
   prompt_prefix?: string;
+  stability?: number;
+  similarity_boost?: number;
 }
 
 export interface RealtimeConfig {

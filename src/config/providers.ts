@@ -276,7 +276,7 @@ const googleProvider: ProviderDefinition = {
       supportsStreaming: true
     },
     {
-      id: 'gemini-3-flash-preview',
+      id: 'gemini-2.5-flash-preview-stt',
       name: 'Gemini STT',
       capabilities: ['stt'] as Capability[],
       tier: 'smart',
@@ -348,38 +348,57 @@ const localLLMProvider: ProviderDefinition = {
   authHeaderFormat: '', // Usually no auth needed for local
   docsUrl: 'https://ollama.ai/docs',
   keyInstructions: 'Install Ollama and run: ollama serve',
-  isAvailable: false, // TODO: Enable when implementing local LLM support
+  isAvailable: true, // Local LLM support is now implemented
   models: [
-    // TODO: Dynamically populate from local server
-    // These are placeholder models that would be detected from Ollama/LM Studio
+    // Default models commonly available in local servers
     {
-      id: 'llama3.3:70b',
-      name: 'Llama 3.3 70B (Local)',
+      id: 'llama3.3',
+      name: 'Llama 3.3 (Local)',
       capabilities: ['text', 'code'] as Capability[],
       tier: 'balanced',
       contextWindow: 131072,
       supportsStreaming: true
     },
     {
-      id: 'qwen2.5-coder:32b',
-      name: 'Qwen 2.5 Coder 32B (Local)',
+      id: 'qwen2.5-coder',
+      name: 'Qwen 2.5 Coder (Local)',
       capabilities: ['text', 'code', 'structured_output'] as Capability[],
       tier: 'balanced',
       contextWindow: 32768,
       supportsStreaming: true
     },
     {
-      id: 'deepseek-r1:32b',
-      name: 'DeepSeek R1 32B (Local)',
+      id: 'deepseek-r1',
+      name: 'DeepSeek R1 (Local)',
       capabilities: ['text', 'code', 'thinking'] as Capability[],
       tier: 'balanced',
       contextWindow: 65536,
       supportsStreaming: true
+    },
+    {
+      id: 'deepseek-coder-v2',
+      name: 'DeepSeek Coder V2 (Local)',
+      capabilities: ['text', 'code', 'structured_output'] as Capability[],
+      tier: 'balanced',
+      contextWindow: 32768,
+      supportsStreaming: true
+    },
+    {
+      id: 'codellama',
+      name: 'Code Llama (Local)',
+      capabilities: ['text', 'code'] as Capability[],
+      tier: 'fast',
+      contextWindow: 16384,
+      supportsStreaming: true
+    },
+    {
+      id: 'mistral',
+      name: 'Mistral (Local)',
+      capabilities: ['text', 'code'] as Capability[],
+      tier: 'fast',
+      contextWindow: 32768,
+      supportsStreaming: true
     }
-    // TODO: Implement model discovery from local server
-    // - GET /api/tags for Ollama
-    // - Parse available models and their capabilities
-    // - Allow user to manually specify capabilities for unknown models
   ]
 };
 

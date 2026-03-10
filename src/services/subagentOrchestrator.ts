@@ -227,12 +227,14 @@ export class SubagentOrchestrator {
     this.processingQueue = true;
 
     try {
-      // Sort queue by priority (highest first) and timestamp
+      // Sort queue by priority (highest first) and timestamp (FIFO for equal priority)
+      // This ensures fair ordering: higher priority items execute first,
+      // and equal priority items are processed in order of arrival
       const sorted = Array.from(this.queue.entries()).sort(([, a], [, b]) => {
         if (a.priority !== b.priority) {
           return b.priority - a.priority; // Higher priority first
         }
-        return a.timestamp - b.timestamp; // Earlier timestamp first
+        return a.timestamp - b.timestamp; // FIFO: earlier timestamp first for equal priority
       });
 
       // Start as many as we can
@@ -284,8 +286,8 @@ export class SubagentOrchestrator {
   }
 
   /**
-   * Simulate execution (replace with actual subagent call)
-   * TODO: Integrate with actual AI service for code execution
+   * Execute task using LLM service for actual code analysis
+   * Uses real AI integration to process the execution request
    */
   private async simulateExecution(active: ActiveExecution): Promise<void> {
     const { id, request, result } = active;
@@ -293,45 +295,114 @@ export class SubagentOrchestrator {
     try {
       this.updateStatus(id, 'running');
 
-      // Simulate progress updates
-      const steps = [
-        { progress: 10, message: 'Analyzing task requirements...' },
-        { progress: 25, message: 'Reading source files...' },
-        { progress: 40, message: 'Generating code changes...' },
-        { progress: 60, message: 'Validating changes...' },
-        { progress: 80, message: 'Applying changes...' },
-        { progress: 95, message: 'Verifying results...' },
-        { progress: 100, message: 'Complete!' },
-      ];
+      // Import LLM service dynamically
+      const { getLLMService } = await import('./llmService');
+      const llmService = getLLMService();
 
-      for (const step of steps) {
-        await this.delay(500);
-        this.addMessage(id, {
-          id: randomUUID(),
-          timestamp: Date.now(),
-          severity: 'info',
-          message: step.message,
-        });
-        this.updateProgress(id, step.progress);
+      // Build task prompt from request
+      const taskPrompt = this.buildTaskPrompt(request);
+
+      this.addMessage(id, {
+        id: randomUUID(),
+        timestamp: Date.now(),
+        severity: 'info',
+        message: 'Analyzing task with AI...',
+      });
+      this.updateProgress(id, 10);
+
+      // Execute using real AI service
+      const response = await llmService.chat([
+        { role: 'user', text: taskPrompt }
+      ], {
+        systemPrompt: 'You are a code execution assistant. Analyze the task and provide specific, actionable results.'
+      });
+
+      this.updateProgress(id, 50);
+      this.addMessage(id, {
+        id: randomUUID(),
+        timestamp: Date.now(),
+        severity: 'info',
+        message: 'Processing AI response...',
+      });
+
+      // Parse response for potential file changes
+      if (request.files.length > 0 && response.text) {
+        const changes = this.extractFileChanges(response.text, request.files);
+        changes.forEach(change => this.addChange(id, change));
       }
 
-      // Simulate file changes
-      if (request.files.length > 0) {
-        const change: FileChange = {
-          path: request.files[0],
-          changeType: 'update',
-          oldContent: '// Old content\n',
-          newContent: '// New content\n',
-          diff: '@@ -1,1 +1,1 @@\n-// Old content\n+// New content\n',
-          changeId: randomUUID(),
-        };
-        this.addChange(id, change);
-      }
+      this.updateProgress(id, 90);
+      this.addMessage(id, {
+        id: randomUUID(),
+        timestamp: Date.now(),
+        severity: 'info',
+        message: 'Task completed successfully',
+      });
+
+      // Store the AI response as a message
+      this.addMessage(id, {
+        id: randomUUID(),
+        timestamp: Date.now(),
+        severity: 'info',
+        message: `AI Response: ${response.text.substring(0, 200)}${response.text.length > 200 ? '...' : ''}`,
+      });
 
       this.completeExecution(id);
     } catch (error) {
-      this.failExecution(id, error instanceof Error ? error.message : 'Unknown error');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.addMessage(id, {
+        id: randomUUID(),
+        timestamp: Date.now(),
+        severity: 'error',
+        message: `Execution failed: ${errorMessage}`,
+      });
+      this.failExecution(id, errorMessage);
     }
+  }
+
+  /**
+   * Build task prompt from execution request
+   */
+  private buildTaskPrompt(request: ExecutionRequest): string {
+    const parts = [
+      `Task: ${request.taskId}`,
+      `Title: ${request.taskTitle}`,
+      `Description: ${request.taskDescription}`,
+    ];
+
+    if (request.files.length > 0) {
+      parts.push(`\nFiles to process:\n${request.files.map((f, i) => `${i + 1}. ${f}`).join('\n')}`);
+    }
+
+    parts.push('\n\nPlease analyze this task and provide specific recommendations or code changes.');
+
+    return parts.join('\n');
+  }
+
+  /**
+   * Extract file changes from AI response
+   */
+  private extractFileChanges(response: string, files: string[]): FileChange[] {
+    const changes: FileChange[] = [];
+
+    // Look for code blocks in the response
+    const codeBlockRegex = /```(?:typescript|javascript|ts|js)?\n([\s\S]*?)```/g;
+    const matches = Array.from(response.matchAll(codeBlockRegex));
+
+    matches.forEach((match, index) => {
+      if (files[index]) {
+        changes.push({
+          path: files[index],
+          changeType: 'update',
+          oldContent: '// Previous content',
+          newContent: match[1].trim(),
+          diff: `@@ -1,1 +1,1 @@\n-// Previous content\n+${match[1].trim().substring(0, 100)}...`,
+          changeId: randomUUID(),
+        });
+      }
+    });
+
+    return changes;
   }
 
   /**

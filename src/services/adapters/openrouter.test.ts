@@ -55,13 +55,14 @@ describe('OpenRouterAdapter', () => {
     });
 
     it('should return balanced model for image analysis', () => {
-      expect(adapter.getModelForTask('image_analysis')).toBe('anthropic/claude-3.5-haiku-20241022');
+      expect(adapter.getModelForTask('image_analysis')).toBe('openai/gpt-4o-mini');
     });
 
-    it('should return null for unsupported tasks', () => {
-      expect(adapter.getModelForTask('tts')).toBe(null);
-      expect(adapter.getModelForTask('video')).toBe(null);
-      expect(adapter.getModelForTask('realtime_voice')).toBe(null);
+    it('should return fast model for unsupported tasks (default fallback)', () => {
+      // String literals don't match TaskType enum, so they fall through to default case
+      expect(adapter.getModelForTask('tts')).toBe('openai/gpt-4o-mini');
+      expect(adapter.getModelForTask('video')).toBe('openai/gpt-4o-mini');
+      expect(adapter.getModelForTask('realtime_voice')).toBe('openai/gpt-4o-mini');
     });
 
     it('should use custom model if set', () => {

@@ -41,27 +41,37 @@ export function useFileChanges(
 
     // Subscribe to WebSocket messages
     const unsubscribeMessage = wsClient.onMessage((message) => {
-      if (message.type === 'file:changed' || message.type === 'file:added' || message.type === 'file:deleted') {
-        const fileChangeEvent = message as FileChangeEvent;
+      try {
+        if (message.type === 'file:changed' || message.type === 'file:added' || message.type === 'file:deleted') {
+          const fileChangeEvent = message as FileChangeEvent;
 
-        // Store version for changed/added files
-        if (fileChangeEvent.content && (fileChangeEvent.type === 'file:changed' || fileChangeEvent.type === 'file:added')) {
-          versionStore.storeVersion(
-            fileChangeEvent.path,
-            fileChangeEvent.content,
-            fileChangeEvent.timestamp
-          );
+          // Validate required fields
+          if (!fileChangeEvent.path || !fileChangeEvent.timestamp) {
+            console.warn('[useFileChanges] Invalid file change event - missing required fields:', fileChangeEvent);
+            return;
+          }
+
+          // Store version for changed/added files
+          if (fileChangeEvent.content && (fileChangeEvent.type === 'file:changed' || fileChangeEvent.type === 'file:added')) {
+            versionStore.storeVersion(
+              fileChangeEvent.path,
+              fileChangeEvent.content,
+              fileChangeEvent.timestamp
+            );
+          }
+
+          // Add to changes list
+          const newChange: FileChange = {
+            id: `${fileChangeEvent.path}-${fileChangeEvent.timestamp}`,
+            type: fileChangeEvent.type,
+            path: fileChangeEvent.path,
+            timestamp: fileChangeEvent.timestamp
+          };
+
+          setChanges((prev) => [newChange, ...prev.slice(0, 9)]); // Keep max 10 changes
         }
-
-        // Add to changes list
-        const newChange: FileChange = {
-          id: `${fileChangeEvent.path}-${fileChangeEvent.timestamp}`,
-          type: fileChangeEvent.type,
-          path: fileChangeEvent.path,
-          timestamp: fileChangeEvent.timestamp
-        };
-
-        setChanges((prev) => [newChange, ...prev.slice(0, 9)]); // Keep max 10 changes
+      } catch (error) {
+        console.error('[useFileChanges] Error processing WebSocket message:', error);
       }
     });
 

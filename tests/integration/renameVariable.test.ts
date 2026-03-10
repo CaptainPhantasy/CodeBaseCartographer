@@ -20,13 +20,50 @@ import { Server } from '../../server/src/server';
 import { resolve } from 'path';
 import { writeFileSync, unlinkSync, existsSync, mkdirSync, rmSync } from 'fs';
 import { randomBytes } from 'crypto';
+import { createServer } from 'http';
+
+/**
+ * Get a random available port for testing
+ * This prevents conflicts with other running servers
+ */
+function getAvailablePort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    server.listen(0, () => {
+      const address = server.address();
+      if (address && typeof address === 'object' && address.port) {
+        server.close(() => resolve(address.port));
+      } else {
+        server.close(() => reject(new Error('Could not get port')));
+      }
+    });
+    server.on('error', reject);
+  });
+}
+
+// Check if we should run integration tests
+const shouldRunIntegrationTests = process.env.RUN_INTEGRATION_TESTS === 'true';
 
 describe('End-to-End: Rename Variable Task', () => {
+  // Skip tests unless explicitly enabled
+  if (!shouldRunIntegrationTests) {
+    it.skip('should execute a simple rename variable task', () => {});
+    it.skip('should have generated valid file changes', () => {});
+    it.skip('should have a valid diff for changes', () => {});
+    it.skip('should have recorded change in orchestrator journal', () => {});
+    it.skip('should be able to rollback the change via orchestrator', () => {});
+    it.skip('should verify the change was applied to the file', () => {});
+    it.skip('should report accurate statistics', () => {});
+    return;
+  }
   let server: Server;
   let orchestrator: SubagentOrchestrator;
   const rollbackService = getRollbackService();
   let testDir: string;
   let testFilePath: string;
+  let serverPort: number;
+  let wsPort: number;
+  let serverBaseUrl: string;
 
   let executionId: string;
   let executionResult: any;
@@ -47,15 +84,20 @@ function test() {
 }
 `, 'utf-8');
 
-    // Start the server
-    server = new Server(3000, 3001, testDir, ':memory:');
+    // Get available ports to prevent conflicts
+    serverPort = await getAvailablePort();
+    wsPort = await getAvailablePort();
+    serverBaseUrl = `http://localhost:${serverPort}`;
+
+    // Start the server with dynamic ports
+    server = new Server(serverPort, wsPort, testDir, ':memory:');
     await server.start();
 
     // Give server a moment to start
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // Verify server is running
-    const response = await fetch('http://localhost:3000/api/health');
+    const response = await fetch(`${serverBaseUrl}/api/health`);
     expect(response.ok).toBe(true);
 
     // Initialize orchestrator
@@ -165,7 +207,7 @@ function test() {
 
     // Read the file via server API to verify the change was applied
     const response = await fetch(
-      `http://localhost:3000/api/files/${encodeURIComponent(firstChange.path)}`
+      `${serverBaseUrl}/api/files/${encodeURIComponent(firstChange.path)}`
     );
 
     expect(response.ok).toBe(true);

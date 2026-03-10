@@ -1,8 +1,21 @@
 # 🗺️ Codebase Cartographer
 
+> **⚠️ IMPORTANT: LOCALHOST DEVELOPMENT ONLY**
+>
+> This application is designed **exclusively for local development use**. It is **NOT production-ready** and should **NOT be deployed to public servers or shared environments** without implementing proper authentication, server-side key management, and security hardening.
+>
+> **Key limitations:**
+> - No authentication or authorization system
+> - API keys stored in browser localStorage (encrypted, but client-side)
+> - No rate limiting on API endpoints
+> - Overly permissive CORS configuration
+> - No security headers (CSP, etc.)
+>
+> **Do not deploy to GitHub Pages, Vercel, or any public hosting service without addressing these security issues first.**
+
 An AI-powered tool for mapping, visualizing, and understanding complex codebases. Uses multiple LLM providers to trace data flows, generate architecture diagrams, and provide intelligent code analysis.
 
-![Codebase Cartographer](https://img.shields.io/badge/AI-Powered-cyan) ![Multi-Provider](https://img.shields.io/badge/Multi--Provider-LLM-blue) ![React](https://img.shields.io/badge/React-19-61dafb)
+![Codebase Cartographer](https://img.shields.io/badge/AI-Powered-cyan) ![Multi-Provider](https://img.shields.io/badge/Multi--Provider-LLM-blue) ![React](https://img.shields.io/badge/React-19-61dafb) ![Development_Only-red)
 
 ## ✨ Features
 
@@ -11,6 +24,8 @@ An AI-powered tool for mapping, visualizing, and understanding complex codebases
 - **🗺️ Visual Architecture Maps** - Auto-generates interactive node-link diagrams of your system
 - **🎙️ Real-time Voice** - Live audio conversations with your AI assistant
 - **🔊 Text-to-Speech** - Read AI responses aloud with natural voices
+  - **Auto-Speak** - Automatically reads AI responses with queuing and playback controls
+  - **Queue Management** - Pause, resume, skip, or stop speech playback
 - **🎬 Video Generation** - Create animated architecture walkthroughs with Veo
 - **🎵 Voice Selection** - Choose from your ElevenLabs voice library with preview functionality
 - **🔍 Model Selection** - Select from OpenRouter's model catalog with pricing information
@@ -70,8 +85,9 @@ On first launch, you'll see the **Setup Wizard** which guides you through:
 | Code Analysis | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Vision | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Text-to-Speech | ✅ | ✅ | ❌ | ❌ | ✅ |
+| Speech-to-Text | ✅ | ✅ | ❌ | ❌ | ✅ |
 | Video Generation | ✅ (Veo) | ❌ | ❌ | ❌ | ❌ |
-| Real-time Voice | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Real-time Voice | ✅ | ✅ | ❌ | ❌ | ✅ |
 | Thinking Mode | ✅ | ✅ | ✅ | ✅ | ❌ |
 | Search Grounding | ✅ | ❌ | ❌ | ❌ | ❌ |
 
@@ -224,15 +240,30 @@ For detailed instructions, see [Adding a Provider](docs/ADDING_A_PROVIDER.md). S
 
 ## 🔒 Security Notes
 
-> **⚠️ IMPORTANT SECURITY WARNING**
-
-This application is designed for **localhost development use only**. Before deploying or sharing, please understand the following security limitations:
+> **⚠️ CRITICAL: LOCALHOST DEVELOPMENT ONLY**
+>
+> This application is **NOT production-ready**. It lacks:
+> - Authentication/Authorization system
+> - Rate limiting on API endpoints
+> - Content Security Policy (CSP) headers
+> - Input sanitization for LLM prompts
+> - Server-side key management
 
 ### Key Storage Security
-- API keys are stored in **browser localStorage** with basic obfuscation (not encryption)
-- Anyone with access to the browser can extract stored API keys
+- API keys are stored in **browser localStorage** with **AES-GCM-256 encryption** and PIN protection
+- While encrypted, client-side storage is still accessible to determined attackers
+- **Auto-lock** after 15 minutes of inactivity
 - **Do not use this app on shared computers or public devices**
 - **Do not commit `.env.local` files to version control** (already in .gitignore)
+
+### Security Weaknesses (Known Issues)
+| Issue | Severity | Status |
+|-------|----------|--------|
+| No authentication | CRITICAL | Not implemented |
+| Permissive CORS | HIGH | Allows all origins |
+| No CSP headers | HIGH | Not implemented |
+| No rate limiting | MEDIUM | Not implemented |
+| Client-side key storage | MEDIUM | Encrypted but client-accessible |
 
 ### Recommended Security Practices
 
@@ -242,12 +273,15 @@ This application is designed for **localhost development use only**. Before depl
 4. **Permissions**: Use API keys with minimal required permissions/scopes
 5. **Monitoring**: Monitor your API provider's usage dashboard for unusual activity
 
-### Production Deployment
-For production use, you must implement:
+### Production Deployment Requirements
+For production use, you **must implement**:
 - **Server-side key management** (never expose keys to clients)
 - **Authentication/Authorization** to control access
 - **Backend proxy** for all LLM API calls
 - **Secure key vault** (e.g., AWS Secrets Manager, Azure Key Vault)
+- **CORS restrictions** to specific origins only
+- **CSP headers** to prevent XSS attacks
+- **Rate limiting** to prevent API abuse
 
 ### Data Privacy
 - API keys are sent **directly to their respective providers only**

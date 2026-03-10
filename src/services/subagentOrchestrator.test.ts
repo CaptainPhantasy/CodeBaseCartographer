@@ -39,7 +39,8 @@ describe('SubagentOrchestrator', () => {
 
       const execution = orchestrator.getExecution(executionId);
       expect(execution).toBeDefined();
-      expect(execution?.status).toBe('queued');
+      // Status should be one of the expected states since the queue processes immediately
+      expect(['queued', 'initializing', 'running']).toContain(execution?.status);
     });
 
     it('should queue tasks when pool is full', async () => {

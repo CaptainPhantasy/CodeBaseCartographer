@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ErrorBoundary } from './ErrorBoundary';
 
@@ -69,11 +69,13 @@ describe('ErrorBoundary', () => {
   });
 
   it('reloads page when reload button is clicked', () => {
-    const reloadSpy = vi.spyOn(window.location, 'reload').mockImplementation(() => {});
-    const mockWindow = Object.create(window);
-    mockWindow.location = { reload: vi.fn() };
-    delete (global as any).window;
-    (global as any).window = mockWindow;
+    // Mock window.location.reload
+    const reloadSpy = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { reload: reloadSpy },
+      writable: true,
+      configurable: true
+    });
 
     render(
       <ErrorBoundary>
@@ -81,17 +83,30 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /reload application/i }));
+    const reloadButton = screen.getByRole('button', { name: /reload application/i });
+    reloadButton.click();
 
-    expect(reloadSpy).toHaveBeenCalled();
-
-    // Cleanup
-    reloadSpy.mockRestore();
+    expect(reloadSpy).toHaveBeenCalledTimes(1);
   });
 
   it('clears localStorage and reloads when reset config button is clicked', () => {
-    const removeItemSpy = vi.spyOn(Storage.prototype, 'removeItem');
-    const reloadSpy = vi.spyOn(window.location, 'reload').mockImplementation(() => {});
+    // Mock localStorage
+    const removeItemSpy = vi.fn();
+    const localStorageMock = {
+      removeItem: removeItemSpy
+    };
+    Object.defineProperty(window, 'localStorage', {
+      value: localStorageMock,
+      writable: true,
+      configurable: true
+    });
+
+    const reloadSpy = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { reload: reloadSpy },
+      writable: true,
+      configurable: true
+    });
 
     render(
       <ErrorBoundary>
@@ -99,14 +114,11 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /reset config/i }));
+    const resetButton = screen.getByRole('button', { name: /reset config/i });
+    resetButton.click();
 
     expect(removeItemSpy).toHaveBeenCalledWith('codebase_cartographer_config');
-    expect(reloadSpy).toHaveBeenCalled();
-
-    // Cleanup
-    removeItemSpy.mockRestore();
-    reloadSpy.mockRestore();
+    expect(reloadSpy).toHaveBeenCalledTimes(1);
   });
 
   it('shows helpful tip message', () => {
@@ -121,7 +133,12 @@ describe('ErrorBoundary', () => {
   });
 
   it('resets state and reloads when reset is called programmatically', () => {
-    const reloadSpy = vi.spyOn(window.location, 'reload').mockImplementation(() => {});
+    const reloadSpy = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { reload: reloadSpy },
+      writable: true,
+      configurable: true
+    });
 
     const { container } = render(
       <ErrorBoundary>
@@ -137,12 +154,10 @@ describe('ErrorBoundary', () => {
       errorBoundaryInstance.handleReset();
     } else {
       // Fallback: find the reset button and click it
-      fireEvent.click(screen.getByRole('button', { name: /reload application/i }));
+      const reloadButton = screen.getByRole('button', { name: /reload application/i });
+      reloadButton.click();
     }
 
-    expect(reloadSpy).toHaveBeenCalled();
-
-    // Cleanup
-    reloadSpy.mockRestore();
+    expect(reloadSpy).toHaveBeenCalledTimes(1);
   });
 });

@@ -35,6 +35,12 @@ const FeatureTooltip: React.FC<{ message: string; children: React.ReactNode }> =
   </div>
 );
 
+// Loaded file with content for context-aware graph generation
+interface LoadedFile {
+  path: string;
+  content: string;
+}
+
 const App: React.FC = () => {
   const { isFirstRun, config } = useConfig();
   const {
@@ -52,6 +58,10 @@ const App: React.FC = () => {
   const [showSetupWizard, setShowSetupWizard] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [mode, setMode] = useState<AppMode>(AppMode.CHAT);
+  
+  // Store loaded files with contents for context-aware generation
+  const [loadedFiles, setLoadedFiles] = useState<LoadedFile[]>([]);
+  const [loadedFilesSource, setLoadedFilesSource] = useState<string>('');
   
   // Show setup wizard on first run
   useEffect(() => {
@@ -239,10 +249,58 @@ const App: React.FC = () => {
     }
   };
 
-  const handleIngest = (filePaths: string[], source: string, options?: any) => {
+  const handleIngest = async (filePaths: string[], source: string, options?: any) => {
     setIsIngestOpen(false);
     const truncatedPaths = filePaths.length > 2000 ? filePaths.slice(0, 2000) : filePaths;
     const count = filePaths.length;
+
+    // Store source for context
+    setLoadedFilesSource(source);
+
+    // Try to fetch file contents for context-aware graph generation
+    // This works when using local files with the backend server running
+    const filesWithContents: LoadedFile[] = [];
+    const MAX_FILES = 50; // Limit to avoid overwhelming the LLM
+    const MAX_CONTENT_SIZE = 10000; // Characters per file
+
+    // Only fetch code files (skip large files, binaries, etc.)
+    const codeExtensions = ['.ts', '.tsx', '.js', '.jsx', '.go', '.py', '.java', '.rs', '.rb', '.php', '.cs'];
+    const codeFiles = filePaths.filter(p => 
+      codeExtensions.some(ext => p.endsWith(ext)) && 
+      !p.includes('node_modules') && 
+      !p.includes('.test.') &&
+      !p.includes('.spec.')
+    ).slice(0, MAX_FILES);
+
+    // Try to fetch contents from backend
+    try {
+      const fetchPromises = codeFiles.map(async (path) => {
+        try {
+          const response = await fetch(`/api/files/${encodeURIComponent(path)}`);
+          if (response.ok) {
+            const data = await response.json();
+            const content = data.content?.slice(0, MAX_CONTENT_SIZE) || '';
+            if (content) {
+              return { path, content };
+            }
+          }
+        } catch {
+          // Ignore fetch errors - file might not exist or other issues
+        }
+        return null;
+      });
+
+      const results = await Promise.all(fetchPromises);
+      const validFiles = results.filter((f): f is LoadedFile => f !== null);
+      filesWithContents.push(...validFiles);
+
+      if (filesWithContents.length > 0) {
+        setLoadedFiles(filesWithContents);
+        console.log(`Loaded ${filesWithContents.length} files with content for context-aware generation`);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch file contents:', err);
+    }
 
     let filterInfo = '';
     if (options) {
@@ -256,9 +314,13 @@ const App: React.FC = () => {
       }
     }
 
+    const contextInfo = filesWithContents.length > 0 
+      ? `\n\n**Context Available:** ${filesWithContents.length} files loaded with full content for accurate flow chart generation. Use "Generate Flow Chart" in the Flow Chart view to visualize with real file paths and transformations.`
+      : '';
+
     const prompt = `I have loaded the file structure for the project "${source}" (${count} files).${filterInfo}
 Here is the file list:
-${truncatedPaths.join('\n')}
+${truncatedPaths.join('\n')}${contextInfo}
 
 Please perform Phase 1: Initial Repo Reconnaissance.
 1. Identify likely entry points (CLI, API, UI).
@@ -740,7 +802,12 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
 
           {/* Flow Chart View */}
           <div className={`absolute inset-0 ${mode === AppMode.FLOW_CHART ? 'z-10' : '-z-10 opacity-0 pointer-events-none'}`}>
-            <DiagramView graphData={graphData} onGraphDataChange={setGraphData} />
+            <DiagramView 
+              graphData={graphData} 
+              onGraphDataChange={setGraphData} 
+              loadedFiles={loadedFiles}
+              loadedFilesSource={loadedFilesSource}
+            />
           </div>
 
           {/* Tasks View */}

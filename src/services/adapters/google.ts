@@ -329,7 +329,6 @@ export class GoogleAdapter extends BaseLLMAdapter {
       },
       callbacks: {
         onopen: () => {
-          console.log('[GoogleAdapter] Live connection opened');
           if (config.onOpen) config.onOpen();
         },
         onmessage: (msg: any) => {
@@ -344,11 +343,9 @@ export class GoogleAdapter extends BaseLLMAdapter {
           }
         },
         onerror: (e: any) => {
-          console.error('[GoogleAdapter] Live error:', e);
           if (config.onError) config.onError(e instanceof Error ? e : new Error(String(e)));
         },
         onclose: () => {
-          console.log('[GoogleAdapter] Live connection closed');
           if (config.onClose) config.onClose();
         }
       }

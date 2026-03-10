@@ -449,33 +449,70 @@ export class Server {
 
   /**
    * GET /api/open-file - Open a file in the native editor
+   * Supports Bear for markdown files on macOS
    */
   private async openFile(req: Request, res: Response): Promise<void> {
     try {
-      const { path } = req.query;
+      const { path, editor } = req.query;
 
       if (!path || typeof path !== 'string') {
         res.status(400).json({ error: 'Path parameter required' });
         return;
       }
 
-      // Determine the OS-specific open command
+      const filePath = path;
       const platform = process.platform;
-      let command: string;
+      const isMarkdown = /\.(md|markdown|mdown|mkd)$/i.test(filePath);
+      const requestedEditor = editor?.toString().toLowerCase();
 
-      switch (platform) {
-        case 'darwin':
-          command = `open "${path}"`;
-          break;
-        case 'win32':
-          command = `start "" "${path}"`;
-          break;
-        case 'linux':
-          command = `xdg-open "${path}"`;
-          break;
-        default:
-          res.status(500).json({ error: `Unsupported platform: ${platform}` });
-          return;
+      let command: string;
+      let usedEditor: string;
+
+      // On macOS, use Bear for markdown files if requested or auto-detect
+      if (platform === 'darwin' && isMarkdown) {
+        if (requestedEditor === 'bear') {
+          // Use Bear URL scheme for better integration
+          command = `open "bear://x-callback-url/open-note?path=${encodeURIComponent(filePath)}"`;
+          usedEditor = 'Bear';
+        } else if (requestedEditor === 'default' || !requestedEditor) {
+          // Try Bear first, fall back to default
+          try {
+            // Check if Bear is installed
+            const { stdout } = await execAsync('mdfind "kMDItemKind == \'Application\' && kMDItemDisplayName == \'Bear\'"');
+            if (stdout.trim()) {
+              command = `open -a Bear "${filePath}"`;
+              usedEditor = 'Bear';
+            } else {
+              command = `open "${filePath}"`;
+              usedEditor = 'default';
+            }
+          } catch {
+            command = `open "${filePath}"`;
+            usedEditor = 'default';
+          }
+        } else {
+          // Specific editor requested
+          command = `open -a "${requestedEditor}" "${filePath}"`;
+          usedEditor = requestedEditor;
+        }
+      } else if (platform === 'darwin') {
+        // Non-markdown or non-Bear on macOS
+        if (requestedEditor && requestedEditor !== 'default') {
+          command = `open -a "${requestedEditor}" "${filePath}"`;
+          usedEditor = requestedEditor;
+        } else {
+          command = `open "${filePath}"`;
+          usedEditor = 'default';
+        }
+      } else if (platform === 'win32') {
+        command = `start "" "${filePath}"`;
+        usedEditor = 'default';
+      } else if (platform === 'linux') {
+        command = `xdg-open "${filePath}"`;
+        usedEditor = 'default';
+      } else {
+        res.status(500).json({ error: `Unsupported platform: ${platform}` });
+        return;
       }
 
       // Execute the open command
@@ -483,8 +520,10 @@ export class Server {
 
       res.json({
         success: true,
-        path,
-        message: `File opened successfully`,
+        path: filePath,
+        editor: usedEditor,
+        isMarkdown,
+        message: `File opened in ${usedEditor}`,
       });
     } catch (error) {
       console.error('Open file error:', error);

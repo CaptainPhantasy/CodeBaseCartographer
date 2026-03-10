@@ -10,6 +10,10 @@ This document provides comprehensive API documentation for the Codebase Cartogra
 - [Resource Fetchers](#resource-fetchers)
   - [fetchElevenLabsVoices](#fetchelevenlabsvoices)
   - [fetchOpenRouterModels](#fetchopenroutermodels)
+- [TTS Queue Service](#tts-queue-service)
+  - [Overview](#tts-queue-overview)
+  - [Singleton Instance](#singleton-instance)
+  - [useTTSQueue Hook](#usettsqueue-hook)
 - [Configuration API](#configuration-api)
   - [useConfig Hook](#useconfig-hook)
   - [ConfigManager](#configmanager)
@@ -374,6 +378,182 @@ if (result.error) {
   console.log('Available models:', result.models);
   // Use models in UI or save to config
 }
+```
+
+---
+
+## TTS Queue Service
+
+### TTS Queue Overview
+
+The TTS Queue Service (`src/services/ttsQueueService.ts`) manages text-to-speech playback with:
+- **Sequential queue** - Speech requests play one at a time, in order
+- **Deduplication** - Identical text in queue is automatically removed
+- **Playback controls** - Pause/resume/skip/stop functionality
+- **State tracking** - Real-time playback state (idle, loading, playing, paused)
+
+This prevents overlapping audio when multiple TTS requests are triggered rapidly (e.g., streaming responses or auto-speak).
+
+### Singleton Instance
+
+```typescript
+import { ttsQueueService } from '../services/ttsQueueService';
+```
+
+#### Methods
+
+##### `enqueue(text: string, voice?: string, priority?: number): string`
+
+Add text to the speech queue.
+
+**Parameters:**
+- `text` (string): Text to speak
+- `voice` (optional): Voice ID to use
+- `priority` (optional): Higher values jump the queue (default: 0)
+
+**Returns:** `string` - Unique speech ID
+
+##### `dequeue(id: string): boolean`
+
+Remove a speech from queue or skip if currently playing.
+
+**Parameters:**
+- `id` (string): Speech ID to remove
+
+**Returns:** `boolean` - True if found and removed
+
+##### `pause(): void`
+
+Pause current playback.
+
+##### `resume(): void`
+
+Resume paused playback.
+
+##### `skip(): void`
+
+Skip current speech and play next in queue.
+
+##### `togglePause(): void`
+
+Toggle between pause and resume.
+
+##### `stop(): void`
+
+Stop all playback and clear the queue.
+
+##### `clearQueue(): void`
+
+Clear queued items without stopping current playback.
+
+##### `getState(): { state: PlaybackState; currentId: string | null; queueLength: number }`
+
+Get current playback state.
+
+**Returns:** State object with:
+- `state`: `'idle' | 'loading' | 'playing' | 'paused'`
+- `currentId`: Currently playing speech ID or null
+- `queueLength`: Number of items in queue
+
+### useTTSQueue Hook
+
+React hook for accessing TTS queue state and controls.
+
+```typescript
+import { useTTSQueue } from '../services/ttsQueueService';
+
+function Component() {
+  const ttsQueue = useTTSQueue();
+
+  return (
+    <div>
+      <button onClick={() => ttsQueue.enqueue('Hello world')}>
+        Speak
+      </button>
+      {ttsQueue.isPlaying && (
+        <button onClick={ttsQueue.pause}>Pause</button>
+      )}
+      {ttsQueue.isPaused && (
+        <button onClick={ttsQueue.resume}>Resume</button>
+      )}
+    </div>
+  );
+}
+```
+
+#### Return Type
+
+```typescript
+{
+  // State
+  state: 'idle' | 'loading' | 'playing' | 'paused';
+  currentId: string | null;
+  queueLength: number;
+  isPlaying: boolean;
+  isPaused: boolean;
+  isLoading: boolean;
+
+  // Methods
+  enqueue: (text: string, voice?: string, priority?: number) => string;
+  pause: () => void;
+  resume: () => void;
+  togglePause: () => void;
+  skip: () => void;
+  stop: () => void;
+  clearQueue: () => void;
+}
+```
+
+#### Usage Examples
+
+**Basic speech enqueue:**
+```typescript
+const { enqueue } = useTTSQueue();
+enqueue('The code analysis is complete.', '21m00Tcm4TlvDq8ikWAM');
+```
+
+**Queue state monitoring:**
+```typescript
+const { isPlaying, queueLength, state } = useTTSQueue();
+
+useEffect(() => {
+  if (isPlaying) {
+    console.log('Currently speaking');
+  }
+  if (queueLength > 0) {
+    console.log(`${queueLength} items in queue`);
+  }
+}, [isPlaying, queueLength, state]);
+```
+
+**Playback controls:**
+```typescript
+const { isPlaying, isPaused, togglePause, skip, stop } = useTTSQueue();
+
+return (
+  <div className="tts-controls">
+    <button onClick={togglePause}>
+      {isPlaying ? '⏸' : '▶️'}
+    </button>
+    <button onClick={skip} disabled={!isPlaying && !isPaused}>
+      ⏭
+    </button>
+    <button onClick={stop}>⏹</button>
+  </div>
+);
+```
+
+**Auto-speak integration:**
+```typescript
+const { enqueue } = useTTSQueue();
+const [autoSpeak, setAutoSpeak] = useState(false);
+
+// Trigger after AI response
+useEffect(() => {
+  if (autoSpeak && aiResponse) {
+    enqueue(aiResponse.text);
+  }
+}, [aiResponse, autoSpeak]);
 ```
 
 ---

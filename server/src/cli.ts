@@ -128,9 +128,25 @@ cli
   });
 
 cli.help();
-cli.version(require('../package.json').version);
 
-cli.parse();
+// Get version from package.json (ES module compatible)
+const getVersion = async (): Promise<string> => {
+  try {
+    const pkgPath = new URL('../package.json', import.meta.url);
+    const pkg = JSON.parse(await readFile(pkgPath, 'utf-8'));
+    return pkg.version || '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+};
+
+getVersion().then(version => {
+  cli.version(version);
+  cli.parse();
+}).catch(() => {
+  cli.version('0.0.0');
+  cli.parse();
+});
 
 /**
  * Get codebase statistics

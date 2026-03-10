@@ -29,6 +29,15 @@ describe('FileVersionStore', () => {
       store.storeVersion('/test/file.ts', 'content', 2000);
 
       const version = store.getPreviousVersion('/test/file.ts');
+      expect(version?.content).toBe('content');
+      expect(version?.timestamp).toBe(1000); // Should keep original timestamp
+    });
+
+    it('should not store duplicate content', () => {
+      store.storeVersion('/test/file.ts', 'content', 1000);
+      store.storeVersion('/test/file.ts', 'content', 2000);
+
+      const version = store.getPreviousVersion('/test/file.ts');
       expect(version?.timestamp).toBe(1000); // Should keep original timestamp
     });
 

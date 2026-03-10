@@ -197,14 +197,6 @@ export class SearchIndexer {
       score += 10;
     }
 
-    // Word boundary matches = small bonus
-    const words = query.split(/\s+/);
-    words.forEach((word) => {
-      if (entry.labelLower.includes(word)) {
-        score += 5;
-      }
-    });
-
     return score;
   }
 

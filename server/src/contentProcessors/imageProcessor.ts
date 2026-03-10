@@ -6,11 +6,12 @@
 import sharp from 'sharp';
 import { readFileSync } from 'fs';
 import { extname } from 'path';
+import type { ProcessedContent } from '../types.js';
 
 /**
- * Processed content interface (will be imported from fileTypeRegistry when available)
+ * Processed content interface for images
  */
-export interface ProcessedImageContent {
+export interface ProcessedImageContent extends ProcessedContent {
   metadata: ImageMetadata;
   base64?: string;
   text?: string;
@@ -105,7 +106,14 @@ function processSvg(buffer: Buffer, filePath: string): ProcessedImageContent {
       space: 'srgb'
     };
 
+    const summary = `SVG image (${width}x${height})`;
+
     return {
+      summary,
+      extracts: [{
+        path: filePath,
+        content: svgContent,
+      }],
       metadata,
       text: svgContent,
       base64: buffer.toString('base64')
@@ -143,7 +151,14 @@ async function processBinaryImage(buffer: Buffer, filePath: string): Promise<Pro
 
     const base64 = pngBuffer.toString('base64');
 
+    const summary = `${imageMetadata.format.toUpperCase()} image (${imageMetadata.width}x${imageMetadata.height}, ${imageMetadata.channels} channel${imageMetadata.channels !== 1 ? 's' : ''}${imageMetadata.hasAlpha ? ', with alpha' : ''})`;
+
     return {
+      summary,
+      extracts: [{
+        path: filePath,
+        content: `[Binary ${imageMetadata.format.toUpperCase()} image - ${buffer.length} bytes]`,
+      }],
       metadata: imageMetadata,
       base64
     };

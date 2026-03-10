@@ -56,7 +56,7 @@ describe('PDF Processor', () => {
       expect(result.extracts).toHaveLength(1);
       expect(result.extracts[0].path).toBe('/path/to/document.pdf');
       expect(result.extracts[0].content).toBe(mockText);
-      expect(result.metadata.numPages).toBe(5);
+      expect(result.metadata?.numPages).toBe(5);
     });
 
     it('should handle PDFs with no text content', async () => {
@@ -71,7 +71,7 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/path/to/empty.pdf');
 
       expect(result.extracts[0].content).toBe('[No text content found in PDF]');
-      expect(result.metadata.numPages).toBe(1);
+      expect(result.metadata?.numPages).toBe(1);
     });
 
     it('should handle single page PDFs', async () => {
@@ -87,7 +87,7 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/path/to/single.pdf');
 
       expect(result.summary).toBe('PDF with 1 page');
-      expect(result.metadata.numPages).toBe(1);
+      expect(result.metadata?.numPages).toBe(1);
     });
 
     it('should handle multi-page PDFs with correct pluralization', async () => {
@@ -102,7 +102,7 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/path/to/multi.pdf');
 
       expect(result.summary).toBe('PDF with 10 pages');
-      expect(result.metadata.numPages).toBe(10);
+      expect(result.metadata?.numPages).toBe(10);
     });
   });
 
@@ -119,7 +119,7 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
       expect(result.summary).toContain('titled "Sample Document Title"');
-      expect(result.metadata.title).toBe('Sample Document Title');
+      expect(result.metadata?.title).toBe('Sample Document Title');
     });
 
     it('should extract author metadata', async () => {
@@ -134,7 +134,7 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
       expect(result.summary).toContain('by John Doe');
-      expect(result.metadata.author).toBe('John Doe');
+      expect(result.metadata?.author).toBe('John Doe');
     });
 
     it('should extract both title and author in summary', async () => {
@@ -149,8 +149,8 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
       expect(result.summary).toBe('PDF with 5 pages titled "My Document" by Jane Smith');
-      expect(result.metadata.title).toBe('My Document');
-      expect(result.metadata.author).toBe('Jane Smith');
+      expect(result.metadata?.title).toBe('My Document');
+      expect(result.metadata?.author).toBe('Jane Smith');
     });
 
     it('should extract subject metadata', async () => {
@@ -164,7 +164,7 @@ describe('PDF Processor', () => {
       const buffer = Buffer.from('fake pdf content');
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
-      expect(result.metadata.subject).toBe('Annual Report');
+      expect(result.metadata?.subject).toBe('Annual Report');
     });
 
     it('should extract creator metadata', async () => {
@@ -178,7 +178,7 @@ describe('PDF Processor', () => {
       const buffer = Buffer.from('fake pdf content');
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
-      expect(result.metadata.creator).toBe('Adobe Acrobat');
+      expect(result.metadata?.creator).toBe('Adobe Acrobat');
     });
 
     it('should extract producer metadata', async () => {
@@ -192,7 +192,7 @@ describe('PDF Processor', () => {
       const buffer = Buffer.from('fake pdf content');
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
-      expect(result.metadata.producer).toBe('PDF Library v2.0');
+      expect(result.metadata?.producer).toBe('PDF Library v2.0');
     });
 
     it('should extract creation and modification dates', async () => {
@@ -209,8 +209,8 @@ describe('PDF Processor', () => {
       const buffer = Buffer.from('fake pdf content');
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
-      expect(result.metadata.creationDate).toBe('2024-01-15T10:30:00Z');
-      expect(result.metadata.modificationDate).toBe('2024-02-01T14:20:00Z');
+      expect(result.metadata?.creationDate).toBe('2024-01-15T10:30:00Z');
+      expect(result.metadata?.modificationDate).toBe('2024-02-01T14:20:00Z');
     });
 
     it('should extract fingerprints if available', async () => {
@@ -225,7 +225,7 @@ describe('PDF Processor', () => {
       const buffer = Buffer.from('fake pdf content');
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
-      expect(result.metadata.fingerprints).toEqual(['abc123', 'def456']);
+      expect(result.metadata?.fingerprints).toEqual(['abc123', 'def456']);
     });
 
     it('should extract permissions if available', async () => {
@@ -240,7 +240,7 @@ describe('PDF Processor', () => {
       const buffer = Buffer.from('fake pdf content');
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
-      expect(result.metadata.permissions).toEqual({ print: true, copy: false, modify: false });
+      expect(result.metadata?.permissions).toEqual({ print: true, copy: false, modify: false });
     });
 
     it('should extract all available metadata fields', async () => {
@@ -265,16 +265,16 @@ describe('PDF Processor', () => {
       const buffer = Buffer.from('fake pdf content');
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
-      expect(result.metadata.title).toBe('Complete Test');
-      expect(result.metadata.author).toBe('Test Author');
-      expect(result.metadata.subject).toBe('Test Subject');
-      expect(result.metadata.creator).toBe('Test Creator');
-      expect(result.metadata.producer).toBe('Test Producer');
-      expect(result.metadata.creationDate).toBe('2024-01-01T00:00:00Z');
-      expect(result.metadata.modificationDate).toBe('2024-01-02T00:00:00Z');
-      expect(result.metadata.fingerprints).toEqual(['fingerprint1']);
-      expect(result.metadata.permissions).toEqual({ print: true });
-      expect(result.metadata.numPages).toBe(8);
+      expect(result.metadata?.title).toBe('Complete Test');
+      expect(result.metadata?.author).toBe('Test Author');
+      expect(result.metadata?.subject).toBe('Test Subject');
+      expect(result.metadata?.creator).toBe('Test Creator');
+      expect(result.metadata?.producer).toBe('Test Producer');
+      expect(result.metadata?.creationDate).toBe('2024-01-01T00:00:00Z');
+      expect(result.metadata?.modificationDate).toBe('2024-01-02T00:00:00Z');
+      expect(result.metadata?.fingerprints).toEqual(['fingerprint1']);
+      expect(result.metadata?.permissions).toEqual({ print: true });
+      expect(result.metadata?.numPages).toBe(8);
     });
   });
 
@@ -288,8 +288,8 @@ describe('PDF Processor', () => {
       expect(result.summary).toBe('Failed to process PDF: Password protected');
       expect(result.extracts[0].content).toContain('Error processing PDF');
       expect(result.extracts[0].content).toContain('Password protected');
-      expect(result.metadata.error).toBe('Password protected');
-      expect(result.metadata.numPages).toBe(0);
+      expect(result.metadata?.error).toBe('Password protected');
+      expect(result.metadata?.numPages).toBe(0);
     });
 
     it('should handle corrupted PDFs gracefully', async () => {
@@ -301,8 +301,8 @@ describe('PDF Processor', () => {
       expect(result.summary).toBe('Failed to process PDF: Invalid PDF structure');
       expect(result.extracts[0].content).toContain('Error processing PDF');
       expect(result.extracts[0].content).toContain('Invalid PDF structure');
-      expect(result.metadata.error).toBe('Invalid PDF structure');
-      expect(result.metadata.numPages).toBe(0);
+      expect(result.metadata?.error).toBe('Invalid PDF structure');
+      expect(result.metadata?.numPages).toBe(0);
     });
 
     it('should handle unsupported PDF formats', async () => {
@@ -323,8 +323,8 @@ describe('PDF Processor', () => {
 
       // The library likely wraps non-Error objects, so we expect an Error message
       expect(result.summary).toContain('Failed to process PDF');
-      expect(result.metadata.error).toBeDefined();
-      expect(result.metadata.numPages).toBe(0);
+      expect(result.metadata?.error).toBeDefined();
+      expect(result.metadata?.numPages).toBe(0);
     });
 
     it('should handle unknown errors', async () => {
@@ -334,7 +334,7 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
       expect(result.summary).toBe('Failed to process PDF: Unknown error');
-      expect(result.metadata.error).toBe('Unknown error');
+      expect(result.metadata?.error).toBe('Unknown error');
     });
 
     it('should include helpful error message for failed processing', async () => {
@@ -390,7 +390,7 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/path/to/large.pdf');
 
       expect(result.extracts[0].content).toBe(longText);
-      expect(result.metadata.numPages).toBe(100);
+      expect(result.metadata?.numPages).toBe(100);
     });
 
     it('should handle PDF with special characters in text', async () => {
@@ -435,7 +435,7 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/path/to/nopage.pdf');
 
       expect(result.summary).toBe('PDF with 0 pages');
-      expect(result.metadata.numPages).toBe(0);
+      expect(result.metadata?.numPages).toBe(0);
     });
 
     it('should handle large page count', async () => {
@@ -450,7 +450,7 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/path/to/large.pdf');
 
       expect(result.summary).toBe('PDF with 9999 pages');
-      expect(result.metadata.numPages).toBe(9999);
+      expect(result.metadata?.numPages).toBe(9999);
     });
 
     it('should preserve file path in extracts', async () => {
@@ -479,9 +479,9 @@ describe('PDF Processor', () => {
       const buffer = Buffer.from('fake pdf content');
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
-      expect(result.metadata.numPages).toBe(5);
-      expect(result.metadata.title).toBeUndefined();
-      expect(result.metadata.author).toBeUndefined();
+      expect(result.metadata?.numPages).toBe(5);
+      expect(result.metadata?.title).toBeUndefined();
+      expect(result.metadata?.author).toBeUndefined();
     });
 
     it('should handle PDF with empty info object', async () => {
@@ -496,7 +496,7 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/path/to/document.pdf');
 
       expect(result.summary).toBe('PDF with 3 pages');
-      expect(result.metadata.numPages).toBe(3);
+      expect(result.metadata?.numPages).toBe(3);
     });
   });
 
@@ -526,12 +526,12 @@ describe('PDF Processor', () => {
       const result = await processPdf(buffer, '/documents/annual-report-2024.pdf');
 
       expect(result.summary).toBe('PDF with 15 pages titled "Annual Report 2024" by Finance Department');
-      expect(result.metadata.title).toBe('Annual Report 2024');
-      expect(result.metadata.author).toBe('Finance Department');
-      expect(result.metadata.subject).toBe('Annual Financial Report');
-      expect(result.metadata.creator).toBe('Microsoft Word');
-      expect(result.metadata.producer).toBe('Adobe PDF Library 15.0');
-      expect(result.metadata.numPages).toBe(15);
+      expect(result.metadata?.title).toBe('Annual Report 2024');
+      expect(result.metadata?.author).toBe('Finance Department');
+      expect(result.metadata?.subject).toBe('Annual Financial Report');
+      expect(result.metadata?.creator).toBe('Microsoft Word');
+      expect(result.metadata?.producer).toBe('Adobe PDF Library 15.0');
+      expect(result.metadata?.numPages).toBe(15);
       expect(result.extracts[0].content).toContain('ANNUAL REPORT 2024');
     });
 

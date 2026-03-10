@@ -17,7 +17,7 @@ export {
 } from './textProcessor.js';
 
 export type {
-  ProcessedContent as TextProcessedContent,
+  TextProcessedContent,
   FileTypeHandler,
 } from './textProcessor.js';
 
@@ -249,7 +249,7 @@ export function isTextProcessedContent(content: ProcessedContent): boolean {
  * Type guard to check if content is from image processor
  */
 export function isImageProcessedContent(content: ProcessedContent): boolean {
-  return 'metadata' in content && 'width' in content.metadata;
+  return 'metadata' in content && content.metadata !== undefined && 'width' in content.metadata;
 }
 
 /**

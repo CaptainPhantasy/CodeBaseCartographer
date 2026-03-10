@@ -293,13 +293,11 @@ async function validateElevenLabsKey(apiKey: string): Promise<ValidationResult> 
 
 /**
  * Validate a local LLM connection
- * TODO: Implement when local LLM support is added
+ * Checks if Ollama or another OpenAI-compatible local server is running
  */
 async function validateLocalLLMConnection(endpoint: string): Promise<ValidationResult> {
-  // TODO: Implement local LLM validation
-  // - Check if Ollama is running at the endpoint
-  // - Verify /api/tags or /v1/models endpoint responds
   try {
+    // Try Ollama's native API first (/api/tags)
     const response = await fetch(`${endpoint}/api/tags`, {
       method: 'GET'
     });
