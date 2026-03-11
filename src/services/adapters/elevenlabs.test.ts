@@ -1,9 +1,26 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ElevenLabsAdapter } from './elevenlabs';
 import { UnsupportedCapabilityError } from './base';
 import { TaskType } from '../../types/capabilities';
 
-// Mock fetch
+// Mock the ElevenLabs SDK
+const mockConvert = vi.fn();
+
+vi.mock('@elevenlabs/elevenlabs-js', () => {
+  class MockElevenLabsClient {
+    constructor(_config: { apiKey: string }) {}
+    textToSpeech = {
+      convert: mockConvert
+    };
+  }
+  return {
+    ElevenLabsClient: MockElevenLabsClient
+  };
+});
+
+// Import after mock is set up
+import { ElevenLabsAdapter } from './elevenlabs';
+
+// Mock fetch for STT tests (STT still uses raw fetch)
 global.fetch = vi.fn();
 
 describe('ElevenLabsAdapter', () => {
@@ -73,130 +90,121 @@ describe('ElevenLabsAdapter', () => {
   });
 
   describe('generateSpeech', () => {
-    it('should generate speech with default voice', async () => {
-      const mockResponse = {
-        ok: true,
-        arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100))
-      };
-      (fetch as any).mockResolvedValue(mockResponse);
+    it('should generate speech with default voice using SDK', async () => {
+      // Create a mock audio buffer
+      const mockAudioBuffer = new ArrayBuffer(100);
+      mockConvert.mockResolvedValueOnce(mockAudioBuffer);
 
       const result = await adapter.generateSpeech('Hello');
 
-      expect(fetch).toHaveBeenCalledWith(
-        'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM',
+      expect(mockConvert).toHaveBeenCalledWith(
+        '21m00Tcm4TlvDq8ikWAM', // Default Rachel voice ID
         expect.objectContaining({
-          method: 'POST',
-          headers: {
-            'xi-api-key': 'test-api-key',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            text: 'Hello',
-            model_id: 'eleven_multilingual_v2',
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.75,
-              style: 0.0,
-              use_speaker_boost: true
-            }
-          })
+          text: 'Hello',
+          modelId: 'eleven_multilingual_v2',
+          voiceSettings: {
+            stability: 0.5,
+            similarityBoost: 0.75,
+            style: 0.0,
+            useSpeakerBoost: true
+          }
         })
       );
       expect(result.format).toBe('mp3');
+      expect(result.audioData).toBeDefined();
     });
 
-    it('should generate speech with custom voice', async () => {
-      const mockResponse = {
-        ok: true,
-        arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100))
-      };
-      (fetch as any).mockResolvedValue(mockResponse);
+    it('should generate speech with legacy voice name (rachel)', async () => {
+      const mockAudioBuffer = new ArrayBuffer(100);
+      mockConvert.mockResolvedValueOnce(mockAudioBuffer);
 
       await adapter.generateSpeech('Hello', { voice: 'rachel' });
 
-      expect(fetch).toHaveBeenCalledWith(
-        'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM',
+      expect(mockConvert).toHaveBeenCalledWith(
+        '21m00Tcm4TlvDq8ikWAM', // Rachel's voice ID
         expect.objectContaining({
-          body: JSON.stringify({
-            text: 'Hello',
-            model_id: 'eleven_multilingual_v2',
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.75,
-              style: 0.0,
-              use_speaker_boost: true
-            }
-          })
+          text: 'Hello'
         })
       );
     });
 
     it('should handle custom voice ID', async () => {
-      const mockResponse = {
-        ok: true,
-        arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100))
-      };
-      (fetch as any).mockResolvedValue(mockResponse);
+      const mockAudioBuffer = new ArrayBuffer(100);
+      mockConvert.mockResolvedValueOnce(mockAudioBuffer);
 
       await adapter.generateSpeech('Hello', { voice: 'custom-voice-id' });
 
-      expect(fetch).toHaveBeenCalledWith(
-        'https://api.elevenlabs.io/v1/text-to-speech/custom-voice-id',
+      expect(mockConvert).toHaveBeenCalledWith(
+        'custom-voice-id',
         expect.objectContaining({
-          body: JSON.stringify({
-            text: 'Hello',
-            model_id: 'eleven_multilingual_v2',
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.75,
-              style: 0.0,
-              use_speaker_boost: true
-            }
-          })
+          text: 'Hello'
         })
       );
     });
 
-    it('should handle custom voice with default settings', async () => {
-      const mockResponse = {
-        ok: true,
-        arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100))
-      };
-      (fetch as any).mockResolvedValue(mockResponse);
+    it('should map paul voice name to ID', async () => {
+      const mockAudioBuffer = new ArrayBuffer(100);
+      mockConvert.mockResolvedValueOnce(mockAudioBuffer);
 
-      const result = await adapter.generateSpeech('Hello', {
-        voice: 'paul'
-      });
+      const result = await adapter.generateSpeech('Hello', { voice: 'paul' });
 
-      expect(fetch).toHaveBeenCalledWith(
-        'https://api.elevenlabs.io/v1/text-to-speech/5Q0t7uMcjvnagumLfvZi',
+      expect(mockConvert).toHaveBeenCalledWith(
+        '5Q0t7uMcjvnagumLfvZi', // Paul's voice ID
         expect.objectContaining({
-          body: JSON.stringify({
-            text: 'Hello',
-            model_id: 'eleven_multilingual_v2',
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.75,
-              style: 0.0,
-              use_speaker_boost: true
-            }
-          })
+          text: 'Hello'
         })
       );
       expect(result.format).toBe('mp3');
     });
 
-    it('should handle API error', async () => {
+    it('should handle SDK error', async () => {
+      mockConvert.mockRejectedValueOnce(new Error('API error'));
+
+      await expect(adapter.generateSpeech('Hello')).rejects.toThrow('TTS failed');
+    });
+
+    it('should handle Uint8Array response from SDK', async () => {
+      const mockUint8Array = new Uint8Array([1, 2, 3, 4, 5]);
+      mockConvert.mockResolvedValueOnce(mockUint8Array);
+
+      const result = await adapter.generateSpeech('Hello');
+
+      expect(result.format).toBe('mp3');
+      expect(result.audioData).toBeDefined();
+    });
+  });
+
+  describe('transcribeAudio', () => {
+    it('should transcribe audio successfully', async () => {
       const mockResponse = {
-        ok: false,
-        status: 401,
+        ok: true,
         json: vi.fn().mockResolvedValue({
-          error: 'Invalid API key'
+          text: 'Hello world',
+          language: 'en',
+          confidence: 0.95,
+          word_count: 2
         })
       };
       (fetch as any).mockResolvedValue(mockResponse);
 
-      await expect(adapter.generateSpeech('Hello')).rejects.toThrow();
+      const audioBuffer = new ArrayBuffer(100);
+      const result = await adapter.transcribeAudio(audioBuffer);
+
+      expect(result.text).toBe('Hello world');
+      expect(result.language).toBe('en');
+      expect(result.confidence).toBe(0.95);
+    });
+
+    it('should handle transcribe error', async () => {
+      const mockResponse = {
+        ok: false,
+        status: 401,
+        json: vi.fn().mockResolvedValue({ error: 'Unauthorized' })
+      };
+      (fetch as any).mockResolvedValue(mockResponse);
+
+      const audioBuffer = new ArrayBuffer(100);
+      await expect(adapter.transcribeAudio(audioBuffer)).rejects.toThrow();
     });
   });
 });

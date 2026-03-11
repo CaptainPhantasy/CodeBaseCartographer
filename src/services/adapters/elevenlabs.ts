@@ -4,6 +4,7 @@
  * Supports: TTS, STT, Realtime Audio (STS)
  */
 
+import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { TaskType } from '../../types/capabilities';
 import {
   BaseLLMAdapter,
@@ -67,9 +68,11 @@ const ELEVENLABS_VOICES = {
 export class ElevenLabsAdapter extends BaseLLMAdapter {
   readonly providerId = 'elevenlabs' as const;
   readonly name = 'ElevenLabs';
+  private client: ElevenLabsClient;
 
   constructor(apiKey: string) {
     super(apiKey);
+    this.client = new ElevenLabsClient({ apiKey });
   }
 
   supportsCapability(capability: string): boolean {
@@ -102,6 +105,9 @@ export class ElevenLabsAdapter extends BaseLLMAdapter {
     throw new UnsupportedCapabilityError(this.providerId as any, 'structured_output');
   }
 
+  /**
+   * Generate speech from text using the ElevenLabs SDK
+   */
   async generateSpeech(
     text: string,
     options: TTSOptions = {}
@@ -118,38 +124,48 @@ export class ElevenLabsAdapter extends BaseLLMAdapter {
     }
     // Otherwise assume voiceId is already a valid voice ID
 
-    const response = await fetch(`${API_BASE}/text-to-speech/${voiceId}`, {
-      method: 'POST',
-      headers: {
-        'xi-api-key': this.apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
+    try {
+      // Use SDK for TTS
+      const audioBuffer = await this.client.textToSpeech.convert(voiceId, {
         text,
-        model_id: 'eleven_multilingual_v2',
-        voice_settings: {
+        modelId: 'eleven_multilingual_v2',
+        voiceSettings: {
           stability: 0.5,
-          similarity_boost: 0.75,
+          similarityBoost: 0.75,
           style: 0.0,
-          use_speaker_boost: true
+          useSpeakerBoost: true
         }
-      })
-    });
+      });
 
-    if (!response.ok) {
-      const body = await response.json().catch(() => ({}));
-      throw parseAPIError(this.providerId as any, response.status, body);
+      // Handle different response types from SDK
+      let arrayBuffer: ArrayBuffer;
+      if (audioBuffer instanceof ArrayBuffer) {
+        arrayBuffer = audioBuffer;
+      } else if (audioBuffer instanceof Uint8Array) {
+        arrayBuffer = audioBuffer.buffer as ArrayBuffer;
+      } else {
+        // Fallback: try to use as ArrayBuffer
+        arrayBuffer = audioBuffer as unknown as ArrayBuffer;
+      }
+
+      return {
+        audioData: arrayBufferToBase64(arrayBuffer),
+        format: 'mp3'
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new AdapterError(
+        `TTS failed: ${errorMessage}`,
+        'TTS_ERROR',
+        this.providerId,
+        false
+      );
     }
-
-    const audioBuffer = await response.arrayBuffer();
-    return {
-      audioData: arrayBufferToBase64(audioBuffer),
-      format: 'mp3'
-    };
   }
 
   /**
    * Transcribe audio to text using ElevenLabs Scribe V2
+   * Note: Using raw fetch as SDK may not expose this endpoint directly
    */
   async transcribeAudio(
     audioData: ArrayBuffer | string,
@@ -210,6 +226,7 @@ export class ElevenLabsAdapter extends BaseLLMAdapter {
 
   /**
    * Connect to ElevenLabs STS WebSocket for real-time voice conversation
+   * Note: Using raw WebSocket as SDK's stream() returns a different interface
    */
   async connectSTS(config: STSConfig): Promise<RealtimeConnection> {
     const voiceId = config.voice || '21m00Tcm4TlvDq8ikWAM'; // Default Rachel
