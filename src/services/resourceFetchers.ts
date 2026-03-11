@@ -1,36 +1,44 @@
+import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { ElevenLabsVoice, OpenRouterModel } from '../types/capabilities';
 
-const ELEVENLABS_API = 'https://api.elevenlabs.io/v1';
 const OPENROUTER_API = 'https://openrouter.ai/api/v1';
 
 /**
- * Fetch all available voices for an ElevenLabs API key
+ * Fetch all available voices for an ElevenLabs API key using the official SDK
  */
 export async function fetchElevenLabsVoices(
   apiKey: string
 ): Promise<{ voices: ElevenLabsVoice[]; error?: string }> {
   try {
-    const response = await fetch(`${ELEVENLABS_API}/voices`, {
-      method: 'GET',
-      headers: { 'xi-api-key': apiKey }
-    });
+    const elevenlabs = new ElevenLabsClient({ apiKey });
+    const response = await elevenlabs.voices.search();
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        return { voices: [], error: 'Invalid API key' };
-      }
-      if (response.status === 429) {
-        return { voices: [], error: 'Rate limited. Please try again later.' };
-      }
-      return { voices: [], error: `HTTP ${response.status}: ${response.statusText}` };
+    // Map SDK response to our ElevenLabsVoice interface
+    const voices: ElevenLabsVoice[] = (response.voices ?? []).map((voice) => ({
+      voice_id: voice.voiceId,
+      name: voice.name ?? undefined,
+      category: voice.category ?? undefined,
+      labels: voice.labels as Record<string, string> | undefined,
+      description: voice.description ?? undefined,
+      preview_url: voice.previewUrl ?? undefined
+    }));
+
+    return { voices };
+  } catch (error) {
+    // Handle specific error types from SDK
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+    // Check for common error patterns
+    if (errorMessage.includes('401') || errorMessage.includes('Unauthorized') || errorMessage.includes('invalid')) {
+      return { voices: [], error: 'Invalid API key' };
+    }
+    if (errorMessage.includes('429') || errorMessage.includes('rate') || errorMessage.includes('limit')) {
+      return { voices: [], error: 'Rate limited. Please try again later.' };
     }
 
-    const data = await response.json();
-    return { voices: data.voices || [] };
-  } catch (error) {
     return {
       voices: [],
-      error: error instanceof Error ? error.message : 'Network error'
+      error: errorMessage
     };
   }
 }

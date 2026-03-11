@@ -1,54 +1,70 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchElevenLabsVoices, fetchOpenRouterModels } from './resourceFetchers';
-import { ElevenLabsVoice, OpenRouterModel } from '../types/capabilities';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { fetchOpenRouterModels } from './resourceFetchers';
+import { OpenRouterModel } from '../types/capabilities';
+
+// Mock the ElevenLabs SDK before importing the module under test
+const mockSearch = vi.fn();
+
+vi.mock('@elevenlabs/elevenlabs-js', () => {
+  // Use a real class to satisfy constructor requirements
+  class MockElevenLabsClient {
+    constructor(_config: { apiKey: string }) {}
+    voices = {
+      search: mockSearch
+    };
+  }
+  return {
+    ElevenLabsClient: MockElevenLabsClient
+  };
+});
+
+// Import after mock is set up
+import { fetchElevenLabsVoices } from './resourceFetchers';
 
 describe('resourceFetchers', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
     vi.restoreAllMocks();
   });
 
   describe('fetchElevenLabsVoices', () => {
     it('should fetch voices successfully', async () => {
-      const mockVoices: ElevenLabsVoice[] = [
+      const mockVoices = [
         {
-          voice_id: 'voice-1',
+          voiceId: 'voice-1',
           name: 'Test Voice 1',
           category: 'premade',
           labels: { accent: 'american' },
           description: 'A test voice',
-          preview_url: 'https://example.com/preview.mp3'
+          previewUrl: 'https://example.com/preview.mp3'
         },
         {
-          voice_id: 'voice-2',
+          voiceId: 'voice-2',
           name: 'Test Voice 2',
-          category: 'cloned'
+          category: 'cloned',
+          labels: undefined,
+          description: undefined,
+          previewUrl: undefined
         }
       ];
 
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ voices: mockVoices })
-      } as Response);
+      mockSearch.mockResolvedValueOnce({ voices: mockVoices });
 
       const result = await fetchElevenLabsVoices('test-api-key');
 
-      expect(result.voices).toEqual(mockVoices);
+      expect(result.voices).toHaveLength(2);
+      expect(result.voices[0].voice_id).toBe('voice-1');
+      expect(result.voices[0].name).toBe('Test Voice 1');
+      expect(result.voices[0].preview_url).toBe('https://example.com/preview.mp3');
       expect(result.error).toBeUndefined();
-      expect(global.fetch).toHaveBeenCalledWith(
-        'https://api.elevenlabs.io/v1/voices',
-        {
-          method: 'GET',
-          headers: { 'xi-api-key': 'test-api-key' }
-        }
-      );
     });
 
     it('should handle 401 unauthorized error', async () => {
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: false,
-        status: 401,
-        statusText: 'Unauthorized'
-      } as Response);
+      const error = new Error('Unauthorized: 401');
+      mockSearch.mockRejectedValueOnce(error);
 
       const result = await fetchElevenLabsVoices('invalid-key');
 
@@ -57,11 +73,8 @@ describe('resourceFetchers', () => {
     });
 
     it('should handle 429 rate limit error', async () => {
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: false,
-        status: 429,
-        statusText: 'Too Many Requests'
-      } as Response);
+      const error = new Error('Rate limit exceeded: 429');
+      mockSearch.mockRejectedValueOnce(error);
 
       const result = await fetchElevenLabsVoices('test-api-key');
 
@@ -69,33 +82,18 @@ describe('resourceFetchers', () => {
       expect(result.error).toBe('Rate limited. Please try again later.');
     });
 
-    it('should handle other HTTP errors', async () => {
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: false,
-        status: 500,
-        statusText: 'Internal Server Error'
-      } as Response);
+    it('should handle other errors', async () => {
+      const error = new Error('Internal server error');
+      mockSearch.mockRejectedValueOnce(error);
 
       const result = await fetchElevenLabsVoices('test-api-key');
 
       expect(result.voices).toEqual([]);
-      expect(result.error).toBe('HTTP 500: Internal Server Error');
-    });
-
-    it('should handle network errors', async () => {
-      global.fetch = vi.fn().mockRejectedValueOnce(new Error('Network error'));
-
-      const result = await fetchElevenLabsVoices('test-api-key');
-
-      expect(result.voices).toEqual([]);
-      expect(result.error).toBe('Network error');
+      expect(result.error).toBe('Internal server error');
     });
 
     it('should handle empty voices array', async () => {
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ voices: [] })
-      } as Response);
+      mockSearch.mockResolvedValueOnce({ voices: [] });
 
       const result = await fetchElevenLabsVoices('test-api-key');
 
@@ -104,15 +102,35 @@ describe('resourceFetchers', () => {
     });
 
     it('should handle missing voices field', async () => {
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({})
-      } as Response);
+      mockSearch.mockResolvedValueOnce({});
 
       const result = await fetchElevenLabsVoices('test-api-key');
 
       expect(result.voices).toEqual([]);
       expect(result.error).toBeUndefined();
+    });
+
+    it('should handle voices with null values', async () => {
+      const mockVoices = [
+        {
+          voiceId: 'voice-1',
+          name: null,
+          category: null,
+          labels: null,
+          description: null,
+          previewUrl: null
+        }
+      ];
+
+      mockSearch.mockResolvedValueOnce({ voices: mockVoices });
+
+      const result = await fetchElevenLabsVoices('test-api-key');
+
+      expect(result.voices).toHaveLength(1);
+      expect(result.voices[0].voice_id).toBe('voice-1');
+      expect(result.voices[0].name).toBeUndefined();
+      expect(result.voices[0].category).toBeUndefined();
+      expect(result.voices[0].preview_url).toBeUndefined();
     });
   });
 
