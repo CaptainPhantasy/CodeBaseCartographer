@@ -4,6 +4,7 @@ import App from './App';
 import { ConfigProvider } from './hooks/useConfig';
 import ErrorBoundary from './components/ErrorBoundary';
 import { SecurityProvider } from './components/SecurityProvider';
+import ServerAuthGate from './components/ServerAuthGate';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -17,6 +18,7 @@ root.render(
       <ConfigProvider>
         <SecurityProvider>
           <App />
+          <ServerAuthGate />
         </SecurityProvider>
       </ConfigProvider>
     </ErrorBoundary>

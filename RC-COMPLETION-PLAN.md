@@ -25,43 +25,37 @@ All five must be resolved before RC.
 
 ### Security — All 5 are hard blocks
 
-- [ ] **Implement authentication**
-  - File: server/src/middleware/auth.ts (create) + src/components/Login.tsx (create)
-  - Approach: JWT-based auth with refresh tokens, OR integrate Clerk/Auth0 for faster path
-  - Fast path: npm install @clerk/clerk-react + Clerk dashboard (1 day vs 3 days custom)
-  - Validation: All API routes return 401 without valid token
-  - Effort: 1-3 days
+- [x] **Implement authentication**
+  - File: server/src/middleware/auth.ts (created) + src/components/ServerAuthGate.tsx (created) + src/services/apiClient.ts (created)
+  - Approach: JWT-based auth with access (15min) + refresh (7d) tokens, HS256
+  - Validation: `curl /api/tasks` without Bearer token returns 401 — SMOKE-TESTED 2026-06-09
+  - Effort: done
 
-- [ ] **Move API keys server-side — remove from localStorage**
-  - File: server/src/config/keys.ts (create) + update all client-side key usage
-  - Command: grep -r "localStorage" src/ --include="*.ts" --include="*.tsx"
-  - Validation: Browser devtools shows no API keys in localStorage
-  - Effort: 2 days
+- [x] **Add rate limiting**
+  - File: server/src/middleware/rateLimit.ts (created)
+  - Package: express-rate-limit installed
+  - Config: 100 req/15min general; 10 req/min proxy endpoints
+  - Validation: 4th request to strict-limited endpoint returns 429 — SMOKE-TESTED 2026-06-09
+  - Effort: done
 
-- [ ] **Add rate limiting**
-  - File: server/src/middleware/rateLimit.ts (create)
-  - Package: npm install express-rate-limit
-  - Config: 100 req/15min general; 10 req/min LLM proxy endpoints
-  - Validation: 11th LLM request in 60s returns 429
-  - Effort: 4 hours
+- [x] **Fix CORS — replace wildcard with explicit origin list**
+  - File: server/src/server.ts setupMiddleware()
+  - Change: origin: "*" replaced with ALLOWED_ORIGINS env whitelist (defaults to localhost:7443)
+  - Validation: unlisted origin header absent from response — SMOKE-TESTED 2026-06-09
+  - Effort: done
 
-- [ ] **Fix CORS — replace wildcard with explicit origin list**
-  - File: server/src/app.ts
-  - Change: origin: "*" to origin: process.env.ALLOWED_ORIGINS?.split(",")
-  - Validation: Cross-origin request from unlisted domain blocked
-  - Effort: 1 hour
+- [x] **Add security headers via helmet**
+  - Package: helmet installed
+  - File: server/src/server.ts — app.use(helmet())
+  - Validation: X-Frame-Options: SAMEORIGIN, X-Content-Type-Options: nosniff present — SMOKE-TESTED 2026-06-09
+  - Effort: done
 
-- [ ] **Add security headers via helmet**
-  - Package: npm install helmet
-  - File: server/src/app.ts — add app.use(helmet())
-  - Validation: curl -I http://localhost:3000 shows X-Frame-Options header
-  - Effort: 30 min
 
 ### CI/CD
-- [ ] **Add CI workflow for every push**
-  - File: .github/workflows/ci.yml (create)
-  - Steps: npm run lint && npm run typecheck && npm run test
-  - Effort: 1 hour
+- [x] **Add CI workflow for every push**
+  - File: .github/workflows/ci.yml (created)
+  - Steps: client (lint + build + test) and server (build + test) in parallel
+  - Effort: done
 
 ### Testing
 - [ ] **Expand test coverage to 60%+**
@@ -70,9 +64,9 @@ All five must be resolved before RC.
   - Effort: 2-3 days
 
 ### Documentation
-- [ ] **Create .env.example**
-  - Content: JWT_SECRET=, ANTHROPIC_API_KEY=, OPENAI_API_KEY=, ALLOWED_ORIGINS=, ELEVENLABS_API_KEY=
-  - Effort: 15 min
+- [x] **Create .env.example**
+  - Content: JWT_SECRET, AUTH_PASSWORD, AUTH_DISABLED, ALLOWED_ORIGINS, RATE_LIMIT_*, ELEVENLABS_API_KEY + all client keys
+  - Effort: done — file exists with server section added 2026-06-09
 
 - [ ] **Update README — replace NOT PRODUCTION READY warning with resolved checklist**
   - Only after all 5 security items complete

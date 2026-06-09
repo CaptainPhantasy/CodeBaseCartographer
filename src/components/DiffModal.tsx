@@ -6,6 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import DiffViewer from './DiffViewer';
 import { getFileVersionStore } from '../services/fileVersionStore';
+import { apiFetch } from '../services/apiClient';
 
 interface DiffModalProps {
   filePath: string | null;
@@ -37,7 +38,7 @@ const DiffModal: React.FC<DiffModalProps> = ({ filePath, onClose }) => {
         setPreviousContent(previousVersion?.content || '');
 
         // Fetch current content from API
-        const response = await fetch(`http://localhost:3000/api/files/${encodeURIComponent(filePath)}`);
+        const response = await apiFetch(`http://localhost:3000/api/files/${encodeURIComponent(filePath)}`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch file: ${response.statusText}`);

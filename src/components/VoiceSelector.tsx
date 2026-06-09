@@ -4,6 +4,7 @@
 
 import React, { useState, useRef } from 'react';
 import { ElevenLabsVoice } from '../types/capabilities';
+import { apiFetch } from '../services/apiClient';
 
 // ============================================================================
 // TYPES
@@ -122,7 +123,7 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
       setPreviewError(null);
 
       // Fetch as blob first to avoid CORS issues with Audio element
-      const response = await fetch(proxyUrl);
+      const response = await apiFetch(proxyUrl);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }

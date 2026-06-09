@@ -9,6 +9,7 @@
  */
 
 import type { RollbackRequest, RollbackResult, FileChange } from '../types/subagent';
+import { apiFetch } from './apiClient';
 
 /**
  * API base URL
@@ -24,7 +25,7 @@ export class RollbackService {
    */
   async rollbackChange(changeId: string): Promise<RollbackResult> {
     try {
-      const response = await fetch(`${API_BASE}/changes/${changeId}/rollback`, {
+      const response = await apiFetch(`${API_BASE}/changes/${changeId}/rollback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -117,7 +118,7 @@ export class RollbackService {
   }> {
     try {
       // Get the change details
-      const response = await fetch(`${API_BASE}/changes/${changeId}`);
+      const response = await apiFetch(`${API_BASE}/changes/${changeId}`);
 
       if (!response.ok) {
         return {
@@ -130,7 +131,7 @@ export class RollbackService {
       const change = await response.json();
 
       // Check for conflicts with newer changes
-      const allChangesResponse = await fetch(`${API_BASE}/changes}?path=${change.path}`);
+      const allChangesResponse = await apiFetch(`${API_BASE}/changes}?path=${change.path}`);
       if (allChangesResponse.ok) {
         const allChanges = await allChangesResponse.json();
         const newerChanges = allChanges.changes.filter(
@@ -180,7 +181,7 @@ export class RollbackService {
       if (options?.offset) params.append('offset', options.offset.toString());
       if (options?.path) params.append('path', options.path);
 
-      const response = await fetch(`${API_BASE}/changes?${params.toString()}`);
+      const response = await apiFetch(`${API_BASE}/changes?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch changes');

@@ -7,13 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+- **JWT authentication**: Bearer-token auth with access (15min) + refresh (7d) tokens.
+  Server generates a one-time password at boot when `AUTH_PASSWORD` is unset — never fail-open.
+  Client `apiFetch()` wrapper auto-attaches tokens and transparently refreshes on 401.
+  `ServerAuthGate` component prompts for password when credentials are needed.
+- **CORS hardening**: wildcard `origin: "*"` replaced with explicit `ALLOWED_ORIGINS` whitelist.
+  Defaults to Vite dev server origins (`http://localhost:7443`).
+- **Security headers**: `helmet()` middleware adds X-Frame-Options, CSP, X-Content-Type-Options, etc.
+- **Rate limiting**: general limiter (100 req/15min) on all `/api` routes;
+  strict limiter (10 req/min) on ElevenLabs proxy endpoint.
+- **SSRF guard on preview proxy**: only `https:` URLs to known ElevenLabs hosts are proxied.
+
+### Added
+- `server/src/middleware/auth.ts` — JWT auth middleware, login/refresh routes, env-configurable.
+- `server/src/middleware/rateLimit.ts` — tiered rate limiting with env overrides.
+- `src/services/apiClient.ts` — authenticated `apiFetch()` wrapper with silent refresh.
+- `src/components/ServerAuthGate.tsx` — modal prompting for server password on 401.
+- `.github/workflows/ci.yml` — lint + build + test for both client and server.
+- 7 new middleware behavioral tests (server).
+
+### Changed
+- All client→server `fetch()` calls replaced with `apiFetch()` (tasks, files, changes, voice preview, file open).
+- `server/tsconfig.json` lib bumped to ES2024 for `Promise.withResolvers`.
+
 ### Planned
 - Integration & E2E test suite
 - Flowchart accuracy improvements
-- Health check & monitoring endpoints
 - Environment-specific configuration
 - "Pneumatic tube" flow visualization
-
 ## [1.0.0] - 2026-02-10
 
 ### Added

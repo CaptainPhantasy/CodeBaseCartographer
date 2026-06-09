@@ -175,7 +175,8 @@ describe('RollbackService', () => {
       await service.getAllChanges({ limit: 10, offset: 5, path: '/test' });
 
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('limit=10&offset=5&path=%2Ftest')
+        expect.stringContaining('limit=10&offset=5&path=%2Ftest'),
+        expect.anything()
       );
     });
   });
@@ -195,7 +196,8 @@ describe('RollbackService', () => {
 
       expect(changes).toEqual(mockChanges);
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining('path=%2Ftest%2Ffile.ts')
+        expect.stringContaining('path=%2Ftest%2Ffile.ts'),
+        expect.anything()
       );
     });
   });

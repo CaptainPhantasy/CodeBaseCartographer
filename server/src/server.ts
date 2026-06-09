@@ -10,6 +10,7 @@
 
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import { createServer } from 'http';
 import { resolve } from 'path';
 import { exec } from 'child_process';
@@ -34,6 +35,8 @@ import {
   sendError,
   logError
 } from './errorHandler.js';
+import { generalLimiter, strictLimiter } from './middleware/rateLimit.js';
+import { initAuth, requireAuth, createAuthRouter, isAuthEnabled } from './middleware/auth.js';
 
 export class Server {
   private app: express.Application;
@@ -82,7 +85,17 @@ export class Server {
     // Add request ID middleware first
     this.app.use(requestIdMiddleware);
 
-    this.app.use(cors());
+    this.app.use(helmet());
+
+    // CORS: explicit origin whitelist (ALLOWED_ORIGINS, comma-separated).
+    // Defaults cover the Vite dev server (vite.config.ts port 7443).
+    const allowedOrigins = process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean)
+      : ['http://localhost:7443', 'http://127.0.0.1:7443'];
+    this.app.use(cors({ origin: allowedOrigins }));
+
+    // General rate limit for all API routes (stricter limits on proxy routes below)
+    this.app.use('/api', generalLimiter);
     this.app.use(express.json());
     this.app.use((req, res, next) => {
       console.log(`${req.method} ${req.path}`);
@@ -99,9 +112,17 @@ export class Server {
       res.json({
         status: 'ok',
         watchPath: this.watchPath,
+        authEnabled: isAuthEnabled(),
         timestamp: Date.now(),
       });
     });
+
+    // Auth routes (login/refresh) — mounted before the auth gate
+    initAuth();
+    this.app.use('/api/auth', createAuthRouter());
+
+    // Everything below requires a valid Bearer access token
+    this.app.use('/api', requireAuth);
 
     // File routes
     this.app.get('/api/files', this.listFiles.bind(this));
@@ -123,7 +144,7 @@ export class Server {
     this.app.post('/api/changes/:id/rollback', this.rollbackChange.bind(this));
 
     // ElevenLabs proxy routes (for voice preview)
-    this.app.get('/api/elevenlabs/preview', this.proxyElevenLabsPreview.bind(this));
+    this.app.get('/api/elevenlabs/preview', strictLimiter, this.proxyElevenLabsPreview.bind(this));
 
     // File open routes (for click-to-open-file in flow chart)
     this.app.get('/api/open-file', this.openFile.bind(this));
@@ -422,8 +443,25 @@ export class Server {
         return;
       }
 
+      // SSRF guard: only proxy https URLs to known ElevenLabs preview hosts
+      let parsed: URL;
+      try {
+        parsed = new URL(url);
+      } catch {
+        res.status(400).json({ error: 'Invalid URL' });
+        return;
+      }
+      const allowedHost =
+        parsed.hostname === 'elevenlabs.io' ||
+        parsed.hostname.endsWith('.elevenlabs.io') ||
+        parsed.hostname === 'storage.googleapis.com';
+      if (parsed.protocol !== 'https:' || !allowedHost) {
+        res.status(400).json({ error: 'URL not allowed' });
+        return;
+      }
+
       // Fetch from ElevenLabs with proper headers
-      const response = await fetch(url as string, {
+      const response = await fetch(parsed.toString(), {
         headers: {
           'User-Agent': 'CodebaseCartographer/1.0'
         }
@@ -437,7 +475,6 @@ export class Server {
       // Stream the audio back
       res.setHeader('Content-Type', 'audio/mpeg');
       res.setHeader('Cache-Control', 'public, max-age=86400'); // 24 hours
-      res.setHeader('Access-Control-Allow-Origin', '*');
 
       const arrayBuffer = await response.arrayBuffer();
       res.send(Buffer.from(arrayBuffer));

@@ -11,6 +11,7 @@ import type {
   TaskListResponse,
   TaskStats,
 } from '../types/task';
+import { apiFetch, SERVER_AUTH_SUCCESS_EVENT } from '../services/apiClient';
 
 // Use backend server port (3000 by default)
 const API_BASE = 'http://localhost:3000/api';
@@ -42,7 +43,7 @@ export function useTasks(): UseTasksResult {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE}/tasks`);
+      const response = await apiFetch(`${API_BASE}/tasks`);
       if (!response.ok) {
         throw new Error(`Failed to fetch tasks: ${response.statusText}`);
       }
@@ -65,7 +66,7 @@ export function useTasks(): UseTasksResult {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE}/tasks`, {
+      const response = await apiFetch(`${API_BASE}/tasks`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +97,7 @@ export function useTasks(): UseTasksResult {
       setError(null);
 
       try {
-        const response = await fetch(`${API_BASE}/tasks/${id}`, {
+        const response = await apiFetch(`${API_BASE}/tasks/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -130,7 +131,7 @@ export function useTasks(): UseTasksResult {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE}/tasks/${id}`, {
+      const response = await apiFetch(`${API_BASE}/tasks/${id}`, {
         method: 'DELETE',
       });
 
@@ -153,7 +154,7 @@ export function useTasks(): UseTasksResult {
    */
   const fetchStats = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/tasks/stats/summary`);
+      const response = await apiFetch(`${API_BASE}/tasks/stats/summary`);
       if (!response.ok) {
         throw new Error(`Failed to fetch stats: ${response.statusText}`);
       }
@@ -175,10 +176,17 @@ export function useTasks(): UseTasksResult {
     [tasks]
   );
 
-  // Fetch tasks on mount
+  // Fetch tasks on mount, and refetch after a successful server login
   useEffect(() => {
     fetchTasks();
     fetchStats();
+
+    const handleAuthSuccess = () => {
+      fetchTasks();
+      fetchStats();
+    };
+    window.addEventListener(SERVER_AUTH_SUCCESS_EVENT, handleAuthSuccess);
+    return () => window.removeEventListener(SERVER_AUTH_SUCCESS_EVENT, handleAuthSuccess);
   }, [fetchTasks, fetchStats]);
 
   return {

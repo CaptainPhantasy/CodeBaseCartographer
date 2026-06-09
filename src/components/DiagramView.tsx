@@ -26,6 +26,7 @@ import FlowInspector from './FlowInspector';
 import { DiagramNodeData } from '../types/diagram';
 import { GraphData, Link } from '../types';
 import { getLLMService, TaskType } from '../services/llmService';
+import { apiFetch } from '../services/apiClient';
 
 /**
  * Algorithm: Detect main flow path from inputs to outputs
@@ -377,7 +378,7 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
       const data = node.data as DiagramNodeData;
       if (data.filePath) {
         try {
-          const response = await fetch(`/api/open-file?path=${encodeURIComponent(data.filePath)}`);
+          const response = await apiFetch(`/api/open-file?path=${encodeURIComponent(data.filePath)}`);
           if (!response.ok) {
             const error = await response.json();
             console.error('Failed to open file:', error);

@@ -23,6 +23,7 @@ import { useConfig } from './hooks/useConfig';
 import { getConfigManager } from './config/configManager';
 import DOMPurify from 'dompurify';
 import { sanitizeError } from './utils/errorSanitizer';
+import { apiFetch } from './services/apiClient';
 
 // Tooltip component for unavailable features
 const FeatureTooltip: React.FC<{ message: string; children: React.ReactNode }> = ({ message, children }) => (
@@ -276,7 +277,7 @@ const App: React.FC = () => {
     try {
       const fetchPromises = codeFiles.map(async (path) => {
         try {
-          const response = await fetch(`/api/files/${encodeURIComponent(path)}`);
+          const response = await apiFetch(`/api/files/${encodeURIComponent(path)}`);
           if (response.ok) {
             const data = await response.json();
             const content = data.content?.slice(0, MAX_CONTENT_SIZE) || '';
