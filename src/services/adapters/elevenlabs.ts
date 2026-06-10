@@ -182,18 +182,14 @@ export class ElevenLabsAdapter extends BaseLLMAdapter {
 
       const formData = new FormData();
       const blob = new Blob([audioBuffer]);
-      formData.append('file', blob, 'audio.wav');
-      formData.append('model_id', options.model || 'scribe_v2');
+      formData.append('audio', blob, 'audio.wav');
+      formData.append('model', options.model || 'scribe-v2');
 
       if (options.language) {
-        formData.append('language', options.language);
+        formData.append('language_code', options.language);
       }
 
-      if (options.detect_language) {
-        formData.append('detect_language', 'true');
-      }
-
-      const response = await fetch(`${API_BASE}/speech-to-text/v2`, {
+      const response = await fetch(`${API_BASE}/scribe`, {
         method: 'POST',
         headers: {
           'xi-api-key': this.apiKey
