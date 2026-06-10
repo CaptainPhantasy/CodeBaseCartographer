@@ -30,7 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - All client→server `fetch()` calls replaced with `apiFetch()` (tasks, files, changes, voice preview, file open).
 - `server/tsconfig.json` lib bumped to ES2024 for `Promise.withResolvers`.
-
+- **Port remediation**: server default port changed from 3000 to 17460 (governance-compliant).
+- **Governance bootstrap**: FLOYD.md, SSOT, and Issues populated; ports 17460/17461 claimed in registry.
+- **ElevenLabs STT fix**: corrected endpoint from `/speech-to-text/v2` to `/scribe`, model from `scribe_v2` to `scribe-v2`, form field from `file` to `audio`.
+- All client-side hardcoded `http://localhost:3000` URLs converted to relative `/api` paths (Vite proxy).
 ### Planned
 - Integration & E2E test suite
 - Flowchart accuracy improvements
