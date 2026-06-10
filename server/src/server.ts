@@ -53,8 +53,8 @@ export class Server {
   private wsManager: WebSocketServerManager;
 
   constructor(
-    port: number = 3000,
-    wsPort: number = 3001,
+    port: number = 17460,
+    wsPort: number = 17461,
     watchPath: string = process.cwd(),
     dbPath: string = './tasks.db'
   ) {

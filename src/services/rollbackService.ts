@@ -12,9 +12,9 @@ import type { RollbackRequest, RollbackResult, FileChange } from '../types/subag
 import { apiFetch } from './apiClient';
 
 /**
- * API base URL
+ * API base URL — proxied through Vite dev server (see vite.config.ts)
  */
-const API_BASE = 'http://localhost:3000/api';
+const API_BASE = '/api';
 
 /**
  * Rollback service for undoing changes

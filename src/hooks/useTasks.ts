@@ -13,8 +13,8 @@ import type {
 } from '../types/task';
 import { apiFetch, SERVER_AUTH_SUCCESS_EVENT } from '../services/apiClient';
 
-// Use backend server port (3000 by default)
-const API_BASE = 'http://localhost:3000/api';
+// Backend API — proxied through Vite dev server (see vite.config.ts)
+const API_BASE = '/api';
 
 export interface UseTasksResult {
   tasks: Task[];

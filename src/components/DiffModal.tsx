@@ -38,7 +38,7 @@ const DiffModal: React.FC<DiffModalProps> = ({ filePath, onClose }) => {
         setPreviousContent(previousVersion?.content || '');
 
         // Fetch current content from API
-        const response = await apiFetch(`http://localhost:3000/api/files/${encodeURIComponent(filePath)}`);
+        const response = await apiFetch(`/api/files/${encodeURIComponent(filePath)}`);
 
         if (!response.ok) {
           throw new Error(`Failed to fetch file: ${response.statusText}`);

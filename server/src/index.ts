@@ -5,8 +5,8 @@
 import { Server } from './server.js';
 
 async function main() {
-  const PORT = process.env.PORT ? Number.parseInt(process.env.PORT) : 3000;
-  const WS_PORT = process.env.WS_PORT ? Number.parseInt(process.env.WS_PORT) : 3001;
+  const PORT = process.env.PORT ? Number.parseInt(process.env.PORT) : 17460;
+  const WS_PORT = process.env.WS_PORT ? Number.parseInt(process.env.WS_PORT) : 17461;
   const WATCH_PATH = process.env.WATCH_PATH || process.cwd();
   const DB_PATH = process.env.DB_PATH || './tasks.db';
 
