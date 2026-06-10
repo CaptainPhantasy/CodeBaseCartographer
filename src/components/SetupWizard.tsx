@@ -198,7 +198,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       [providerId]: { ...prev[providerId], validating: true, error: undefined }
     }));
 
-    const result = await validateApiKey(providerId, state.apiKey);
+    const trimmedKey = state.apiKey.trim();
+    const result = await validateApiKey(providerId, trimmedKey);
 
     setProviderStates(prev => ({
       ...prev,
@@ -213,7 +214,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
 
     // If valid, save to config
     if (result.isValid) {
-      await setProviderKey(providerId, state.apiKey, true);
+      await setProviderKey(providerId, trimmedKey, true);
       setProviderValidation(providerId, true);
     }
   };

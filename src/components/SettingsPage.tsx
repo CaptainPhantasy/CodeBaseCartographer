@@ -120,8 +120,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
   const handleSaveKey = async () => {
     if (!editingProvider || !editState.apiKey) return;
 
+    // Trim whitespace — copy-paste from settings pages often includes trailing newlines/spaces
+    const trimmedKey = editState.apiKey.trim();
+    setEditState(prev => ({ ...prev, apiKey: trimmedKey }));
+
     // Quick format validation before making API call
-    if (!quickValidateKeyFormat(editingProvider, editState.apiKey)) {
+    if (!quickValidateKeyFormat(editingProvider, trimmedKey)) {
       setEditState(prev => ({
         ...prev,
         error: getFormatError(editingProvider)
@@ -131,16 +135,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
 
     setEditState(prev => ({ ...prev, validating: true, error: undefined }));
 
-    const result = await validateApiKey(editingProvider, editState.apiKey);
+    const result = await validateApiKey(editingProvider, trimmedKey);
 
     if (result.isValid) {
-      await setProviderKey(editingProvider, editState.apiKey, true);
+      await setProviderKey(editingProvider, trimmedKey, true);
       setProviderValidation(editingProvider, true);
 
       // Fetch provider-specific resources after successful validation
       if (editingProvider === 'elevenlabs') {
         setLoadingVoices(true);
-        const voiceResult = await fetchElevenLabsVoices(editState.apiKey);
+        const voiceResult = await fetchElevenLabsVoices(trimmedKey);
         if (voiceResult.voices.length > 0) {
           await setCachedVoices('elevenlabs', voiceResult.voices);
           // Trigger re-render to show the voice selector
@@ -151,7 +155,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
 
       if (editingProvider === 'openrouter') {
         setLoadingModels(true);
-        const modelResult = await fetchOpenRouterModels(editState.apiKey);
+        const modelResult = await fetchOpenRouterModels(trimmedKey);
         if (modelResult.models.length > 0) {
           await setCachedModels('openrouter', modelResult.models);
           // Trigger re-render to show the model selector
