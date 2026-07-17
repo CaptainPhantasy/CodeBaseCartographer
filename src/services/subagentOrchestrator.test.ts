@@ -6,6 +6,17 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { SubagentOrchestrator } from './subagentOrchestrator';
 import type { ExecutionRequest } from '../types/subagent';
 
+// The orchestrator's execution path dynamically imports llmService and calls
+// chat(). In the test environment there is no backend, so an unmocked chat()
+// rejects within milliseconds — executions leave the active pool before the
+// tests can observe or cancel them. A hanging chat() keeps executions active
+// deterministically; cancel/timeout paths drive all state transitions.
+vi.mock('./llmService', () => ({
+  getLLMService: () => ({
+    chat: () => new Promise(() => {}),
+  }),
+}));
+
 describe('SubagentOrchestrator', () => {
   let orchestrator: SubagentOrchestrator;
 
@@ -94,7 +105,7 @@ describe('SubagentOrchestrator', () => {
       });
     });
 
-    it('should cancel an active execution', () => {
+    it('should cancel an active execution', async () => {
       const request: ExecutionRequest = {
         taskId: 'task-1',
         taskTitle: 'Test task',
@@ -103,19 +114,15 @@ describe('SubagentOrchestrator', () => {
         priority: 'high',
       };
 
-      return orchestrator.submit(request).then(executionId => {
-        // Wait a bit for execution to start
-        return new Promise<void>((resolve) => {
-          setTimeout(() => {
-            const cancelled = orchestrator.cancel(executionId);
-            expect(cancelled).toBe(true);
+      const executionId = await orchestrator.submit(request);
+      // Let the queue processor move the execution into the active pool
+      await new Promise<void>((resolve) => setTimeout(resolve, 20));
 
-            const execution = orchestrator.getExecution(executionId);
-            expect(execution?.status).toMatch(/cancelled|failed/);
-            resolve();
-          }, 100);
-        });
-      });
+      const cancelled = orchestrator.cancel(executionId);
+      expect(cancelled).toBe(true);
+
+      const execution = orchestrator.getExecution(executionId);
+      expect(execution?.status).toBe('cancelled');
     });
   });
 

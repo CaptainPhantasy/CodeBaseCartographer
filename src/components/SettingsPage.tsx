@@ -460,12 +460,50 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
     );
   };
 
+  const renderServerProvidersTab = () => {
+    const enabledProviderIds = new Set(config.providers.filter(p => p.isEnabled).map(p => p.providerId));
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4">
+          <h3 className="text-lg font-semibold text-white mb-2">Server-managed providers</h3>
+          <p className="text-sm text-slate-300">
+            API keys are read from the backend environment and never enter the browser. Update
+            <code className="mx-1 text-cyan-300">.env.local</code> and restart the backend to add or rotate a key.
+          </p>
+        </div>
+        <div className="grid gap-3">
+          {getAvailableProviders().map(provider => {
+            const enabled = enabledProviderIds.has(provider.id);
+            const info = PROVIDER_INFO[provider.id];
+            return (
+              <div key={provider.id} className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${info.color} flex items-center justify-center text-xl`}>
+                  {info.icon}
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-white">{provider.name}</h4>
+                  <p className="text-xs text-slate-500">{provider.description}</p>
+                </div>
+                <span className={`text-xs px-3 py-1 rounded-full ${
+                  enabled ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-400'
+                }`}>
+                  {enabled ? 'Server ready' : 'Not configured'}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   // ============================================================================
   // TASK MAPPINGS TAB
   // ============================================================================
 
   const renderTaskMappingsTab = () => {
-    const enabledProviders = config.providers.filter(p => p.isEnabled && p.apiKey);
+    const enabledProviders = config.providers.filter(p => p.isEnabled);
     
     const getCapableModels = (taskType: TaskType) => {
       const required = TASK_REQUIRED_CAPABILITIES[taskType];
@@ -744,7 +782,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
           {/* Tabs */}
           <div className="flex border-b border-slate-800">
             {[
-              { id: 'apikeys' as const, label: 'API Keys', icon: '🔑' },
+              { id: 'apikeys' as const, label: 'Providers', icon: '🔐' },
               { id: 'tasks' as const, label: 'Task Mappings', icon: '🔗' },
               { id: 'preferences' as const, label: 'Preferences', icon: '⚡' }
             ].map(tab => (
@@ -764,7 +802,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
 
           {/* Content */}
           <div className="p-6 max-h-[calc(100vh-200px)] overflow-y-auto">
-            {activeTab === 'apikeys' && renderApiKeysTab()}
+            {activeTab === 'apikeys' && renderServerProvidersTab()}
             {activeTab === 'tasks' && renderTaskMappingsTab()}
             {activeTab === 'preferences' && renderPreferencesTab()}
           </div>

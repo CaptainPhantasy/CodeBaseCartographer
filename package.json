@@ -14,11 +14,9 @@
     "lint": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@elevenlabs/elevenlabs-js": "^2.34.0",
-    "@google/genai": "^1.40.0",
     "@types/diff": "^7.0.2",
     "@types/dompurify": "^3.0.5",
     "@xyflow/react": "^12.10.0",

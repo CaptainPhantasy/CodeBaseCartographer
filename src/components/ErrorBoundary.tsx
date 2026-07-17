@@ -78,7 +78,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
             <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4 mb-6">
               <p className="text-sm text-amber-300">
-                <strong>Tip:</strong> Try refreshing the page. If the problem persists, check your API key configuration in Settings or clear your browser cache.
+                <strong>Tip:</strong> Try refreshing the page. If the problem persists, check the backend provider configuration or clear your browser cache.
               </p>
             </div>
 

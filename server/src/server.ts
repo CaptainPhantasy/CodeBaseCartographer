@@ -37,6 +37,7 @@ import {
 } from './errorHandler.js';
 import { generalLimiter, strictLimiter } from './middleware/rateLimit.js';
 import { initAuth, requireAuth, createAuthRouter, isAuthEnabled } from './middleware/auth.js';
+import { createLLMRouter } from './llm/routes.js';
 
 export class Server {
   private app: express.Application;
@@ -96,7 +97,9 @@ export class Server {
 
     // General rate limit for all API routes (stricter limits on proxy routes below)
     this.app.use('/api', generalLimiter);
-    this.app.use(express.json());
+    // STT requests carry base64 audio. Keep a finite ceiling while allowing a
+    // useful recording instead of Express's 100 KiB default.
+    this.app.use(express.json({ limit: '25mb' }));
     this.app.use((req, res, next) => {
       console.log(`${req.method} ${req.path}`);
       next();
@@ -143,8 +146,8 @@ export class Server {
     this.app.get('/api/changes/:id', this.getChange.bind(this));
     this.app.post('/api/changes/:id/rollback', this.rollbackChange.bind(this));
 
-    // ElevenLabs proxy routes (for voice preview)
-    this.app.get('/api/elevenlabs/preview', strictLimiter, this.proxyElevenLabsPreview.bind(this));
+    // LLM proxy routes (server-side API key injection)
+    this.app.use('/api/llm', strictLimiter, createLLMRouter());
 
     // File open routes (for click-to-open-file in flow chart)
     this.app.get('/api/open-file', this.openFile.bind(this));

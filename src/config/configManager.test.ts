@@ -135,11 +135,11 @@ describe('ConfigManager', () => {
       await configManager.setProviderKey('openai', 'test-api-key');
 
       const provider = configManager.getProvider('openai');
-      expect(provider?.apiKey).toBe(obfuscateKeyLegacy('test-api-key'));
+      expect(provider?.apiKey).toBe(''); // API keys now server-side only
       expect(provider?.isEnabled).toBe(true);
 
       const apiKey = configManager.getApiKey('openai');
-      expect(apiKey).toBe('test-api-key');
+      expect(apiKey).toBeUndefined(); // Keys never stored client-side
     });
 
     it('should update existing provider', async () => {
@@ -147,7 +147,7 @@ describe('ConfigManager', () => {
       await configManager.setProviderKey('openai', 'second-key');
 
       const provider = configManager.getProvider('openai');
-      expect(provider?.apiKey).toBe(obfuscateKeyLegacy('second-key'));
+      expect(provider?.apiKey).toBe(''); // API keys now server-side only
     });
 
     it('should enable/disable provider', async () => {

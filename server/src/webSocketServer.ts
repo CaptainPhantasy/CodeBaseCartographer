@@ -11,7 +11,9 @@
  */
 
 import { WebSocketServer, WebSocket } from 'ws';
-import type { Server as HTTPServer } from 'http';
+import type { Server as HTTPServer, IncomingMessage } from 'http';
+import { verifyUpgrade, extractToken } from './middleware/wsAuth.js';
+import { verifyToken, isAuthEnabled, getAuthConfig } from './middleware/auth.js';
 import type { WebSocketMessage, FileEvent, Task, WelcomeMessageData, ReconnectingMessageData } from './types.js';
 import { writeFile, unlink } from 'fs/promises';
 import { existsSync, readFileSync } from 'fs';
@@ -26,6 +28,8 @@ interface ClientMetadata {
   lastPing: number;
   missedPongs: number;
   connectedAt: number;
+  /** Access token presented at upgrade (null when auth is disabled). */
+  token: string | null;
 }
 
 /**
@@ -153,10 +157,19 @@ export class WebSocketServerManager {
     this.wss = new WebSocketServer({
       port: server ? undefined : this.port,
       server,
+      // Validate the access token before the handshake completes.
+      // Failed upgrades get an HTTP 401 response from the ws library.
+      verifyClient: ({ req }: { req: IncomingMessage }) => verifyUpgrade(req),
     });
 
-    this.wss.on('connection', (ws: WebSocket) => {
-      this.handleConnection(ws);
+    this.wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
+      // Auth was already verified by verifyClient during the upgrade.
+      // Re-verify defensively in case a future refactor bypasses it.
+      if (!verifyUpgrade(req)) {
+        ws.close(1008, 'Unauthorized');
+        return;
+      }
+      this.handleConnection(ws, req);
     });
 
     // Start heartbeat interval
@@ -172,7 +185,7 @@ export class WebSocketServerManager {
   /**
    * Handle new client connection
    */
-  private handleConnection(ws: WebSocket): void {
+  private handleConnection(ws: WebSocket, req?: IncomingMessage): void {
     const clientId = this.generateClientId();
     const now = Date.now();
 
@@ -183,6 +196,7 @@ export class WebSocketServerManager {
       lastPing: now,
       missedPongs: 0,
       connectedAt: now,
+      token: req ? extractToken(req) : null,
     };
 
     this.clients.set(ws, metadata);
@@ -333,6 +347,19 @@ export class WebSocketServerManager {
     const deadClients: WebSocket[] = [];
 
     this.clients.forEach((metadata, ws) => {
+      // Re-verify the access token on each heartbeat. If it expired, close
+      // the connection so the client re-authenticates with a fresh token.
+      if (isAuthEnabled() && (!metadata.token || !verifyToken(metadata.token, 'access', getAuthConfig()))) {
+        console.log(`Client ${metadata.id} access token expired, closing connection`);
+        try {
+          ws.close(1008, 'Token expired');
+        } catch {
+          // close() failures fall through to terminate below
+        }
+        deadClients.push(ws);
+        return;
+      }
+
       if (!metadata.isAlive) {
         metadata.missedPongs++;
 

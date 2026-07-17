@@ -551,63 +551,32 @@ export class ConfigManager {
   }
 
   /**
-   * Get decrypted API key for a provider
-   * Returns the cached decrypted key if unlocked, otherwise throws
-   * @returns Decrypted API key, or undefined if not found
-   * @throws Error if config is locked and key is encrypted
+   * Get API key for a provider — DEPRECATED: keys now live server-side.
+   * Returns undefined always; API keys are read from env vars by the LLM proxy.
    */
-  getApiKey(providerId: ProviderId): string | undefined {
-    const provider = this.getProvider(providerId);
-    if (!provider?.apiKey) return undefined;
-
-    // Check for session-only key first
-    if (provider.sessionOnly) {
-      const sessionKey = this.sessionOnlyKeys.get(providerId);
-      if (!sessionKey) {
-        throw new Error(`API key for ${providerId} is session-only and has been cleared. Please re-enter the key.`);
-      }
-      return sessionKey;
-    }
-
-    // If key is encrypted, check cache first
-    if (isEncryptedFormat(provider.apiKey)) {
-      if (!this.isUnlocked) {
-        throw new Error('Config is locked. Please unlock by entering your PIN.');
-      }
-      const key = this.decryptedKeysCache.get(providerId);
-      if (!key) {
-        throw new Error(`API key for ${providerId} not found in cache. Please re-lock and unlock.`);
-      }
-      return key;
-    }
-
-    // Legacy obfuscated key - decrypt synchronously
-    return deobfuscateKeyLegacy(provider.apiKey);
+  getApiKey(_providerId: ProviderId): string | undefined {
+    return undefined;
   }
 
   /**
-   * Set or update a provider's API key
-   * Encrypts the key before storing if PIN is available
-   *
-   * @param providerId - Provider identifier
-   * @param apiKey - API key to store
-   * @param isEnabled - Whether the provider is enabled
-   * @param sessionOnly - If true, key is never persisted (session-only)
+   * Set or update a provider's configuration
+   * DEPRECATED: API keys are now managed server-side via env vars.
+   * This no longer stores API keys in localStorage.
+   * Provider enablement and metadata are still tracked for UI purposes.
    */
   async setProviderKey(
     providerId: ProviderId,
-    apiKey: string,
+    _apiKey: string,
     isEnabled = true,
-    sessionOnly = false
+    _sessionOnly = false
   ): Promise<void> {
     const existingIndex = this.config.providers.findIndex(p => p.providerId === providerId);
-    const encryptedKey = sessionOnly ? '' : await obfuscateKey(apiKey);
 
     const providerConfig: ProviderConfig = {
       providerId,
-      apiKey: encryptedKey,
+      apiKey: '', // Never store keys client-side
       isEnabled,
-      sessionOnly,
+      sessionOnly: false,
       validatedAt: undefined,
       isValid: undefined
     };
@@ -618,17 +587,7 @@ export class ConfigManager {
       this.config.providers.push(providerConfig);
     }
 
-    // Store in appropriate cache
-    if (sessionOnly) {
-      this.sessionOnlyKeys.set(providerId, apiKey);
-    } else if (this.isUnlocked) {
-      this.decryptedKeysCache.set(providerId, apiKey);
-    }
-
-    // Only save if not session-only
-    if (!sessionOnly) {
-      this.saveConfig();
-    }
+    this.saveConfig();
   }
 
   /**
@@ -669,11 +628,11 @@ export class ConfigManager {
   }
 
   /**
-   * Get all enabled providers with valid API keys
-   * Includes both persistent keys and session-only keys
+   * Get all enabled providers.
+   * API keys are now server-side; enablement is tracked via isEnabled flag.
    */
   getEnabledProviders(): ProviderConfig[] {
-    return this.config.providers.filter(p => p.isEnabled && (p.apiKey || p.sessionOnly));
+    return this.config.providers.filter(p => p.isEnabled);
   }
 
   // --------------------------------------------------------------------------
@@ -754,19 +713,19 @@ export class ConfigManager {
 
   /**
    * Check if any providers are configured
+   * API keys are now server-side; enablement is tracked via isEnabled flag.
    */
   hasAnyProvider(): boolean {
-    return this.config.providers.some(p => p.isEnabled && (p.apiKey || p.sessionOnly));
+    return this.config.providers.some(p => p.isEnabled);
   }
 
   /**
-   * Check if a specific provider has a key configured
-   * @param providerId - Provider ID to check
-   * @returns true if provider has an API key (persistent or session-only)
+   * Check if a specific provider is enabled.
+   * API keys are now server-side; this checks client-side enablement only.
    */
   hasProviderKey(providerId: ProviderId): boolean {
     const provider = this.getProvider(providerId);
-    return provider?.isEnabled === true && (provider?.apiKey || provider?.sessionOnly) === true;
+    return provider?.isEnabled === true;
   }
 
   /**

@@ -75,7 +75,7 @@ const AssetGenerator: React.FC = () => {
                     <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700 max-w-md">
                         <p className="text-sm text-slate-500">
                             Video generation requires Google AI (Gemini) with Veo access. 
-                            Go to Settings to add your Google AI API key.
+                            Configure GOOGLE_API_KEY in the backend environment and restart the server.
                         </p>
                     </div>
                 </div>

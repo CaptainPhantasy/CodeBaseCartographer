@@ -129,7 +129,7 @@ describe('ErrorBoundary', () => {
     );
 
     expect(screen.getByText('Tip:')).toBeInTheDocument();
-    expect(screen.getByText('Try refreshing the page. If the problem persists, check your API key configuration in Settings or clear your browser cache.')).toBeInTheDocument();
+    expect(screen.getByText('Try refreshing the page. If the problem persists, check the backend provider configuration or clear your browser cache.')).toBeInTheDocument();
   });
 
   it('resets state and reloads when reset is called programmatically', () => {

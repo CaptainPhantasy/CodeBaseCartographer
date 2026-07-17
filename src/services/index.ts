@@ -4,7 +4,6 @@
  */
 
 export * from './llmService';
-export * from './adapters';
 export * from './snapshotService';
 export * from './complexityService';
 export * from './dependencyService';

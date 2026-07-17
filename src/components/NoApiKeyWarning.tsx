@@ -12,7 +12,7 @@ interface NoApiKeyWarningProps {
 
 export const NoApiKeyWarning: React.FC<NoApiKeyWarningProps> = ({ onOpenSetup, onOpenSettings }) => {
   const { config } = useConfig();
-  const hasAnyKey = config.providers.some(p => p.apiKey && p.apiKey.trim().length > 0);
+  const hasAnyKey = config.providers.some(p => p.isEnabled);
 
   if (hasAnyKey) {
     return null;
@@ -24,9 +24,9 @@ export const NoApiKeyWarning: React.FC<NoApiKeyWarningProps> = ({ onOpenSetup, o
         <div className="flex items-center gap-3">
           <span className="text-amber-400 text-xl">⚠️</span>
           <div>
-            <p className="text-amber-200 font-medium">No API Keys Configured</p>
+            <p className="text-amber-200 font-medium">No Server Providers Configured</p>
             <p className="text-amber-300/70 text-sm">
-              Add at least one LLM provider key to enable AI features
+              Add a provider key to the backend environment to enable AI features
             </p>
           </div>
         </div>
@@ -49,7 +49,7 @@ export const NoApiKeyWarning: React.FC<NoApiKeyWarningProps> = ({ onOpenSetup, o
       {/* Security reminder */}
       <div className="max-w-7xl mx-auto px-4 pb-2">
         <p className="text-xs text-amber-400/60">
-          🔒 Keys are stored locally in your browser. Never share your API keys.
+          🔒 Provider keys stay on the backend and are never stored in this browser.
         </p>
       </div>
     </div>

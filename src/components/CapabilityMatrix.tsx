@@ -53,7 +53,7 @@ export const CapabilityMatrix: React.FC<CapabilityMatrixProps> = ({ compact = fa
 
   // Get configured providers
   const configuredProviders = config.providers
-    .filter(p => p.isEnabled && p.apiKey)
+    .filter(p => p.isEnabled)
     .map(p => getProvider(p.providerId))
     .filter((p): p is NonNullable<typeof p> => p !== undefined);
 
@@ -69,7 +69,7 @@ export const CapabilityMatrix: React.FC<CapabilityMatrixProps> = ({ compact = fa
     return (
       <div className="text-center py-8 text-slate-400">
         <p>No providers configured yet.</p>
-        <p className="text-sm mt-1">Add API keys to see the capability matrix.</p>
+        <p className="text-sm mt-1">Configure provider keys on the backend to see the capability matrix.</p>
       </div>
     );
   }

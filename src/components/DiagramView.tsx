@@ -436,7 +436,7 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
     try {
       const llmService = getLLMService();
       if (!llmService.isTaskAvailable(TaskType.GRAPH_GENERATION)) {
-        throw new Error('Graph generation requires an LLM provider. Please configure API keys in Settings.');
+        throw new Error('Graph generation requires an LLM provider configured in the backend environment.');
       }
 
       // Use context-aware generation if we have loaded files

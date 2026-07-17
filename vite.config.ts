@@ -25,7 +25,6 @@ export default defineConfig(() => {
           output: {
             manualChunks: {
               'vendor-visualization': ['d3', '@xyflow/react', 'dagre'],
-              'vendor-ai': ['@google/genai', '@elevenlabs/elevenlabs-js'],
             },
           },
         },

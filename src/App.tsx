@@ -159,7 +159,7 @@ const App: React.FC = () => {
       setMessages(prev => [...prev, { 
         id: Date.now().toString(), 
         role: 'model', 
-        text: '⚠️ No LLM provider configured. Please go to Settings and add an API key to enable chat functionality.', 
+        text: '⚠️ No LLM provider configured. Add a provider key to the backend environment and restart the server.',
         timestamp: new Date() 
       }]);
       return;
@@ -242,7 +242,7 @@ const App: React.FC = () => {
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         role: 'model',
-        text: "Error: " + sanitizedError + "\n\nPlease check your API key configuration in Settings.",
+        text: "Error: " + sanitizedError + "\n\nPlease check the backend provider configuration.",
         timestamp: new Date()
       }]);
     } finally {
