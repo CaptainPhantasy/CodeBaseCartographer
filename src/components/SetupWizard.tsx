@@ -95,15 +95,13 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Step navigation
-  const steps: WizardStep[] = ['welcome', 'providers', 'apikeys', 'tasks', 'complete'];
+  const steps: WizardStep[] = ['welcome', 'providers', 'tasks', 'complete'];
   const stepIndex = steps.indexOf(currentStep);
   
   const canProceed = useCallback(() => {
     switch (currentStep) {
       case 'welcome': return true;
       case 'providers': return selectedProviders.size > 0;
-      case 'apikeys': 
-        return Array.from(selectedProviders).some(pid => providerStates[pid]?.isValid);
       case 'tasks': return true;
       case 'complete': return true;
       default: return false;
@@ -255,7 +253,12 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   };
 
   // Complete setup
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    // Persist provider enablement only. Secrets remain in the backend env.
+    await Promise.all(Array.from(selectedProviders).map(providerId =>
+      setProviderKey(providerId, '', true)
+    ));
+
     // Save task mappings
     Object.entries(taskMappings).forEach(([taskType, mapping]) => {
       if (mapping) {
@@ -270,8 +273,8 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     onComplete();
   };
 
-  // Get providers with valid keys
-  const validProviders = Array.from(selectedProviders).filter(pid => providerStates[pid]?.isValid);
+  // Selected providers contain non-secret routing preferences only.
+  const validProviders = Array.from(selectedProviders);
 
   // ============================================================================
   // RENDER STEPS
@@ -284,7 +287,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       </div>
       <h2 className="text-3xl font-bold text-white">Welcome to Codebase Cartographer</h2>
       <p className="text-slate-400 max-w-md mx-auto">
-        To get started, configure API keys for AI providers or import an existing configuration.
+        To get started, choose providers already configured in the backend environment or import non-secret settings.
       </p>
 
       {/* Import Config Option */}
@@ -308,7 +311,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         {importError && (
           <p className="text-red-400 text-sm mt-2">{importError}</p>
         )}
-        <p className="text-xs text-slate-500 mt-2">Import your saved API keys and settings</p>
+        <p className="text-xs text-slate-500 mt-2">Import task mappings and preferences; provider keys are never imported.</p>
       </div>
 
       <div className="text-sm text-slate-500">— or set up manually —</div>
@@ -317,7 +320,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         <h4 className="font-medium text-slate-200 mb-2">What you'll need:</h4>
         <ul className="text-sm text-slate-400 space-y-2">
           <li className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> At least one LLM API key (OpenRouter recommended)
+            <span className="text-green-400">✓</span> At least one backend provider key (OpenRouter recommended)
           </li>
           <li className="flex items-center gap-2">
             <span className="text-slate-500">○</span> Optional: Multiple providers for different tasks
@@ -331,7 +334,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-white mb-2">Select Your Providers</h2>
-        <p className="text-slate-400">Choose which AI providers you want to configure</p>
+        <p className="text-slate-400">Choose which server-configured AI providers you want to use</p>
       </div>
       
       <div className="grid gap-4">
@@ -367,7 +370,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       </div>
       
       <p className="text-sm text-slate-500 text-center">
-        💡 Tip: OpenRouter gives you access to many models through one API key
+        🔒 Keys are read from the backend environment and never enter this browser
       </p>
     </div>
   );
@@ -566,7 +569,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       </div>
       <h2 className="text-3xl font-bold text-white">You're All Set!</h2>
       <p className="text-slate-400 max-w-md mx-auto">
-        Your API keys have been configured and saved securely. You can now start mapping your codebase.
+        Your provider preferences are saved. Backend keys remain server-side, and you can now start mapping your codebase.
       </p>
       
       <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 max-w-md mx-auto text-left">

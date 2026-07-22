@@ -40,7 +40,7 @@ const LiveSession: React.FC<LiveSessionProps> = ({ onClose }) => {
     const inputContextRef = useRef<AudioContext | null>(null);
     const outputContextRef = useRef<AudioContext | null>(null);
     const nextStartTimeRef = useRef<number>(0);
-    const connectionRef = useRef<any>(null);
+    const connectionRef = useRef<{ sendAudio: (data: string) => void; send: (data: unknown) => void; close: () => void } | null>(null);
     const processorRef = useRef<ScriptProcessorNode | null>(null);
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 

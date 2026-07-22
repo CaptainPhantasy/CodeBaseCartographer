@@ -2,182 +2,34 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { NoApiKeyWarning } from './NoApiKeyWarning';
 
-// Mock the useConfig hook
+let providers: Array<{ providerId: string; apiKey: string; isEnabled: boolean }> = [];
 vi.mock('../hooks/useConfig', () => ({
-  useConfig: vi.fn()
+  useConfig: () => ({ config: { providers } }),
 }));
 
-import { useConfig } from '../hooks/useConfig';
-
 describe('NoApiKeyWarning', () => {
-  const mockOnOpenSetup = vi.fn();
-  const mockOnOpenSettings = vi.fn();
-
-  beforeEach(() => {
-    vi.clearAllMocks();
+  it('hides when a server-backed provider is enabled', () => {
+    providers = [{ providerId: 'openai', apiKey: '', isEnabled: true }];
+    const { container } = render(<NoApiKeyWarning onOpenSetup={vi.fn()} onOpenSettings={vi.fn()} />);
+    expect(container).toBeEmptyDOMElement();
   });
 
-  it('does not render when API keys are configured', () => {
-    vi.mocked(useConfig).mockReturnValue({
-      config: {
-        providers: [
-          { providerId: 'openai', apiKey: 'sk-test123', isEnabled: true }
-        ],
-        taskMappings: [],
-        preferences: {}
-      }
-    });
-
-    const { container } = render(
-      <NoApiKeyWarning
-        onOpenSetup={mockOnOpenSetup}
-        onOpenSettings={mockOnOpenSettings}
-      />
-    );
-
-    expect(container.firstChild).toBeNull();
+  it('guides server configuration without claiming browser key storage', () => {
+    providers = [];
+    render(<NoApiKeyWarning onOpenSetup={vi.fn()} onOpenSettings={vi.fn()} />);
+    expect(screen.getByText('No Server Providers Configured')).toBeInTheDocument();
+    expect(screen.getByText(/backend environment/i)).toBeInTheDocument();
+    expect(screen.getByText(/never stored in this browser/i)).toBeInTheDocument();
   });
 
-  it('renders warning banner when no API keys are configured', () => {
-    vi.mocked(useConfig).mockReturnValue({
-      config: {
-        providers: [
-          { providerId: 'openai', apiKey: '', isEnabled: true }
-        ],
-        taskMappings: [],
-        preferences: {}
-      }
-    });
-
-    render(
-      <NoApiKeyWarning
-        onOpenSetup={mockOnOpenSetup}
-        onOpenSettings={mockOnOpenSettings}
-      />
-    );
-
-    expect(screen.getByText('No API Keys Configured')).toBeInTheDocument();
-    expect(screen.getByText('Add at least one LLM provider key to enable AI features')).toBeInTheDocument();
-  });
-
-  it('renders warning when providers array is empty', () => {
-    vi.mocked(useConfig).mockReturnValue({
-      config: {
-        providers: [],
-        taskMappings: [],
-        preferences: {}
-      }
-    });
-
-    render(
-      <NoApiKeyWarning
-        onOpenSetup={mockOnOpenSetup}
-        onOpenSettings={mockOnOpenSettings}
-      />
-    );
-
-    expect(screen.getByText('No API Keys Configured')).toBeInTheDocument();
-  });
-
-  it('calls onOpenSetup when setup button is clicked', () => {
-    vi.mocked(useConfig).mockReturnValue({
-      config: {
-        providers: [],
-        taskMappings: [],
-        preferences: {}
-      }
-    });
-
-    render(
-      <NoApiKeyWarning
-        onOpenSetup={mockOnOpenSetup}
-        onOpenSettings={mockOnOpenSettings}
-      />
-    );
-
+  it('opens setup and settings actions', () => {
+    providers = [];
+    const openSetup = vi.fn();
+    const openSettings = vi.fn();
+    render(<NoApiKeyWarning onOpenSetup={openSetup} onOpenSettings={openSettings} />);
     fireEvent.click(screen.getByRole('button', { name: /setup wizard/i }));
-
-    expect(mockOnOpenSetup).toHaveBeenCalled();
-  });
-
-  it('calls onOpenSettings when settings button is clicked', () => {
-    vi.mocked(useConfig).mockReturnValue({
-      config: {
-        providers: [],
-        taskMappings: [],
-        preferences: {}
-      }
-    });
-
-    render(
-      <NoApiKeyWarning
-        onOpenSetup={mockOnOpenSetup}
-        onOpenSettings={mockOnOpenSettings}
-      />
-    );
-
     fireEvent.click(screen.getByRole('button', { name: /settings/i }));
-
-    expect(mockOnOpenSettings).toHaveBeenCalled();
-  });
-
-  it('shows security reminder at the bottom', () => {
-    vi.mocked(useConfig).mockReturnValue({
-      config: {
-        providers: [],
-        taskMappings: [],
-        preferences: {}
-      }
-    });
-
-    render(
-      <NoApiKeyWarning
-        onOpenSetup={mockOnOpenSetup}
-        onOpenSettings={mockOnOpenSettings}
-      />
-    );
-
-    // The text includes a lock emoji at the beginning
-    expect(screen.getByText(/Keys are stored locally in your browser/)).toBeInTheDocument();
-    expect(screen.getByText(/Never share your API keys/)).toBeInTheDocument();
-  });
-
-  it('has proper styling classes', () => {
-    vi.mocked(useConfig).mockReturnValue({
-      config: {
-        providers: [],
-        taskMappings: [],
-        preferences: {}
-      }
-    });
-
-    const { container } = render(
-      <NoApiKeyWarning
-        onOpenSetup={mockOnOpenSetup}
-        onOpenSettings={mockOnOpenSettings}
-      />
-    );
-
-    const warningBanner = container.firstChild;
-    expect(warningBanner).toHaveClass('bg-amber-500/10', 'border-b', 'border-amber-500/30');
-  });
-
-  it('displays warning icon', () => {
-    vi.mocked(useConfig).mockReturnValue({
-      config: {
-        providers: [],
-        taskMappings: [],
-        preferences: {}
-      }
-    });
-
-    render(
-      <NoApiKeyWarning
-        onOpenSetup={mockOnOpenSetup}
-        onOpenSettings={mockOnOpenSettings}
-      />
-    );
-
-    expect(screen.getByText('⚠️')).toBeInTheDocument();
+    expect(openSetup).toHaveBeenCalledOnce();
+    expect(openSettings).toHaveBeenCalledOnce();
   });
 });

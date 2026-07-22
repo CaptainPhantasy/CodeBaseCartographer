@@ -53,6 +53,15 @@ export function clearServerTokens(): void {
   }
 }
 
+/**
+ * Current in-memory access token, or null when not authenticated.
+ * Used by the WebSocket client to authenticate the upgrade request
+ * (browsers cannot set custom headers on WebSocket connections).
+ */
+export function getAccessToken(): string | null {
+  return accessToken;
+}
+
 /** Derive the API origin ('' for same-origin/relative URLs) from a request URL. */
 function apiOrigin(url: string): string {
   if (url.startsWith('/')) return '';

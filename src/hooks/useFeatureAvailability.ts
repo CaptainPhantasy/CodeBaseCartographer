@@ -100,11 +100,11 @@ function isCapabilityAvailable(capability: Capability): { available: boolean; pr
 /**
  * Get detailed feature availability
  */
-function getDetailedAvailability(): FeatureAvailability & {
+async function getDetailedAvailability(): Promise<FeatureAvailability & {
   providers: Record<keyof FeatureAvailability, { providerId?: ProviderId; modelId?: string }>
-} {
+}> {
   const llmService = getLLMService();
-  const baseAvailability = llmService.getFeatureAvailability();
+  const baseAvailability = await llmService.getFeatureAvailability();
 
   // Additional capability checks
   const searchGrounding = isCapabilityAvailable('search_grounding');
@@ -166,8 +166,8 @@ export function useFeatureAvailability(): UseFeatureAvailabilityResult {
   const refresh = useCallback(() => {
     setLoading(true);
     // Small delay to allow config changes to propagate
-    setTimeout(() => {
-      const newAvailability = getDetailedAvailability();
+    setTimeout(async () => {
+      const newAvailability = await getDetailedAvailability();
       setAvailability(newAvailability);
       setLoading(false);
     }, 50);

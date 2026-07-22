@@ -85,7 +85,7 @@ function signToken(type: AuthTokenPayload['type'], config: AuthConfig): string {
   return jwt.sign({ type } satisfies AuthTokenPayload, config.secret, { expiresIn });
 }
 
-function verifyToken(token: string, expectedType: AuthTokenPayload['type'], config: AuthConfig): boolean {
+export function verifyToken(token: string, expectedType: AuthTokenPayload['type'], config: AuthConfig): boolean {
   try {
     const payload = jwt.verify(token, config.secret) as AuthTokenPayload & jwt.JwtPayload;
     return payload.type === expectedType;
@@ -178,6 +178,11 @@ export function createAuthRouter(): Router {
 /** Whether auth is enabled for the active configuration (used by /api/health). */
 export function isAuthEnabled(): boolean {
   return !getConfig().disabled;
+}
+
+/** Active auth configuration (initializes from env on first use). Used by WS upgrade auth. */
+export function getAuthConfig(): AuthConfig {
+  return getConfig();
 }
 
 /** Test-only: reset the module singleton. */

@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "gates": [
+    {
+      "name": "secure-proxy-recovery-checks",
+      "command": [
+        "sh",
+        "-c",
+        "npm ci && cd server && npm ci && cd .. && npm run lint && npm run build && npm test -- --run && npm run test:coverage && npm audit --audit-level=high && cd server && npm run build && npm test -- --run && npm run test:coverage && npm audit --audit-level=high"
+      ],
+      "required": true
+    }
+  ],
+  "include": [
+    ".proofline.json",
+    ".env.example",
+    ".github/workflows/ci.yml",
+    "README.md",
+    "index.html",
+    "package.json",
+    "package-lock.json",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "server/package.json",
+    "server/package-lock.json",
+    "server/vitest.config.ts",
+    "server/src/**",
+    "src/App.tsx",
+    "src/components/**",
+    "src/config/configManager.ts",
+    "src/config/configManager.test.ts",
+    "src/hooks/**",
+    "src/services/**"
+  ],
+  "deny": [
+    ".env",
+    ".env.local",
+    ".env.*.local",
+    "*.pem",
+    "*.key",
+    "node_modules/**",
+    "dist/**",
+    "build/**",
+    "coverage/**",
+    ".git/**",
+    ".claude/**",
+    ".agents/**",
+    ".planning/**",
+    ".supercache*/**",
+    "Issues/**",
+    "SSOT/**",
+    "FLOYD.md",
+    "CLAUDE.md",
+    "HANDOFF.md",
+    "DOGFOOD_REPORT.md",
+    "IMPLEMENTATION-PLAN.html",
+    "REVIEW_EVIDENCE_LEDGER.md",
+    "src/config/storage/**"
+  ],
+  "baseBranch": "autonomously-fixed",
+  "publish": true
+}

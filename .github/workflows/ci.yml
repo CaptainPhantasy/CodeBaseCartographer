@@ -21,7 +21,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
-      - run: npm test
+      - run: npm run test:coverage
 
   server:
     runs-on: ubuntu-latest
@@ -37,4 +37,4 @@ jobs:
           cache-dependency-path: server/package-lock.json
       - run: npm ci
       - run: npm run build
-      - run: npm test
+      - run: npm run test:coverage

@@ -18,6 +18,7 @@ import {
   ElevenLabsVoice,
   OpenRouterModel
 } from '../types/capabilities';
+import { fetchProviderStatus } from '../services/llm/providerStatus';
 
 // ============================================================================
 // TYPES
@@ -81,7 +82,7 @@ interface ConfigProviderProps {
 export function ConfigProvider({ children }: ConfigProviderProps) {
   const [configManager] = useState<ConfigManager>(() => getConfigManager());
   const [config, setConfig] = useState<AppConfig>(() => configManager.getFullConfig());
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Subscribe to config changes
   useEffect(() => {
@@ -91,8 +92,31 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
     return unsubscribe;
   }, [configManager]);
 
-  // Check if this is the first run (no providers configured)
-  const isFirstRun = !configManager.hasAnyProvider();
+  // Hydrate non-secret provider enablement from the authenticated backend.
+  // This lets a fresh browser profile use server-configured providers without
+  // ever copying their keys into localStorage.
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const status = await fetchProviderStatus();
+        for (const [providerId, available] of Object.entries(status)) {
+          if (available && !configManager.getProvider(providerId as ProviderId)) {
+            await configManager.setProviderKey(providerId as ProviderId, '', true);
+          }
+        }
+        if (!cancelled) setConfig({ ...configManager.getFullConfig() });
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [configManager]);
+
+  // Do not flash the setup wizard while server provider status is loading.
+  const isFirstRun = !isLoading && !configManager.hasAnyProvider();
 
   // Memoized callbacks
   const getApiKey = useCallback((providerId: ProviderId) => {

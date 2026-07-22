@@ -1,21 +1,17 @@
 # 🗺️ Codebase Cartographer
 
-> **⚠️ IMPORTANT: LOCALHOST DEVELOPMENT ONLY**
+> **Local development tool with production-grade security architecture.**
 >
-> This application is designed **exclusively for local development use**. It is **NOT production-ready** and should **NOT be deployed to public servers or shared environments** without implementing proper authentication, server-side key management, and security hardening.
->
-> **Key limitations:**
-> - No authentication or authorization system
-> - API keys stored in browser localStorage (encrypted, but client-side)
-> - No rate limiting on API endpoints
-> - Overly permissive CORS configuration
-> - No security headers (CSP, etc.)
->
-> **Do not deploy to GitHub Pages, Vercel, or any public hosting service without addressing these security issues first.**
+> All provider keys are stored server-side (environment variables, never sent
+> to the browser). Authentication uses JWT (15-min access + 7-day refresh).
+> CORS is restricted to a configured origin whitelist. Rate limiting and
+> Helmet security headers are active. Safe for local development — for
+> public deployment, configure a strong `JWT_SECRET` and an explicit
+> `ALLOWED_ORIGINS` env var before exposing to a network.
 
 An AI-powered tool for mapping, visualizing, and understanding complex codebases. Uses multiple LLM providers to trace data flows, generate architecture diagrams, and provide intelligent code analysis.
 
-![Codebase Cartographer](https://img.shields.io/badge/AI-Powered-cyan) ![Multi-Provider](https://img.shields.io/badge/Multi--Provider-LLM-blue) ![React](https://img.shields.io/badge/React-19-61dafb) ![Development_Only-red)
+![Codebase Cartographer](https://img.shields.io/badge/AI-Powered-cyan) ![Multi-Provider](https://img.shields.io/badge/Multi--Provider-LLM-blue) ![React](https://img.shields.io/badge/React-19-61dafb) ![Security-JWT-green) ![CORS-Whitelisted-blue)
 
 ## ✨ Features
 
@@ -38,7 +34,7 @@ An AI-powered tool for mapping, visualizing, and understanding complex codebases
 
 - Node.js 18+
 - npm or yarn
-- At least one LLM API key (see [Provider Setup](#provider-setup))
+- At least one LLM provider key configured in the backend environment (see [Provider Setup](#provider-setup))
 
 ### Installation
 
@@ -54,16 +50,15 @@ npm install
 npm run dev
 ```
 
-The app will open at `http://localhost:5173`
+The app will open at `http://localhost:7443`
 
 ### First Run
 
 On first launch, you'll see the **Setup Wizard** which guides you through:
 
 1. **Select Providers** - Choose which LLM providers you want to use
-2. **Enter API Keys** - Securely enter your API keys (stored locally)
-3. **Configure Tasks** - Map features to your preferred providers
-4. **Start Exploring** - Begin mapping your codebase!
+2. **Configure Tasks** - Map features to your preferred providers
+3. **Start Exploring** - Begin mapping your codebase; keys remain server-side
 
 ## 🔑 Provider Setup
 
@@ -93,10 +88,10 @@ On first launch, you'll see the **Setup Wizard** which guides you through:
 
 ### Resource Selection Features
 
-After adding your API keys in the Settings → API Keys tab, the application automatically fetches and displays available resources:
+After configuring provider keys in the backend environment, the application fetches available resources through the authenticated proxy:
 
 **🎵 ElevenLabs Voice Selection**
-- Automatically fetches your available voices after API key validation
+- Automatically fetches your available voices through the backend proxy
 - Categorizes voices by type (Cloned, Premade, Generated, Other)
 - Play voice previews directly in the UI
 - View detailed voice information including descriptions and labels
@@ -174,9 +169,9 @@ codebase-cartographer/
 
 ## ⚙️ Configuration
 
-### Environment Variables (Optional)
+### Environment Variables
 
-You can pre-configure API keys via environment variables. Copy `.env.example` to `.env.local`:
+Provider API keys are configured server-side. Copy `.env.example` to `.env.local`:
 
 ```bash
 cp .env.example .env.local
@@ -185,20 +180,21 @@ cp .env.example .env.local
 Then edit `.env.local` with your keys:
 
 ```env
-VITE_GOOGLE_API_KEY=your_google_key
-VITE_OPENAI_API_KEY=your_openai_key
-# etc.
+GOOGLE_API_KEY=your_google_key
+OPENAI_API_KEY=your_openai_key
+# etc. — see .env.example for the full list (auth, CORS, rate limits)
 ```
 
-**Note:** The in-app Settings UI is the recommended way to manage keys. Environment variables serve as fallbacks.
+**Note:** Keys are read by the backend proxy only (`server/src/llm/keyStore.ts`). The browser never receives them.
 
-### Local Storage
+### Non-Secret Configuration (browser storage)
 
-All configuration is stored in browser localStorage:
-- API keys are obfuscated (not encrypted - don't use in shared environments)
-- Task mappings and preferences are JSON-stored
-- Config can be exported/imported via Settings
-- Voice and model selections are cached for faster loading
+The browser stores non-secret settings only. Provider API keys are never
+written here — those live in server-side env vars.
+
+- Task mappings and preferences (JSON)
+- Voice and model selections (for faster load)
+- Import/export via Settings
 
 ## 📚 Documentation
 
@@ -238,53 +234,62 @@ For detailed instructions, see [Adding a Provider](docs/ADDING_A_PROVIDER.md). S
 3. Update type definitions in `src/types/capabilities.ts`
 4. Update adapter factory and UI components
 
+### Test Coverage
+
+Run `npm run test:coverage` (client) and `cd server && npm run test:coverage` (server).
+Coverage thresholds act as regression guards and fail CI when coverage drops
+(baseline 2026-06-11):
+
+| Project | Statements | Branches | Functions | Lines |
+|---------|-----------|----------|-----------|-------|
+| Client  | 70% (gate: 68) | 59% (gate: 56) | 73% (gate: 71) | 71% (gate: 69) |
+| Server  | 39% (gate: 37) | 78% (gate: 75) | 74% (gate: 71) | 39% (gate: 37) |
+
+HTML reports land in `coverage/index.html` in each project.
+
 ## 🔒 Security Notes
 
-> **⚠️ CRITICAL: LOCALHOST DEVELOPMENT ONLY**
->
-> This application is **NOT production-ready**. It lacks:
-> - Authentication/Authorization system
-> - Rate limiting on API endpoints
-> - Content Security Policy (CSP) headers
-> - Input sanitization for LLM prompts
-> - Server-side key management
+> All LLM provider calls are proxied through the authenticated backend
+> (`/api/llm/*`). The browser never handles raw API keys.
 
 ### Key Storage Security
-- API keys are stored in **browser localStorage** with **AES-GCM-256 encryption** and PIN protection
-- While encrypted, client-side storage is still accessible to determined attackers
-- **Auto-lock** after 15 minutes of inactivity
-- **Do not use this app on shared computers or public devices**
-- **Do not commit `.env.local` files to version control** (already in .gitignore)
+- Keys live server-side in environment variables: `GOOGLE_API_KEY`, `OPENAI_API_KEY`,
+  `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`, `ELEVENLABS_API_KEY`, `LOCAL_LLM_ENDPOINT`
+- The browser never sees the raw keys — it only sends prompts to the authenticated
+  `/api/llm/*` proxy
+- Configure keys via `.env.local` (already in .gitignore) or your shell environment
+- For multi-user deployments, swap `process.env` reads for AWS Secrets Manager /
+  HashiCorp Vault (see `server/src/llm/keyStore.ts`)
 
-### Security Weaknesses (Known Issues)
-| Issue | Severity | Status |
-|-------|----------|--------|
-| No authentication | CRITICAL | Not implemented |
-| Permissive CORS | HIGH | Allows all origins |
-| No CSP headers | HIGH | Not implemented |
-| No rate limiting | MEDIUM | Not implemented |
-| Client-side key storage | MEDIUM | Encrypted but client-accessible |
+### Security Posture (Implemented)
+| Layer | Implementation | Location |
+|-------|----------------|----------|
+| Authentication | JWT (access + refresh) | `server/src/middleware/auth.ts` |
+| CORS | Origin whitelist (env) | `server/src/server.ts` |
+| Security headers | Helmet defaults | `server/src/server.ts` |
+| Rate limiting | 100/15m general, 10/1m strict | `server/src/middleware/rateLimit.ts` |
+| Key storage | Server-side env vars only | `server/src/llm/keyStore.ts` |
+| LLM proxy | All provider calls server-side | `server/src/llm/proxy.ts` |
 
-### Recommended Security Practices
+### Recommended Operational Practices
 
-1. **Local Development Only**: Run this application only on your personal development machine
-2. **Environment Variables**: Use `.env.local` for API keys instead of the in-app settings when possible
-3. **Key Rotation**: Regularly rotate your API keys, especially if you suspect exposure
-4. **Permissions**: Use API keys with minimal required permissions/scopes
-5. **Monitoring**: Monitor your API provider's usage dashboard for unusual activity
+1. **Strong `JWT_SECRET`**: Set a 32+ byte random value before exposing to a network
+2. **Set `ALLOWED_ORIGINS`**: Lock the CORS origin to your exact frontend URL
+3. **Key Rotation**: Rotate provider API keys on a regular schedule
+4. **Least Privilege**: Issue provider keys with the minimum scopes you need
+5. **Usage Monitoring**: Watch your provider dashboards for unusual activity
 
-### Production Deployment Requirements
-For production use, you **must implement**:
-- **Server-side key management** (never expose keys to clients)
-- **Authentication/Authorization** to control access
-- **Backend proxy** for all LLM API calls
-- **Secure key vault** (e.g., AWS Secrets Manager, Azure Key Vault)
-- **CORS restrictions** to specific origins only
-- **CSP headers** to prevent XSS attacks
-- **Rate limiting** to prevent API abuse
+### Production Hardening Checklist
+Before deploying to a shared/public network:
+- [ ] Set a strong `JWT_SECRET` (32+ random bytes)
+- [ ] Set `ALLOWED_ORIGINS` to your exact frontend URL
+- [ ] Enable HTTPS at the proxy layer (Caddy, nginx, or cloud LB)
+- [ ] Move provider keys from `.env` to a secret manager
+- [ ] Configure log rotation and centralized logging
+- [ ] Review and tighten rate-limit windows for your traffic profile
 
 ### Data Privacy
-- API keys are sent **directly to their respective providers only**
+- API keys remain on the backend and are attached only to outbound requests to their respective providers
 - No keys are sent to any third-party services or intermediaries
 - No telemetry or analytics data is collected by this application
 

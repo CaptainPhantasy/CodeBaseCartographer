@@ -9,6 +9,8 @@
  * - Graceful handling of server restarts
  */
 
+import { getAccessToken } from './apiClient';
+
 export type FileChangeEvent = {
   type: 'file:changed' | 'file:added' | 'file:deleted';
   path: string;
@@ -93,7 +95,14 @@ class WebSocketClient {
 
     try {
       this.manualDisconnect = false;
-      this.ws = new WebSocket(this.url);
+      // Attach the access token at connect-time (not construction-time) so
+      // reconnects after a token refresh always use the current token.
+      // The server validates it during the WebSocket upgrade (wsAuth.ts).
+      const token = getAccessToken();
+      const url = token
+        ? `${this.url}${this.url.includes('?') ? '&' : '?'}access_token=${encodeURIComponent(token)}`
+        : this.url;
+      this.ws = new WebSocket(url);
 
       this.ws.onopen = () => {
         this.reconnectAttempts = 0;
