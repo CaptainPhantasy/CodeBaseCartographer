@@ -111,6 +111,9 @@ const FlowMap: React.FC<FlowMapProps> = ({ data }) => {
                 .on("end", dragended);
         }
 
+        return () => {
+            simulation.stop();
+        };
     }, [data]);
 
     return (

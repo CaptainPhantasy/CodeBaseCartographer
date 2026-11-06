@@ -156,6 +156,7 @@ const CodeExecutionPanel: React.FC<CodeExecutionPanelProps> = ({
             {onClose && (
               <button
                 onClick={onClose}
+                aria-label="Close execution panel"
                 className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
               >
                 <ProductIcon name="Close" />

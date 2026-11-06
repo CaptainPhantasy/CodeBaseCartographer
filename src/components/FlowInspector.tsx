@@ -138,6 +138,7 @@ export default function FlowInspector({
         {onClose && (
           <button
             onClick={onClose}
+            aria-label="Close flow inspector"
             className="text-slate-400 hover:text-white transition-colors"
           >
             <ProductIcon name="Close" />

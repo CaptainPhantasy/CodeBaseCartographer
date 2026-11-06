@@ -102,6 +102,7 @@ const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
           <h2 className="text-xl font-semibold text-white">Create New Task</h2>
           <button
             onClick={onClose}
+            aria-label="Close new task dialog"
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
             disabled={isSubmitting}
           >

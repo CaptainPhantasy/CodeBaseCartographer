@@ -23,28 +23,29 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .setup-content { padding-block: 32px; }
 .setup-content > .flex { flex-wrap: wrap; }
 .fixed > div { max-width: 100%; }
+/* :root raises specificity so these win over Tailwind utilities loaded after this file. */
 @media (max-width: 760px) {
- .app-shell { flex-direction: column; overflow-y: auto; }
- .app-sidebar { width: 100%; padding: 16px; border-right: 0; border-bottom: 1px solid #475569; max-height: none; overflow: visible; }
- .app-sidebar > div:first-child { margin-bottom: 16px; }
- .app-sidebar > .mb-6 { margin-bottom: 12px; }
- .app-sidebar nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
- .app-sidebar nav > * { margin: 0 !important; min-width: 0; }
- .app-sidebar > .mt-auto { margin-top: 16px; padding-top: 16px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
- .app-sidebar > .mt-auto > * { margin: 0 !important; min-width: 0; }
- .app-workspace { flex: none; min-height: 720px; }
- .app-workspace main { min-height: 500px; }
- .app-header { padding: 16px; }
- .app-header h2 { font-size: 20px; }
- .setup-content { padding-block: 8px; }
- .setup-card { padding: 20px; }
- .setup-content > .flex:first-child { gap: 6px; margin-bottom: 20px; flex-wrap: nowrap; }
- .setup-content > .flex:first-child > .h-1 { width: 20px; }
- .setup-card h1, .setup-card h2 { font-size: 24px; }
- .setup-card button { min-width: 0; }
- .chat-composer { grid-template-columns: minmax(0,1fr); }
- .composer-actions { justify-content: flex-end; }
- .fixed.inset-0 { overflow-y: auto; align-items: flex-start; }
+ :root .app-shell { flex-direction: column; overflow-y: auto; }
+ :root .app-sidebar { width: 100%; padding: 16px; border-right: 0; border-bottom: 1px solid #475569; max-height: none; overflow: visible; }
+ :root .app-sidebar > div:first-child { margin-bottom: 16px; }
+ :root .app-sidebar > .mb-6 { margin-bottom: 12px; }
+ :root .app-sidebar nav { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+ :root .app-sidebar nav > * { margin: 0 !important; min-width: 0; }
+ :root .app-sidebar > .mt-auto { margin-top: 16px; padding-top: 16px; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+ :root .app-sidebar > .mt-auto > * { margin: 0 !important; min-width: 0; }
+ :root .app-workspace { flex: none; min-height: 720px; }
+ :root .app-workspace main { min-height: 500px; }
+ :root .app-header { padding: 16px; }
+ :root .app-header h2 { font-size: 20px; }
+ :root .setup-content { padding-block: 8px; }
+ :root .setup-card { padding: 20px; }
+ :root .setup-content > .flex:first-child { gap: 6px; margin-bottom: 20px; flex-wrap: nowrap; }
+ :root .setup-content > .flex:first-child > .h-1 { width: 20px; }
+ :root .setup-card h1, :root .setup-card h2 { font-size: 24px; }
+ :root .setup-card button { min-width: 0; }
+ :root .chat-composer { grid-template-columns: minmax(0,1fr); }
+ :root .composer-actions { justify-content: flex-end; }
+ :root .fixed.inset-0 { overflow-y: auto; align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 

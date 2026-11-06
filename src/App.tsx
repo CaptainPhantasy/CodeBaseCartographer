@@ -793,7 +793,7 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
 
           {/* Map View */}
           <div className={`absolute inset-0 p-6 ${mode === AppMode.MAP ? 'z-10' : 'hidden'}`}>
-            <FlowMap data={graphData} />
+            {mode === AppMode.MAP && <FlowMap data={graphData} />}
           </div>
 
           {/* Assets View */}

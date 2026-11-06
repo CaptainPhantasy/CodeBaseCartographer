@@ -732,6 +732,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
             </h2>
             <button
               onClick={onClose}
+              aria-label="Close settings"
               className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700 rounded-lg"
             >
               <ProductIcon name="Close" />

@@ -80,7 +80,7 @@ const RepoIngest: React.FC<RepoIngestProps> = ({ isOpen, onClose, onIngest }) =>
                     <h3 className="font-bold text-lg text-slate-100 flex items-center gap-2">
                         <span>Introduce Codebase</span>
                     </h3>
-                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors text-xl"><ProductIcon name="Close" /></button>
+                    <button onClick={onClose} aria-label="Close repository import" className="text-slate-400 hover:text-white transition-colors text-xl"><ProductIcon name="Close" /></button>
                 </div>
 
                 <div className="p-0">
