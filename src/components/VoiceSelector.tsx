@@ -30,10 +30,10 @@ interface VoiceGroup {
 // ============================================================================
 
 const CATEGORY_INFO: Record<VoiceCategory, { label: string; icon: string; color: string }> = {
-  cloned: { label: 'Cloned Voices', icon: '🎤', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
-  premade: { label: 'Premade Voices', icon: '🎭', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
-  generated: { label: 'Generated Voices', icon: '✨', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
-  other: { label: 'Other Voices', icon: '📦', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30' }
+  cloned: { label: 'Cloned Voices', icon: 'Mic', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30' },
+  premade: { label: 'Premade Voices', icon: 'Volume', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' },
+  generated: { label: 'Generated Voices', icon: 'Compass', color: 'bg-green-500/20 text-green-400 border-green-500/30' },
+  other: { label: 'Other Voices', icon: 'Folder', color: 'bg-slate-500/20 text-slate-400 border-slate-500/30' }
 };
 
 // ============================================================================
@@ -186,7 +186,7 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
             cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
             ${disabled || voices.length === 0
               ? 'border-slate-700'
-              : 'border-slate-600 focus:ring-cyan-500 focus:border-cyan-500 hover:border-slate-500'
+              : 'border-slate-600 focus:ring-teal-700 focus:border-teal-700 hover:border-slate-500'
             }
           `}
         >
@@ -283,7 +283,7 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({
                 <button
                   onClick={() => handlePreview(selectedVoice)}
                   disabled={disabled}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-teal-700/20 hover:bg-teal-700/30 text-teal-200 text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />

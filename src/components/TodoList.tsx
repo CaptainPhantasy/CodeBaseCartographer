@@ -58,9 +58,9 @@ const TodoList: React.FC<TodoListProps> = ({ onNodeClick, selectedNodeId }) => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="flex items-center gap-3">
-          <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" />
-          <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce delay-75" />
-          <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce delay-150" />
+          <div className="w-2 h-2 bg-teal-200 rounded-full animate-bounce" />
+          <div className="w-2 h-2 bg-teal-200 rounded-full animate-bounce delay-75" />
+          <div className="w-2 h-2 bg-teal-200 rounded-full animate-bounce delay-150" />
           <span className="text-slate-400 ml-2">Loading tasks...</span>
         </div>
       </div>

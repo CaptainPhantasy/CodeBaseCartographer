@@ -155,7 +155,7 @@ const GraphViewWithFeatures: React.FC<GraphViewWithFeaturesProps> = ({
 
       {/* Focus Mode Banner */}
       {focusedNodeId && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-cyan-600/90 backdrop-blur border border-cyan-400 rounded-lg px-4 py-2 shadow-lg">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-teal-800/90 backdrop-blur border border-teal-200 rounded-lg px-4 py-2 shadow-lg">
           <span className="text-sm font-semibold text-white">
             Focus: {graphData.nodes.find(n => n.id === focusedNodeId)?.label || focusedNodeId}
           </span>

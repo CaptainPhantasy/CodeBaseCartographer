@@ -77,7 +77,7 @@ const LiveDiffViewer: React.FC<LiveDiffViewerProps> = ({
             : line.startsWith('-')
             ? 'bg-red-900/20 text-red-300'
             : line.startsWith('@@')
-            ? 'bg-purple-900/30 text-purple-300 font-bold'
+            ? 'bg-slate-900/30 text-slate-300 font-bold'
             : 'text-slate-300';
 
           return (
@@ -181,7 +181,7 @@ const LiveDiffViewer: React.FC<LiveDiffViewerProps> = ({
                 }`}
               >
                 <div className="flex items-center justify-between gap-1">
-                  <span className="text-xs font-mono text-cyan-400 truncate flex-1">
+                  <span className="text-xs font-mono text-teal-200 truncate flex-1">
                     {change.path.split('/').pop()}
                   </span>
                   <span className={`text-xs px-1 py-0.5 rounded ${getChangeTypeColor(change.changeType)}`}>
@@ -204,7 +204,7 @@ const LiveDiffViewer: React.FC<LiveDiffViewerProps> = ({
               <div className="bg-slate-800 px-4 py-2 border-b border-slate-700">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-mono text-cyan-400">
+                    <div className="text-sm font-mono text-teal-200">
                       {selectedChangeData.path}
                     </div>
                     <div className="text-xs text-slate-400 mt-0.5">

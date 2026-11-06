@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 import React, { useEffect, useRef, useState } from 'react';
 import { getLLMService } from '../services/llmService';
 import { useFeatureAvailability } from '../hooks/useFeatureAvailability';
@@ -191,12 +192,12 @@ const LiveSession: React.FC<LiveSessionProps> = ({ onClose }) => {
     return (
         <div className="fixed inset-0 bg-slate-900/90 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
             <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-600 max-w-md w-full text-center">
-                <h2 className="text-2xl font-bold mb-4 text-cyan-400">Architect Live Session</h2>
+                <h2 className="text-2xl font-bold mb-4 text-teal-200">Architect Live Session</h2>
                 
                 <div className="h-32 flex items-center justify-center gap-2 mb-8">
                     {status === 'unavailable' ? (
                         <div className="text-slate-500 text-sm px-4">
-                            <div className="text-4xl mb-4">🎙️</div>
+                            <div className="text-4xl mb-4"><ProductIcon name="Mic" /></div>
                             <p>Real-time voice is not available.</p>
                             <p className="mt-2 text-amber-400">{errorMessage}</p>
                         </div>
@@ -205,7 +206,7 @@ const LiveSession: React.FC<LiveSessionProps> = ({ onClose }) => {
                             <div 
                                 key={i} 
                                 className={`w-4 rounded-full transition-all duration-100 ease-in-out ${
-                                    status === 'connected' ? 'bg-cyan-500' : 'bg-slate-600'
+                                    status === 'connected' ? 'bg-teal-700' : 'bg-slate-600'
                                 }`}
                                 style={{ height: `${Math.max(10, Math.min(100, h))}px` }}
                             />

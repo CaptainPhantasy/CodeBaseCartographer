@@ -62,7 +62,7 @@ const TasksView: React.FC<TasksViewProps> = ({
         </div>
         <button
           onClick={() => setIsCreateDialogOpen(true)}
-          className="px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg shadow-cyan-900/20"
+          className="px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors flex items-center gap-2 shadow-lg shadow-cyan-900/20"
         >
           <span className="text-lg">+</span> New Task
         </button>

@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * CodeExecutionPanel.tsx - Execution UI with progress tracking
  *
@@ -96,7 +97,7 @@ const CodeExecutionPanel: React.FC<CodeExecutionPanelProps> = ({
       queued: 'bg-slate-700 text-slate-300',
       initializing: 'bg-blue-900/30 text-blue-400',
       running: 'bg-yellow-900/30 text-yellow-400',
-      awaiting_approval: 'bg-purple-900/30 text-purple-400',
+      awaiting_approval: 'bg-slate-900/30 text-slate-400',
       completed: 'bg-green-900/30 text-green-400',
       failed: 'bg-red-900/30 text-red-400',
       cancelled: 'bg-slate-800 text-slate-400',
@@ -108,10 +109,10 @@ const CodeExecutionPanel: React.FC<CodeExecutionPanelProps> = ({
   // Get severity icon
   const getSeverityIcon = (severity: string) => {
     const icons: Record<string, string> = {
-      info: 'ℹ️',
-      warning: '⚠️',
-      error: '❌',
-      success: '✅',
+      info: 'Info',
+      warning: 'Warning',
+      error: 'Error',
+      success: 'Check',
     };
     return icons[severity] || icons.info;
   };
@@ -157,7 +158,7 @@ const CodeExecutionPanel: React.FC<CodeExecutionPanelProps> = ({
                 onClick={onClose}
                 className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
               >
-                ✕
+                <ProductIcon name="Close" />
               </button>
             )}
           </div>
@@ -168,7 +169,7 @@ const CodeExecutionPanel: React.FC<CodeExecutionPanelProps> = ({
           <div className="mt-3">
             <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-gradient-to-r from-blue-500 to-purple-500 h-full transition-all duration-300"
+                className="bg-gradient-to-r from-blue-500 to-slate-500 h-full transition-all duration-300"
                 style={{ width: `${execution.progress}%` }}
               />
             </div>
@@ -221,8 +222,8 @@ const CodeExecutionPanel: React.FC<CodeExecutionPanelProps> = ({
                     className="w-full px-3 py-2 flex items-center justify-between hover:bg-slate-700 transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                      <span className={change.expanded ? 'rotate-90' : ''}>▶</span>
-                      <span className="text-sm font-mono text-cyan-400">{change.path}</span>
+                      <span className={change.expanded ? 'rotate-90' : ''}><ProductIcon name="Play" /></span>
+                      <span className="text-sm font-mono text-teal-200">{change.path}</span>
                       <span className={`text-xs px-1.5 py-0.5 rounded ${
                         change.changeType === 'create'
                           ? 'bg-green-900/30 text-green-400'

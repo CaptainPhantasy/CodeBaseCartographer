@@ -182,7 +182,7 @@ export const PinModal: React.FC<PinModalProps> = ({ onUnlock, error: externalErr
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
           {/* Icon */}
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
+            <div className="w-20 h-20 bg-gradient-to-br from-teal-700 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-none">
               <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
@@ -210,12 +210,12 @@ export const PinModal: React.FC<PinModalProps> = ({ onUnlock, error: externalErr
                 key={index}
                 className={`w-12 h-14 rounded-lg border-2 flex items-center justify-center transition-all ${
                   index === activePinIndex
-                    ? 'border-cyan-500 bg-cyan-500/10'
+                    ? 'border-teal-700 bg-teal-700/10'
                     : 'border-slate-700 bg-slate-800'
                 }`}
               >
                 {index < currentPin.length && (
-                  <div className="w-3 h-3 rounded-full bg-cyan-500" />
+                  <div className="w-3 h-3 rounded-full bg-teal-700" />
                 )}
               </div>
             ))}
@@ -301,8 +301,8 @@ export const PinModal: React.FC<PinModalProps> = ({ onUnlock, error: externalErr
 
           {/* Setup Mode Info */}
           {mode === 'setup' && (
-            <div className="mt-6 bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
-              <p className="text-cyan-400 text-xs text-center">
+            <div className="mt-6 bg-teal-700/10 border border-teal-700/20 rounded-lg p-3">
+              <p className="text-teal-200 text-xs text-center">
                 <strong>Security Note:</strong> Your PIN encrypts API keys locally. Keys are never sent to any server.
               </p>
             </div>

@@ -17,24 +17,24 @@ const ALL_CAPABILITIES: Capability[] = [
 ];
 
 const CAPABILITY_INFO: Record<Capability, { label: string; icon: string; description: string }> = {
-  text: { label: 'Text', icon: '💬', description: 'Basic text generation and chat' },
-  code: { label: 'Code', icon: '💻', description: 'Code generation and analysis' },
-  structured_output: { label: 'JSON', icon: '📋', description: 'Structured JSON output' },
-  vision: { label: 'Vision', icon: '👁️', description: 'Image understanding' },
-  tts: { label: 'TTS', icon: '🔊', description: 'Text-to-speech synthesis' },
-  stt: { label: 'STT', icon: '🎤', description: 'Speech-to-text transcription' },
-  video: { label: 'Video', icon: '🎬', description: 'Video generation' },
-  realtime_audio: { label: 'Live', icon: '🎙️', description: 'Real-time audio/voice' },
-  thinking: { label: 'Think', icon: '🧠', description: 'Extended reasoning mode' },
-  search_grounding: { label: 'Search', icon: '🔍', description: 'Web search grounding' }
+  text: { label: 'Text', icon: 'Chat', description: 'Basic text generation and chat' },
+  code: { label: 'Code', icon: 'Code', description: 'Code generation and analysis' },
+  structured_output: { label: 'JSON', icon: 'File', description: 'Structured JSON output' },
+  vision: { label: 'Vision', icon: 'Eye', description: 'Image understanding' },
+  tts: { label: 'TTS', icon: 'Volume', description: 'Text-to-speech synthesis' },
+  stt: { label: 'STT', icon: 'Mic', description: 'Speech-to-text transcription' },
+  video: { label: 'Video', icon: 'Video', description: 'Video generation' },
+  realtime_audio: { label: 'Live', icon: 'Mic', description: 'Real-time audio/voice' },
+  thinking: { label: 'Think', icon: 'Compass', description: 'Extended reasoning mode' },
+  search_grounding: { label: 'Search', icon: 'Search', description: 'Web search grounding' }
 };
 
 const PROVIDER_INFO: Record<ProviderId, { color: string }> = {
-  openrouter: { color: 'bg-purple-500' },
+  openrouter: { color: 'bg-slate-500' },
   openai: { color: 'bg-green-500' },
   anthropic: { color: 'bg-orange-500' },
   google: { color: 'bg-blue-500' },
-  elevenlabs: { color: 'bg-pink-500' },
+  elevenlabs: { color: 'bg-slate-500' },
   local_llm: { color: 'bg-slate-500' }
 };
 
@@ -106,7 +106,7 @@ export const CapabilityMatrix: React.FC<CapabilityMatrixProps> = ({ compact = fa
                   {ALL_CAPABILITIES.map(cap => (
                     <td key={cap} className="py-2 px-2 text-center">
                       {providerCaps.has(cap) ? (
-                        <span className="text-green-400">✓</span>
+                        <span className="text-green-400">OK</span>
                       ) : (
                         <span className="text-slate-600">—</span>
                       )}
@@ -127,13 +127,13 @@ export const CapabilityMatrix: React.FC<CapabilityMatrixProps> = ({ compact = fa
       {/* Legend */}
       <div className="flex flex-wrap gap-4 text-xs text-slate-400 mb-4">
         <div className="flex items-center gap-1">
-          <span className="text-green-400">✓</span> Supported
+          <span className="text-green-400">OK</span> Supported
         </div>
         <div className="flex items-center gap-1">
           <span className="text-slate-600">—</span> Not supported
         </div>
         <div className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded bg-cyan-500"></span> Assigned to task
+          <span className="w-2 h-2 rounded bg-teal-700"></span> Assigned to task
         </div>
       </div>
 
@@ -173,7 +173,7 @@ export const CapabilityMatrix: React.FC<CapabilityMatrixProps> = ({ compact = fa
                       <span className="font-medium text-white">{provider.name}</span>
                       <span className="text-slate-500 text-xs">({provider.models.length} models)</span>
                       <span className="ml-auto text-slate-400">
-                        {showModels === provider.id ? '▼' : '▶'}
+                        {showModels === provider.id ? '▼' : 'Play'}
                       </span>
                     </div>
                   </td>
@@ -188,7 +188,7 @@ export const CapabilityMatrix: React.FC<CapabilityMatrixProps> = ({ compact = fa
                     <tr 
                       key={model.id} 
                       className={`border-b border-slate-800/50 hover:bg-slate-800/30 ${
-                        isAssigned ? 'bg-cyan-500/5' : ''
+                        isAssigned ? 'bg-teal-700/5' : ''
                       }`}
                     >
                       <td className="py-2 px-3 pl-8">
@@ -196,7 +196,7 @@ export const CapabilityMatrix: React.FC<CapabilityMatrixProps> = ({ compact = fa
                           <span className="text-slate-300">{model.name}</span>
                           {isAssigned && (
                             <span 
-                              className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded"
+                              className="text-[10px] bg-teal-700/20 text-teal-200 px-1.5 py-0.5 rounded"
                               title={`Assigned to: ${assignedTasks.map(t => t.replace('_', ' ')).join(', ')}`}
                             >
                               Active
@@ -220,7 +220,7 @@ export const CapabilityMatrix: React.FC<CapabilityMatrixProps> = ({ compact = fa
                                 ? 'text-green-400' 
                                 : 'text-slate-700'
                             } ${isHovered ? 'scale-125' : ''} inline-block transition-transform`}>
-                              {hasCapability ? '✓' : '—'}
+                              {hasCapability ? 'OK' : '—'}
                             </span>
                           </td>
                         );
@@ -231,7 +231,7 @@ export const CapabilityMatrix: React.FC<CapabilityMatrixProps> = ({ compact = fa
                             ? 'bg-green-500/20 text-green-400'
                             : model.tier === 'balanced'
                               ? 'bg-yellow-500/20 text-yellow-400'
-                              : 'bg-purple-500/20 text-purple-400'
+                              : 'bg-slate-500/20 text-slate-400'
                         }`}>
                           {model.tier}
                         </span>
@@ -277,7 +277,7 @@ export const CapabilityMatrix: React.FC<CapabilityMatrixProps> = ({ compact = fa
                     : 'bg-red-500/10 text-red-400'
                 }`}
               >
-                <span>{canHandle ? '✓' : '✗'}</span>
+                <span>{canHandle ? 'OK' : 'No'}</span>
                 <span>{taskType.replace(/_/g, ' ')}</span>
               </div>
             );

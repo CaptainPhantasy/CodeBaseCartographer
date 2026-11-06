@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * React Flow-based diagram canvas component
  */
@@ -189,11 +190,11 @@ function getNodeColorFromNodeType(type: string): string {
 
 function getNodeColorHexFromType(type: string): string {
   const colors: Record<string, string> = {
-    'entry': '#06b6d4',
-    'logic': '#8b5cf6',
+    'entry': '#5ec8d8',
+    'logic': '#c4b5fd',
     'process': '#6366f1',
-    'storage': '#10b981',
-    'exit': '#f59e0b',
+    'storage': '#6ee7b7',
+    'exit': '#fbbf24',
     'external': '#ef4444',
     'decision': '#f59e0b',
     'default': '#6b7280'
@@ -486,31 +487,31 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
       <div className="absolute top-4 left-4 z-10 flex gap-2">
         <button
           onClick={handleAutoLayout}
-          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-teal-800 hover:bg-teal-700 text-white text-sm font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
         >
-          <span>📐</span> Auto Layout
+          <span><ProductIcon name="Map" /></span> Auto Layout
         </button>
         <button
           onClick={() => setIsGenerateOpen(true)}
-          className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white text-sm font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
         >
-          <span>✨</span> Generate
+          <span><ProductIcon name="Compass" /></span> Generate
         </button>
         {!hasGraphData && (
           <button
             onClick={handleAddNode}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
           >
-            <span>➕</span> Add Node
+            <span><ProductIcon name="Plus" /></span> Add Node
           </button>
         )}
         <button
           onClick={() => setParticlesEnabled(!particlesEnabled)}
           className={`px-4 py-2 text-white text-sm font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2 ${
-            particlesEnabled ? 'bg-green-600 hover:bg-green-500' : 'bg-slate-600 hover:bg-slate-500'
+            particlesEnabled ? 'bg-teal-900 hover:bg-teal-800' : 'bg-slate-700 hover:bg-slate-600'
           }`}
         >
-          <span>{particlesEnabled ? '🔮' : '⭕'}</span>
+          <span><ProductIcon name="Compass" /></span>
           {particlesEnabled ? 'Particles On' : 'Particles Off'}
         </button>
         {/* Data Source Indicator */}
@@ -585,7 +586,7 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
         <div className="font-semibold text-slate-300 mb-2">Pneumatic Tube:</div>
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
+            <div className="w-3 h-3 rounded-full bg-teal-700"></div>
             <span>Blue sphere = Request (downstream)</span>
           </div>
           <div className="flex items-center gap-2">
@@ -629,7 +630,7 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
           <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-lg mx-4">
             <div className="flex items-center justify-between p-4 border-b border-slate-700">
               <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                <span>✨</span> Generate Flow Chart
+                <span><ProductIcon name="Compass" /></span> Generate Flow Chart
               </h2>
               <button
                 onClick={() => {
@@ -638,7 +639,7 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
                 }}
                 className="text-slate-400 hover:text-white transition-colors"
               >
-                ✕
+                <ProductIcon name="Close" />
               </button>
             </div>
             <div className="p-4">
@@ -646,7 +647,7 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
               {loadedFiles && loadedFiles.length > 0 ? (
                 <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
                   <div className="flex items-center gap-2 text-green-400 text-sm font-medium">
-                    <span>📂</span>
+                    <span><ProductIcon name="Folder" /></span>
                     <span>Using {loadedFiles.length} loaded files for context-aware generation</span>
                   </div>
                   <p className="text-xs text-green-300/70 mt-1">
@@ -656,7 +657,7 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
               ) : (
                 <div className="mb-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                   <div className="flex items-center gap-2 text-amber-400 text-sm font-medium">
-                    <span>⚠️</span>
+                    <span><ProductIcon name="Warning" /></span>
                     <span>No files loaded — using description only</span>
                   </div>
                   <p className="text-xs text-amber-300/70 mt-1">
@@ -672,7 +673,7 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
                 value={generatePrompt}
                 onChange={(e) => setGeneratePrompt(e.target.value)}
                 placeholder="e.g., Web application with React frontend, Express API backend, PostgreSQL database, and Redis cache..."
-                className="w-full h-32 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                className="w-full h-32 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent resize-none"
                 disabled={isGenerating}
               />
               {generateError && (
@@ -696,15 +697,15 @@ export default function DiagramView({ graphData, onGraphDataChange, loadedFiles,
               <button
                 onClick={handleGenerateFromPrompt}
                 disabled={!generatePrompt.trim() || isGenerating}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-slate-600 hover:bg-slate-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors flex items-center gap-2"
               >
                 {isGenerating ? (
                   <>
-                    <span className="animate-spin">⚙️</span> Generating...
+                    <span className="animate-spin"><ProductIcon name="Settings" /></span> Generating...
                   </>
                 ) : (
                   <>
-                    <span>✨</span> Generate
+                    <span><ProductIcon name="Compass" /></span> Generate
                   </>
                 )}
               </button>

@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * TaskCreateDialog component - Form for creating new tasks
  */
@@ -104,7 +105,7 @@ const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
             className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
             disabled={isSubmitting}
           >
-            ✕
+            <ProductIcon name="Close" />
           </button>
         </div>
 
@@ -127,7 +128,7 @@ const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Implement user authentication"
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none"
               disabled={isSubmitting}
               autoFocus
             />
@@ -143,7 +144,7 @@ const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the task, requirements, and acceptance criteria..."
               rows={5}
-              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none resize-none"
+              className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none resize-none"
               disabled={isSubmitting}
             />
           </div>
@@ -167,7 +168,7 @@ const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
                   disabled={isSubmitting}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     priority === value
-                      ? 'bg-cyan-600 text-white ring-2 ring-cyan-400'
+                      ? 'bg-teal-800 text-white ring-2 ring-teal-200'
                       : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                   }`}
                 >
@@ -189,7 +190,7 @@ const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
                 onChange={(e) => setFileInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddFile())}
                 placeholder="src/components/MyComponent.tsx"
-                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none font-mono text-sm"
+                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white placeholder-slate-500 focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none font-mono text-sm"
                 disabled={isSubmitting}
               />
               <button
@@ -208,7 +209,7 @@ const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
                     key={idx}
                     className="flex items-center gap-2 bg-slate-900/50 rounded-lg px-3 py-2"
                   >
-                    <span className="flex-1 text-cyan-400 font-mono text-sm truncate">
+                    <span className="flex-1 text-teal-200 font-mono text-sm truncate">
                       {file}
                     </span>
                     <button
@@ -217,7 +218,7 @@ const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
                       disabled={isSubmitting}
                       className="p-1 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded transition-colors"
                     >
-                      ✕
+                      <ProductIcon name="Close" />
                     </button>
                   </div>
                 ))}
@@ -238,7 +239,7 @@ const TaskCreateDialog: React.FC<TaskCreateDialogProps> = ({
             <button
               type="submit"
               disabled={isSubmitting || !title.trim()}
-              className="flex-1 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-5 py-2.5 bg-teal-800 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>

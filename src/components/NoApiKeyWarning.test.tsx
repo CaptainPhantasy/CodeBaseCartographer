@@ -137,7 +137,7 @@ describe('NoApiKeyWarning', () => {
       />
     );
 
-    // The text includes a lock emoji at the beginning
+    // Security notice copy
     expect(screen.getByText(/Keys are stored locally in your browser/)).toBeInTheDocument();
     expect(screen.getByText(/Never share your API keys/)).toBeInTheDocument();
   });
@@ -178,6 +178,6 @@ describe('NoApiKeyWarning', () => {
       />
     );
 
-    expect(screen.getByText('⚠️')).toBeInTheDocument();
+    expect(document.querySelector('.product-icon')).toBeTruthy();
   });
 });

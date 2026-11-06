@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * QuickActionsMenu - Single entry point for quick actions (Cmd+K)
  */
@@ -60,7 +61,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
     {
       id: 'focus-node',
       label: 'Focus Selected Node',
-      icon: '🎯',
+      icon: 'Compass',
       description: 'Show only selected node and dependencies',
       action: () => {
         onFocusNode?.();
@@ -71,7 +72,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
     {
       id: 'clear-focus',
       label: 'Clear Focus',
-      icon: '👁️',
+      icon: 'Eye',
       description: 'Show all nodes',
       action: () => {
         onClearFocus?.();
@@ -82,7 +83,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
     {
       id: 'create-node',
       label: 'Create New Node',
-      icon: '➕',
+      icon: 'Plus',
       description: 'Add a new node to the graph',
       action: () => {
         onCreateNode?.();
@@ -93,7 +94,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
     {
       id: 'auto-layout',
       label: 'Auto Layout',
-      icon: '📐',
+      icon: 'Map',
       description: 'Apply automatic layout to graph',
       action: () => {
         onAutoLayout?.();
@@ -104,7 +105,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
     {
       id: 'toggle-minimap',
       label: 'Toggle Mini Map',
-      icon: '🗺️',
+      icon: 'Map',
       description: 'Show/hide the mini map',
       action: () => {
         onToggleMiniMap?.();
@@ -115,7 +116,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
     {
       id: 'export',
       label: 'Export Graph',
-      icon: '📤',
+      icon: 'Upload',
       description: 'Export graph as image or JSON',
       action: () => {
         onExport?.();
@@ -209,7 +210,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
 
     return parts.map((part, idx) =>
       regex.test(part) ? (
-        <mark key={idx} className="bg-cyan-500/30 text-cyan-300 rounded px-0.5">
+        <mark key={idx} className="bg-teal-700/30 text-cyan-300 rounded px-0.5">
           {part}
         </mark>
       ) : (
@@ -234,7 +235,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
         {/* Header with search input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-700">
           <span className="text-slate-400">
-            {mode === 'search' ? '🔍' : '⚡'}
+            {mode === 'search' ? 'Search' : 'Code'}
           </span>
           <input
             ref={inputRef}
@@ -254,7 +255,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
               className="p-1 hover:bg-slate-800 rounded transition-colors"
               title="Clear search"
             >
-              ✕
+              <ProductIcon name="Close" />
             </button>
           )}
           <kbd className="px-2 py-1 bg-slate-800 text-slate-400 text-xs rounded">
@@ -295,11 +296,11 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
                     }}
                     className={`w-full px-4 py-3 flex items-start gap-3 transition-colors ${
                       idx === selectedIndex
-                        ? 'bg-cyan-500/10 border-l-2 border-cyan-500'
+                        ? 'bg-teal-700/10 border-l-2 border-teal-700'
                         : 'hover:bg-slate-800 border-l-2 border-transparent'
                     }`}
                   >
-                    <div className="mt-0.5 text-xl">{action.icon}</div>
+                    <div className="mt-0.5 text-xl">{<ProductIcon name={action.icon} />}</div>
                     <div className="flex-1 text-left">
                       <div className="text-slate-200 font-medium">
                         {action.label}
@@ -326,15 +327,15 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
                     }}
                     className={`w-full px-4 py-3 flex items-start gap-3 transition-colors ${
                       idx === selectedIndex
-                        ? 'bg-cyan-500/10 border-l-2 border-cyan-500'
+                        ? 'bg-teal-700/10 border-l-2 border-teal-700'
                         : 'hover:bg-slate-800 border-l-2 border-transparent'
                     }`}
                   >
                     <div className="mt-0.5">
                       {item.type === 'link' ? (
-                        <span className="text-slate-400">↗️</span>
+                        <span className="text-slate-400">→</span>
                       ) : (
-                        <span className="text-cyan-400">⬡</span>
+                        <span className="text-teal-200">⬡</span>
                       )}
                     </div>
                     <div className="flex-1 text-left">
@@ -345,7 +346,7 @@ const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
                         <span
                           className={`text-xs px-1.5 py-0.5 rounded ${
                             item.type === 'node'
-                              ? 'bg-violet-500/20 text-violet-400'
+                              ? 'bg-slate-500/20 text-slate-400'
                               : 'bg-slate-700 text-slate-400'
                           }`}
                         >

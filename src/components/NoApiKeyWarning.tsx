@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * NoApiKeyWarning Component - Shows warning banner when no API keys are configured
  */
@@ -20,9 +21,9 @@ export const NoApiKeyWarning: React.FC<NoApiKeyWarningProps> = ({ onOpenSetup, o
 
   return (
     <div className="bg-amber-500/10 border-b border-amber-500/30">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <span className="text-amber-400 text-xl">⚠️</span>
+          <span className="text-amber-400 text-xl"><ProductIcon name="Warning" /></span>
           <div>
             <p className="text-amber-200 font-medium">No API Keys Configured</p>
             <p className="text-amber-300/70 text-sm">
@@ -30,10 +31,10 @@ export const NoApiKeyWarning: React.FC<NoApiKeyWarningProps> = ({ onOpenSetup, o
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={onOpenSetup}
-            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition-colors"
+            className="px-4 py-2 bg-teal-800 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
           >
             Setup Wizard
           </button>
@@ -49,7 +50,7 @@ export const NoApiKeyWarning: React.FC<NoApiKeyWarningProps> = ({ onOpenSetup, o
       {/* Security reminder */}
       <div className="max-w-7xl mx-auto px-4 pb-2">
         <p className="text-xs text-amber-400/60">
-          🔒 Keys are stored locally in your browser. Never share your API keys.
+          <ProductIcon name="Check" /> Keys are stored locally in your browser. Never share your API keys.
         </p>
       </div>
     </div>

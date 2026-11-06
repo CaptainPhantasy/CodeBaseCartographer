@@ -36,7 +36,7 @@ interface FlowParticlesProps {
 // Particle configuration
 const CONFIG = {
   request: {
-    color: '#06b6d4',    // cyan-500
+    color: '#06b6d4',    // teal-700
     size: 12,            // px diameter
     glowColor: 'rgba(6, 182, 212, 0.5)',
     speed: 0.003,        // Progress per frame (~3 seconds for full journey)

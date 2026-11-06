@@ -180,9 +180,9 @@ describe('SetupWizard', () => {
     if (openaiButton) fireEvent.click(openaiButton);
     if (openrouterButton) fireEvent.click(openrouterButton);
 
-    // Check that they have the selected styling (border-cyan-500)
-    expect(openaiButton).toHaveClass('border-cyan-500');
-    expect(openrouterButton).toHaveClass('border-cyan-500');
+    // Check that they have the selected styling (border-teal-700)
+    expect(openaiButton).toHaveClass('border-teal-700');
+    expect(openrouterButton).toHaveClass('border-teal-700');
   });
 
   it('requires at least one provider selected to proceed', () => {
@@ -469,7 +469,7 @@ describe('SetupWizard', () => {
 
     // Initially, no validation status badge should be shown
     // Check for the specific "Valid" badge with checkmark, not the "Validate" button
-    expect(screen.queryByText(/✓ Valid/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/OK Valid/)).not.toBeInTheDocument();
 
     // Enter API key and validate
     const input = screen.getByPlaceholderText(/Enter your OpenAI API key/i);
@@ -482,7 +482,7 @@ describe('SetupWizard', () => {
 
     // Wait for validation - check for the "Valid" badge with checkmark
     await waitFor(() => {
-      expect(screen.getByText(/✓ Valid/)).toBeInTheDocument();
+      expect(screen.getByText(/OK Valid/)).toBeInTheDocument();
     });
   });
 
