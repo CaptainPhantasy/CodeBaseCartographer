@@ -242,7 +242,7 @@ describe('graphValidator', () => {
       const result = validateGraph(data, { autoRepair: false });
       const feedback = formatValidationFeedback(result);
 
-      expect(feedback).toContain('✓ VALID');
+      expect(feedback).toContain('OK VALID');
       expect(feedback).toContain('Nodes: 1');
     });
 
@@ -255,7 +255,7 @@ describe('graphValidator', () => {
       const result = validateGraph(data, { autoRepair: false });
       const feedback = formatValidationFeedback(result);
 
-      expect(feedback).toContain('✗ INVALID');
+      expect(feedback).toContain('FAIL INVALID');
       expect(feedback).toContain('## Errors');
     });
 

@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * Diff Modal Component
  * Displays a modal with diff viewer for file changes
@@ -124,7 +125,7 @@ const DiffModal: React.FC<DiffModalProps> = ({ filePath, onClose }) => {
             className="p-2 hover:bg-slate-700 rounded-lg transition-colors text-slate-400 hover:text-white"
             aria-label="Close modal"
           >
-            ✕
+            <ProductIcon name="Close" />
           </button>
         </div>
 
@@ -133,7 +134,7 @@ const DiffModal: React.FC<DiffModalProps> = ({ filePath, onClose }) => {
           {loading ? (
             <div className="flex items-center justify-center h-full">
               <div className="flex items-center gap-3 text-slate-400">
-                <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-teal-700 border-t-transparent rounded-full animate-spin" />
                 <span>Loading file contents...</span>
               </div>
             </div>

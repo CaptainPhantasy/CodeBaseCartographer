@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title"><title id="title">CodeBase Cartographer</title>
+<circle cx="256" cy="256" r="198" fill="#15212b" stroke="#aab6bf" stroke-width="10"/>
+<circle cx="256" cy="256" r="168" fill="none" stroke="#2a3a46" stroke-width="6"/>
+<path fill="none" stroke="#3d5363" stroke-width="4" d="M256 72V440M72 256H440M124 124L388 388M388 124L124 388"/>
+<path fill="#c9d4e0" d="M256 96L278 236L256 220L234 236Z"/>
+<path fill="#d6ad68" d="M256 416L234 276L256 292L278 276Z"/>
+<path fill="#8fa3b8" d="M96 256L236 234L220 256L236 278Z"/>
+<path fill="#8fa3b8" d="M416 256L276 278L292 256L276 234Z"/>
+<circle cx="188" cy="188" r="18" fill="#3b6ea5" stroke="#c9d4e0" stroke-width="4"/>
+<circle cx="324" cy="188" r="18" fill="#3b6ea5" stroke="#c9d4e0" stroke-width="4"/>
+<circle cx="256" cy="308" r="20" fill="#1e3a5f" stroke="#d6ad68" stroke-width="5"/>
+<path fill="none" stroke="#d6ad68" stroke-width="6" stroke-linecap="round" d="M202 200L244 292M310 200L268 292"/>
+<circle cx="256" cy="256" r="16" fill="#f2f0e9" stroke="#24313c" stroke-width="4"/>
+</svg>

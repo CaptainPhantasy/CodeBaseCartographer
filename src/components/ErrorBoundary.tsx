@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * ErrorBoundary Component - Catches React errors and displays fallback UI
  */
@@ -57,7 +58,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="max-w-lg w-full bg-slate-900 border border-red-500/30 rounded-2xl p-8 shadow-2xl">
             <div className="flex items-center gap-4 mb-6">
               <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center text-2xl">
-                ⚠️
+                <ProductIcon name="Warning" />
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">Something went wrong</h1>
@@ -85,7 +86,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex gap-3">
               <button
                 onClick={this.handleReset}
-                className="flex-1 py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-medium rounded-lg transition-colors"
+                className="flex-1 py-3 bg-teal-800 hover:bg-teal-700 text-white font-medium rounded-lg transition-colors"
               >
                 Reload Application
               </button>

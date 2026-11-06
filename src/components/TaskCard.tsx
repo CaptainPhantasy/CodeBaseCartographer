@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * TaskCard component - Individual task display with status controls
  */
@@ -127,14 +128,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
             className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded transition-colors"
             title={expanded ? 'Collapse' : 'Expand'}
           >
-            {expanded ? '▼' : '▶'}
+            {expanded ? '▼' : 'Play'}
           </button>
           <button
             onClick={() => setShowDeleteConfirm(true)}
             className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded transition-colors"
             title="Delete task"
           >
-            🗑
+            <ProductIcon name="Trash" />
           </button>
         </div>
       </div>
@@ -217,7 +218,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   <button
                     key={idx}
                     onClick={() => handleFileClick(file)}
-                    className="w-full text-left text-xs bg-slate-900/50 hover:bg-slate-700/50 text-cyan-400 hover:text-cyan-300 px-2.5 py-1.5 rounded font-mono truncate transition-colors"
+                    className="w-full text-left text-xs bg-slate-900/50 hover:bg-slate-700/50 text-teal-200 hover:text-cyan-300 px-2.5 py-1.5 rounded font-mono truncate transition-colors"
                     title={file}
                   >
                     {file}

@@ -95,7 +95,7 @@ const WatchModeToggle: React.FC<WatchModeToggleProps> = ({
         disabled={isConnecting}
         className={`
           relative w-10 h-6 rounded-full p-1 transition-colors duration-200
-          ${isWatching ? 'bg-cyan-600' : 'bg-slate-700'}
+          ${isWatching ? 'bg-teal-800' : 'bg-slate-700'}
           ${isConnecting ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'}
         `}
         aria-label={isWatching ? 'Disable watch mode' : 'Enable watch mode'}

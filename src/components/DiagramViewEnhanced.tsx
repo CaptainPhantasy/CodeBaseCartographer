@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * Enhanced DiagramView - Integrates Focus Mode, Search, and Context Menus
  */
@@ -263,7 +264,7 @@ export default function DiagramViewEnhanced() {
     <div className="w-full h-full bg-slate-950 relative">
       {/* Focus Mode Banner */}
       {focusedNodeId && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-cyan-600/90 backdrop-blur border border-cyan-400 rounded-lg px-4 py-2 shadow-lg">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-teal-800/90 backdrop-blur border border-teal-200 rounded-lg px-4 py-2 shadow-lg">
           <span className="text-sm font-semibold text-white">
             Focus: {(nodes.find(n => n.id === focusedNodeId)?.data as DiagramNodeData)?.label || focusedNodeId}
           </span>
@@ -283,15 +284,15 @@ export default function DiagramViewEnhanced() {
       <div className="absolute top-4 left-4 z-10 flex gap-2">
         <button
           onClick={handleAutoLayout}
-          className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-teal-800 hover:bg-teal-700 text-white text-sm font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
         >
-          <span>📐</span> Auto Layout
+          <span><ProductIcon name="Map" /></span> Auto Layout
         </button>
         <button
           onClick={handleAddNode}
           className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-lg transition-colors flex items-center gap-2"
         >
-          <span>➕</span> Add Node
+          <span><ProductIcon name="Plus" /></span> Add Node
         </button>
       </div>
 

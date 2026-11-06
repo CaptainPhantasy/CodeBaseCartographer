@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * ContextMenu - Right-click context menus for common operations
  */
@@ -122,7 +123,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, items, onClose }) => {
             }`}
           >
             <div className="flex items-center gap-2">
-              {item.icon && <span className="text-sm">{item.icon}</span>}
+              {item.icon && <span className="text-sm">{<ProductIcon name={item.icon} />}</span>}
               <span className="text-sm">{item.label}</span>
             </div>
             {item.shortcut && (
@@ -189,14 +190,14 @@ export function getNodeContextMenuItems(nodeId: string, handlers: {
     {
       id: 'focus',
       label: 'Focus Node',
-      icon: '🎯',
+      icon: 'Compass',
       action: handlers.onFocus,
       shortcut: 'Cmd+F'
     },
     {
       id: 'edit',
       label: 'Edit',
-      icon: '✏️',
+      icon: 'Code',
       action: handlers.onEdit
     },
     {
@@ -207,13 +208,13 @@ export function getNodeContextMenuItems(nodeId: string, handlers: {
     {
       id: 'duplicate',
       label: 'Duplicate',
-      icon: '📋',
+      icon: 'File',
       action: handlers.onDuplicate
     },
     {
       id: 'connect',
       label: 'Connect To...',
-      icon: '🔗',
+      icon: 'Connect',
       action: handlers.onConnect
     },
     {
@@ -224,7 +225,7 @@ export function getNodeContextMenuItems(nodeId: string, handlers: {
     {
       id: 'delete',
       label: 'Delete',
-      icon: '🗑️',
+      icon: 'Trash',
       action: handlers.onDelete,
       shortcut: 'Del'
     }
@@ -246,7 +247,7 @@ export function getCanvasContextMenuItems(handlers: {
     {
       id: 'create-node',
       label: 'Create Node',
-      icon: '➕',
+      icon: 'Plus',
       action: handlers.onCreateNode
     },
     {
@@ -257,13 +258,13 @@ export function getCanvasContextMenuItems(handlers: {
     {
       id: 'auto-layout',
       label: 'Auto Layout',
-      icon: '📐',
+      icon: 'Map',
       action: handlers.onAutoLayout
     },
     {
       id: 'fit-view',
       label: 'Fit View',
-      icon: '🔍',
+      icon: 'Search',
       action: handlers.onFitView
     },
     {
@@ -274,21 +275,21 @@ export function getCanvasContextMenuItems(handlers: {
     {
       id: 'zoom-in',
       label: 'Zoom In',
-      icon: '➕',
+      icon: 'Plus',
       action: handlers.onZoomIn,
       shortcut: 'Cmd++'
     },
     {
       id: 'zoom-out',
       label: 'Zoom Out',
-      icon: '➖',
+      icon: 'Close',
       action: handlers.onZoomOut,
       shortcut: 'Cmd+-'
     },
     {
       id: 'reset-zoom',
       label: 'Reset Zoom',
-      icon: '🎯',
+      icon: 'Compass',
       action: handlers.onResetZoom,
       shortcut: 'Cmd+0'
     }

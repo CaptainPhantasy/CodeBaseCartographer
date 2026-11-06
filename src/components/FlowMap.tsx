@@ -48,8 +48,8 @@ const FlowMap: React.FC<FlowMapProps> = ({ data }) => {
             .attr("r", 10)
             .attr("fill", (d: Node) => {
                 switch(d.type) {
-                    case 'entry': return "#22d3ee"; // cyan-400
-                    case 'logic': return "#a78bfa"; // violet-400
+                    case 'entry': return "#22d3ee"; // teal-200
+                    case 'logic': return "#a78bfa"; // slate-400
                     case 'storage': return "#fbbf24"; // amber-400
                     case 'exit': return "#f87171"; // red-400
                     default: return "#94a3b8"; // slate-400
@@ -111,6 +111,9 @@ const FlowMap: React.FC<FlowMapProps> = ({ data }) => {
                 .on("end", dragended);
         }
 
+        return () => {
+            simulation.stop();
+        };
     }, [data]);
 
     return (

@@ -1,3 +1,4 @@
+import { ProductIcon } from './components/ProductIcon';
 import React, { useState, useEffect, useRef } from 'react';
 import { Message, AppMode, GraphData } from './types';
 import { getLLMService, TaskType } from './services/llmService';
@@ -132,7 +133,7 @@ const App: React.FC = () => {
           setMessages(prev => [...prev.slice(-9), {
             id: Date.now().toString(),
             role: 'model',
-            text: `⚠️ Auto graph update failed (non-critical): ${sanitizedError}`,
+            text: ` The map could not be refreshed: ${sanitizedError}`,
             timestamp: new Date()
           }]);
         }
@@ -158,7 +159,7 @@ const App: React.FC = () => {
       setMessages(prev => [...prev, { 
         id: Date.now().toString(), 
         role: 'model', 
-        text: '⚠️ No LLM provider configured. Please go to Settings and add an API key to enable chat functionality.', 
+        text: ' No LLM provider configured. Please go to Settings and add an API key to enable chat functionality.', 
         timestamp: new Date() 
       }]);
       return;
@@ -360,7 +361,7 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
       setMessages(prev => [...prev, {
         id: Date.now().toString(),
         role: 'model',
-        text: '⚠️ Speech-to-Text not available. Please configure OpenAI (Whisper), Google, or ElevenLabs in Settings.',
+        text: ' Speech-to-Text not available. Please configure OpenAI (Whisper), Google, or ElevenLabs in Settings.',
         timestamp: new Date()
       }]);
       return;
@@ -405,7 +406,7 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
             setMessages(prev => [...prev, {
               id: Date.now().toString(),
               role: 'model',
-              text: `⚠️ Transcription failed: ${e instanceof Error ? e.message : String(e)}`,
+              text: ` Transcription failed: ${e instanceof Error ? e.message : String(e)}`,
               timestamp: new Date()
             }]);
           }
@@ -418,7 +419,7 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
         setMessages(prev => [...prev, {
           id: Date.now().toString(),
           role: 'model',
-          text: '⚠️ Microphone access denied. Please allow microphone access in your browser settings.',
+          text: ' Microphone access denied. Please allow microphone access in your browser settings.',
           timestamp: new Date()
         }]);
       }
@@ -426,56 +427,56 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
   };
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden" data-app-ready="true">
+    <div className="app-shell flex h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden" data-app-ready="true">
       {/* Sidebar */}
-      <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col p-4">
+      <div className={`app-sidebar w-64 bg-slate-900 border-r border-slate-800 flex flex-col p-4 ${showSetupWizard ? "hidden" : ""}`}>
         <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 bg-cyan-500 rounded-lg flex items-center justify-center font-bold text-slate-900">CC</div>
+          <img src="/icon.svg" alt="" width="36" height="36" className="shrink-0 bg-transparent border-0 shadow-none" style={{background:"transparent",border:0,boxShadow:"none"}} />
           <h1 className="font-bold text-lg tracking-tight">Cartographer</h1>
         </div>
         
         <div className="mb-6">
           <button 
             onClick={() => setIsIngestOpen(true)}
-            className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center justify-center gap-2 transition-colors border border-indigo-500/50 shadow-lg shadow-indigo-900/20"
+            className="w-full py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg flex items-center justify-center gap-2 transition-colors border border-indigo-500/50 shadow-lg shadow-none"
           >
-            <span>🚀</span> Connect Codebase
+            <span><ProductIcon name="Connect" /></span> Connect Codebase
           </button>
         </div>
         
         <nav className="flex-1 space-y-2">
           <button
             onClick={() => setMode(AppMode.CHAT)}
-            className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.CHAT ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'hover:bg-slate-800'}`}
+            className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.CHAT ? 'bg-teal-700/10 text-teal-200 border border-teal-700/20' : 'hover:bg-slate-800'}`}
           >
-            <span>💬</span> Trace & Chat
+            <span><ProductIcon name="Chat" /></span> Trace & Chat
           </button>
           <button
             onClick={() => setMode(AppMode.MAP)}
-            className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.MAP ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'hover:bg-slate-800'}`}
+            className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.MAP ? 'bg-teal-700/10 text-teal-200 border border-teal-700/20' : 'hover:bg-slate-800'}`}
           >
-            <span>🗺️</span> Visual Map
+            <span><ProductIcon name="Map" /></span> Visual Map
           </button>
           <button
             onClick={() => setMode(AppMode.FLOW_CHART)}
-            className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.FLOW_CHART ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'hover:bg-slate-800'}`}
+            className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.FLOW_CHART ? 'bg-teal-700/10 text-teal-200 border border-teal-700/20' : 'hover:bg-slate-800'}`}
           >
-            <span>📊</span> Flow Chart
+            <span><ProductIcon name="Chart" /></span> Flow Chart
           </button>
           <button
             onClick={() => setMode(AppMode.TASKS)}
-            className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.TASKS ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'hover:bg-slate-800'}`}
+            className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.TASKS ? 'bg-teal-700/10 text-teal-200 border border-teal-700/20' : 'hover:bg-slate-800'}`}
           >
-            <span>✅</span> Tasks
+            <span><ProductIcon name="Check" /></span> Tasks
           </button>
 
           {/* Video/Asset Studio - conditionally show based on availability */}
           {isVideoAvailable ? (
             <button
               onClick={() => setMode(AppMode.ASSETS)}
-              className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.ASSETS ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'hover:bg-slate-800'}`}
+              className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${mode === AppMode.ASSETS ? 'bg-teal-700/10 text-teal-200 border border-teal-700/20' : 'hover:bg-slate-800'}`}
             >
-              <span>🎬</span> Asset Studio
+              <span><ProductIcon name="Video" /></span> Asset Studio
             </button>
           ) : (
             <FeatureTooltip message={getConfigureMessage('isVideoAvailable') || 'Video generation unavailable'}>
@@ -483,7 +484,7 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
                 disabled
                 className="w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 opacity-50 cursor-not-allowed bg-slate-800/50"
               >
-                <span>🎬</span> Asset Studio
+                <span><ProductIcon name="Video" /></span> Asset Studio
               </button>
             </FeatureTooltip>
           )}
@@ -507,8 +508,8 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-400">Thinking Mode</span>
               <button 
-                onClick={() => setUseThinking(!useThinking)}
-                className={`w-10 h-6 rounded-full p-1 transition-colors ${useThinking ? 'bg-cyan-600' : 'bg-slate-700'}`}
+                aria-label="Thinking mode" aria-pressed={useThinking} onClick={() => setUseThinking(!useThinking)}
+                className={`w-10 h-6 rounded-full p-1 transition-colors ${useThinking ? 'bg-teal-800' : 'bg-slate-700'}`}
               >
                 <div className={`w-4 h-4 bg-white rounded-full transition-transform ${useThinking ? 'translate-x-4' : ''}`} />
               </button>
@@ -529,8 +530,8 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-400">Live Grounding</span>
               <button 
-                onClick={() => setUseSearch(!useSearch)}
-                className={`w-10 h-6 rounded-full p-1 transition-colors ${useSearch ? 'bg-cyan-600' : 'bg-slate-700'}`}
+                aria-label="Search grounding" aria-pressed={useSearch} onClick={() => setUseSearch(!useSearch)}
+                className={`w-10 h-6 rounded-full p-1 transition-colors ${useSearch ? 'bg-teal-800' : 'bg-slate-700'}`}
               >
                 <div className={`w-4 h-4 bg-white rounded-full transition-transform ${useSearch ? 'translate-x-4' : ''}`} />
               </button>
@@ -551,8 +552,8 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
             <div className="flex items-center justify-between text-sm">
               <span className="text-slate-400">Auto-Speak</span>
               <button
-                onClick={() => setAutoTTS(!autoTTS)}
-                className={`w-10 h-6 rounded-full p-1 transition-colors ${autoTTS ? 'bg-cyan-600' : 'bg-slate-700'}`}
+                aria-label="Automatic speech" aria-pressed={autoTTS} onClick={() => setAutoTTS(!autoTTS)}
+                className={`w-10 h-6 rounded-full p-1 transition-colors ${autoTTS ? 'bg-teal-800' : 'bg-slate-700'}`}
               >
                 <div className={`w-4 h-4 bg-white rounded-full transition-transform ${autoTTS ? 'translate-x-4' : ''}`} />
               </button>
@@ -574,8 +575,8 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
               <div className="text-xs text-slate-400 mb-2 flex items-center justify-between">
                 <span>
                   {ttsQueue.isLoading && 'Loading...'}
-                  {ttsQueue.isPlaying && '🔊 Speaking...'}
-                  {ttsQueue.isPaused && '⏸️ Paused'}
+                  {ttsQueue.isPlaying && ' Speaking...'}
+                  {ttsQueue.isPaused && ' Paused'}
                   {!ttsQueue.isPlaying && !ttsQueue.isPaused && !ttsQueue.isLoading && ttsQueue.queueLength > 0 && `Queued: ${ttsQueue.queueLength}`}
                 </span>
               </div>
@@ -585,12 +586,12 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
                   disabled={!ttsQueue.isPlaying && !ttsQueue.isPaused}
                   className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors ${
                     ttsQueue.isPlaying || ttsQueue.isPaused
-                      ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                      ? 'bg-teal-800 hover:bg-teal-700 text-white'
                       : 'bg-slate-700 text-slate-500 cursor-not-allowed'
                   }`}
                   title={ttsQueue.isPlaying ? 'Pause' : 'Resume'}
                 >
-                  {ttsQueue.isPlaying ? '⏸' : '▶️'}
+                  {ttsQueue.isPlaying ? 'Pause' : 'Play'}
                 </button>
                 <button
                   onClick={ttsQueue.skip}
@@ -602,14 +603,14 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
                   }`}
                   title="Skip to next"
                 >
-                  ⏭
+                  <ProductIcon name="Skip" />
                 </button>
                 <button
                   onClick={ttsQueue.stop}
                   className={`flex-1 py-1.5 px-2 rounded text-xs font-medium transition-colors bg-red-600/50 hover:bg-red-600/70 text-white`}
                   title="Stop all"
                 >
-                  ⏹
+                  <ProductIcon name="Stop" />
                 </button>
               </div>
             </div>
@@ -619,9 +620,9 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
           {isRealtimeAvailable ? (
             <button 
               onClick={() => setIsLiveOpen(true)}
-              className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold rounded-lg shadow-lg hover:shadow-red-500/20 transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold rounded-lg shadow-lg hover:shadow-none transition-all flex items-center justify-center gap-2"
             >
-              <span>🎙️</span> Architect Live
+              <span><ProductIcon name="Mic" /></span> Architect Live
             </button>
           ) : (
             <FeatureTooltip message={getConfigureMessage('isRealtimeAvailable') || 'Real-time voice unavailable'}>
@@ -629,7 +630,7 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
                 disabled
                 className="w-full py-3 bg-gradient-to-r from-slate-600 to-slate-500 text-slate-300 font-bold rounded-lg opacity-50 cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <span>🎙️</span> Architect Live
+                <span><ProductIcon name="Mic" /></span> Architect Live
               </button>
             </FeatureTooltip>
           )}
@@ -638,13 +639,13 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
             onClick={() => setShowSettings(true)}
             className="w-full py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors flex items-center justify-center gap-2 mt-2"
           >
-            <span>⚙️</span> Settings
+            <span><ProductIcon name="Settings" /></span> Settings
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col relative">
+      <div className={`app-workspace flex-1 flex flex-col relative min-w-0 ${showSetupWizard ? "hidden" : ""}`}>
 
         {/* No API Key Warning Banner */}
         <NoApiKeyWarning
@@ -653,10 +654,10 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
         />
 
         {/* Header */}
-        <header className="h-16 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between px-6 backdrop-blur">
+        <header className="app-header min-h-16 bg-slate-900/50 border-b border-slate-800 flex items-center justify-between px-6 backdrop-blur">
           <div className="flex items-center gap-4">
             <h2 className="text-xl font-semibold text-slate-100">
-              {mode === AppMode.CHAT && "System Cartography Interface"}
+              {mode === AppMode.CHAT && "Codebase overview"}
               {mode === AppMode.MAP && "Data Flow Visualization"}
               {mode === AppMode.ASSETS && "Generative Assets"}
               {mode === AppMode.FLOW_CHART && "Flow Chart Editor"}
@@ -681,9 +682,9 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
             <button
               onClick={() => setShowSettings(true)}
               className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white"
-              title="Settings"
+              aria-label="Settings" title="Settings"
             >
-              ⚙️
+              <ProductIcon name="Settings" />
             </button>
           </div>
         </header>
@@ -692,20 +693,20 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
         <main className="flex-1 overflow-hidden relative">
           
           {/* Chat View */}
-          <div className={`absolute inset-0 flex flex-col ${mode === AppMode.CHAT ? 'z-10' : '-z-10 opacity-0 pointer-events-none'}`}>
+          <div className={`absolute inset-0 flex flex-col ${mode === AppMode.CHAT ? 'z-10' : 'hidden'}`}>
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-3xl rounded-2xl p-5 ${msg.role === 'user' ? 'bg-cyan-600 text-white' : 'bg-slate-800 border border-slate-700'}`}>
+                  <div className={`max-w-3xl rounded-2xl p-5 ${msg.role === 'user' ? 'bg-teal-800 text-white' : 'bg-slate-800 border border-slate-700'}`}>
                     {msg.role === 'model' && (
                       <div className="flex items-center gap-2 mb-2 pb-2 border-b border-slate-700/50">
-                        <span className="text-xs font-bold text-cyan-400 uppercase tracking-wider">Cartographer AI</span>
+                        <span className="text-xs font-bold text-teal-200 uppercase tracking-wider">Cartographer AI</span>
                         {msg.isThinking && <span className="text-[10px] bg-slate-700 px-2 py-0.5 rounded text-slate-300">Thinking Mode</span>}
                         {isTTSAvailable ? (
-                          <button onClick={() => handleSpeak(msg.text)} className="ml-auto text-slate-400 hover:text-white" title="Read Aloud">🔊</button>
+                          <button onClick={() => handleSpeak(msg.text)} className="ml-auto text-slate-400 hover:text-white" title="Read Aloud"><ProductIcon name="Volume" /></button>
                         ) : (
                           <FeatureTooltip message={getConfigureMessage('isTTSAvailable') || 'TTS unavailable'}>
-                            <button disabled className="ml-auto text-slate-600 cursor-not-allowed" title="TTS unavailable">🔊</button>
+                            <button disabled className="ml-auto text-slate-600 cursor-not-allowed" title="TTS unavailable"><ProductIcon name="Volume" /></button>
                           </FeatureTooltip>
                         )}
                       </div>
@@ -731,9 +732,9 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
               {isLoading && (
                 <div className="flex justify-start">
                   <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700 flex items-center gap-3">
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" />
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce delay-75" />
-                    <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce delay-150" />
+                    <div className="w-2 h-2 bg-teal-200 rounded-full animate-bounce" />
+                    <div className="w-2 h-2 bg-teal-200 rounded-full animate-bounce delay-75" />
+                    <div className="w-2 h-2 bg-teal-200 rounded-full animate-bounce delay-150" />
                   </div>
                 </div>
               )}
@@ -741,7 +742,7 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
             </div>
             
             <div className="p-6 bg-slate-900 border-t border-slate-800">
-              <div className="relative max-w-4xl mx-auto">
+              <div className="chat-composer max-w-4xl mx-auto">
                 <input
                   type="text"
                   value={inputText}
@@ -749,41 +750,41 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                   placeholder={isTextAvailable ? "Describe a flow to map, or ask for optimization..." : "Configure an LLM provider in Settings to enable chat"}
                   disabled={!isTextAvailable}
-                  className="w-full bg-slate-800 text-slate-200 rounded-xl pl-6 pr-28 py-4 focus:ring-2 focus:ring-cyan-500 focus:outline-none border border-slate-700 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-slate-800 text-slate-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-teal-700 focus:outline-none border border-slate-700 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-                <div className="absolute right-2 top-2 bottom-2 flex items-center gap-1">
+                <div className="composer-actions flex items-center gap-2">
                   {/* Microphone button */}
                   {isSTTAvailable ? (
                     <button
                       onClick={handleToggleRecording}
                       disabled={isLoading}
-                      className={`aspect-square w-10 rounded-lg flex items-center justify-center transition-colors ${
+                      className={`aspect-square w-11 rounded-lg flex items-center justify-center transition-colors ${
                         isRecording
                           ? 'bg-red-500 hover:bg-red-600 animate-pulse'
                           : 'bg-slate-700 hover:bg-slate-600'
                       } disabled:opacity-50 disabled:cursor-not-allowed`}
-                      title={isRecording ? 'Stop recording' : 'Record voice'}
+                      aria-label={isRecording ? 'Stop recording' : 'Record voice'} title={isRecording ? 'Stop recording' : 'Record voice'}
                     >
-                      {isRecording ? '⏹️' : '🎤'}
+                      {isRecording ? 'Stop' : 'Mic'}
                     </button>
                   ) : (
                     <FeatureTooltip message={getConfigureMessage('isSTTAvailable') || 'Speech-to-Text unavailable'}>
                       <button
                         disabled
-                        className="aspect-square w-10 rounded-lg flex items-center justify-center bg-slate-700 opacity-50 cursor-not-allowed"
+                        className="aspect-square w-11 rounded-lg flex items-center justify-center bg-slate-700 opacity-50 cursor-not-allowed"
                         title="Speech-to-Text unavailable"
                       >
-                        🎤
+                        <ProductIcon name="Mic" />
                       </button>
                     </FeatureTooltip>
                   )}
                   <button
                     onClick={() => handleSendMessage()}
                     disabled={isLoading || !isTextAvailable}
-                    className="aspect-square w-10 bg-cyan-600 hover:bg-cyan-500 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Send"
+                    className="aspect-square w-11 bg-teal-800 hover:bg-teal-700 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    aria-label="Send message" title="Send"
                   >
-                    ➤
+                    <ProductIcon name="Send" />
                   </button>
                 </div>
               </div>
@@ -791,17 +792,17 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
           </div>
 
           {/* Map View */}
-          <div className={`absolute inset-0 p-6 ${mode === AppMode.MAP ? 'z-10' : '-z-10 opacity-0 pointer-events-none'}`}>
-            <FlowMap data={graphData} />
+          <div className={`absolute inset-0 p-6 ${mode === AppMode.MAP ? 'z-10' : 'hidden'}`}>
+            {mode === AppMode.MAP && <FlowMap data={graphData} />}
           </div>
 
           {/* Assets View */}
-          <div className={`absolute inset-0 p-6 ${mode === AppMode.ASSETS ? 'z-10' : '-z-10 opacity-0 pointer-events-none'}`}>
+          <div className={`absolute inset-0 p-6 ${mode === AppMode.ASSETS ? 'z-10' : 'hidden'}`}>
             <AssetGenerator />
           </div>
 
           {/* Flow Chart View */}
-          <div className={`absolute inset-0 ${mode === AppMode.FLOW_CHART ? 'z-10' : '-z-10 opacity-0 pointer-events-none'}`}>
+          <div className={`absolute inset-0 ${mode === AppMode.FLOW_CHART ? 'z-10' : 'hidden'}`}>
             <DiagramView 
               graphData={graphData} 
               onGraphDataChange={setGraphData} 
@@ -811,7 +812,7 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
           </div>
 
           {/* Tasks View */}
-          <div className={`absolute inset-0 ${mode === AppMode.TASKS ? 'z-10' : '-z-10 opacity-0 pointer-events-none'}`}>
+          <div className={`absolute inset-0 ${mode === AppMode.TASKS ? 'z-10' : 'hidden'}`}>
             <TasksView />
           </div>
 

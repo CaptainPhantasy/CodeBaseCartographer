@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * SetupWizard Component - Multi-step onboarding wizard for first-run configuration
  */
@@ -32,46 +33,46 @@ type WizardStep = 'welcome' | 'providers' | 'apikeys' | 'tasks' | 'complete';
 
 const PROVIDER_INFO: Record<ProviderId, { icon: string; color: string; description: string }> = {
   openrouter: { 
-    icon: '🌐', 
-    color: 'from-purple-500 to-indigo-600',
+    icon: 'Connect', 
+    color: 'from-slate-500 to-indigo-600',
     description: 'Access Claude, GPT-4, Gemini, and more through one API'
   },
   openai: { 
-    icon: '🤖', 
+    icon: 'Code', 
     color: 'from-green-500 to-emerald-600',
     description: 'Direct access to GPT-4o, o1, TTS, and Realtime API'
   },
   anthropic: { 
-    icon: '🧠', 
+    icon: 'Compass', 
     color: 'from-orange-500 to-amber-600',
     description: 'Direct access to Claude models with extended thinking'
   },
   google: { 
-    icon: '✨', 
-    color: 'from-blue-500 to-cyan-600',
+    icon: 'Compass', 
+    color: 'from-blue-500 to-teal-800',
     description: 'Gemini models with video, TTS, and Live API'
   },
   elevenlabs: {
-    icon: '🎵',
-    color: 'from-pink-500 to-rose-600',
+    icon: 'Volume',
+    color: 'from-slate-500 to-rose-600',
     description: 'Premium text-to-speech with natural voices'
   },
   local_llm: { 
-    icon: '💻', 
+    icon: 'Code', 
     color: 'from-slate-500 to-slate-600',
     description: 'Run models locally via Ollama (coming soon)'
   }
 };
 
 const TASK_INFO: Record<TaskType, { name: string; icon: string; description: string }> = {
-  [TaskType.TEXT_GENERATION]: { name: 'Text Generation', icon: '💬', description: 'Chat and text responses' },
-  [TaskType.GRAPH_GENERATION]: { name: 'Graph Generation', icon: '🗺️', description: 'Generate structured graph data' },
-  [TaskType.TTS]: { name: 'Text-to-Speech', icon: '🔊', description: 'Convert text to audio' },
-  [TaskType.VIDEO]: { name: 'Video Generation', icon: '🎬', description: 'Generate videos from prompts' },
-  [TaskType.REALTIME_VOICE]: { name: 'Live Voice', icon: '🎙️', description: 'Real-time voice conversations' },
-  [TaskType.IMAGE_ANALYSIS]: { name: 'Image Analysis', icon: '🖼️', description: 'Analyze and understand images' },
-  [TaskType.CODE_ANALYSIS]: { name: 'Code Analysis', icon: '💻', description: 'Analyze and understand code' },
-  [TaskType.TASK_GENERATION]: { name: 'Task Generation', icon: '✅', description: 'AI-powered task suggestions' }
+  [TaskType.TEXT_GENERATION]: { name: 'Text Generation', icon: 'Chat', description: 'Chat and text responses' },
+  [TaskType.GRAPH_GENERATION]: { name: 'Graph Generation', icon: 'Map', description: 'Generate structured graph data' },
+  [TaskType.TTS]: { name: 'Text-to-Speech', icon: 'Volume', description: 'Convert text to audio' },
+  [TaskType.VIDEO]: { name: 'Video Generation', icon: 'Video', description: 'Generate videos from prompts' },
+  [TaskType.REALTIME_VOICE]: { name: 'Live Voice', icon: 'Mic', description: 'Real-time voice conversations' },
+  [TaskType.IMAGE_ANALYSIS]: { name: 'Image Analysis', icon: 'Eye', description: 'Analyze and understand images' },
+  [TaskType.CODE_ANALYSIS]: { name: 'Code Analysis', icon: 'Code', description: 'Analyze and understand code' },
+  [TaskType.TASK_GENERATION]: { name: 'Task Generation', icon: 'Check', description: 'AI-powered task suggestions' }
 };
 
 // ============================================================================
@@ -278,9 +279,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
 
   const renderWelcome = () => (
     <div className="text-center space-y-6">
-      <div className="w-20 h-20 mx-auto bg-gradient-to-br from-cyan-500 to-indigo-600 rounded-2xl flex items-center justify-center text-4xl shadow-lg shadow-cyan-500/20">
-        CC
-      </div>
+      <img src="/icon.svg" alt="" width="56" height="56" className="mx-auto mb-2 bg-transparent border-0 shadow-none" style={{background:"transparent",border:0,boxShadow:"none"}} />
       <h2 className="text-3xl font-bold text-white">Welcome to Codebase Cartographer</h2>
       <p className="text-slate-400 max-w-md mx-auto">
         To get started, configure API keys for AI providers or import an existing configuration.
@@ -288,7 +287,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
 
       {/* Import Config Option */}
       <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4 max-w-md mx-auto text-left">
-        <h4 className="font-medium text-slate-200 mb-3">Already have a config?</h4>
+        <h4 className="font-medium text-slate-200 mb-3">Have saved settings?</h4>
         <input
           ref={fileInputRef}
           type="file"
@@ -300,9 +299,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={importing}
-          className="w-full py-2 px-4 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full py-2 px-4 bg-teal-800 hover:bg-teal-700 text-white rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {importing ? 'Importing...' : '📥 Import Config JSON'}
+          {importing ? 'Importing...' : ' Import settings'}
         </button>
         {importError && (
           <p className="text-red-400 text-sm mt-2">{importError}</p>
@@ -316,7 +315,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         <h4 className="font-medium text-slate-200 mb-2">What you'll need:</h4>
         <ul className="text-sm text-slate-400 space-y-2">
           <li className="flex items-center gap-2">
-            <span className="text-green-400">✓</span> At least one LLM API key (OpenRouter recommended)
+            <span className="text-green-400">OK</span> At least one LLM API key (OpenRouter recommended)
           </li>
           <li className="flex items-center gap-2">
             <span className="text-slate-500">○</span> Optional: Multiple providers for different tasks
@@ -344,21 +343,21 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
               onClick={() => toggleProvider(provider.id)}
               className={`w-full p-4 rounded-xl border-2 transition-all text-left flex items-center gap-4 ${
                 isSelected 
-                  ? 'border-cyan-500 bg-cyan-500/10' 
+                  ? 'border-teal-700 bg-teal-700/10' 
                   : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
               }`}
             >
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${info.color} flex items-center justify-center text-2xl`}>
-                {info.icon}
+                {<ProductIcon name={info.icon} />}
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-white">{provider.name}</h3>
                 <p className="text-sm text-slate-400">{info.description}</p>
               </div>
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                isSelected ? 'border-cyan-500 bg-cyan-500' : 'border-slate-600'
+                isSelected ? 'border-teal-700 bg-teal-700' : 'border-slate-600'
               }`}>
-                {isSelected && <span className="text-white text-xs">✓</span>}
+                {isSelected && <span className="text-white text-xs">OK</span>}
               </div>
             </button>
           );
@@ -366,7 +365,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       </div>
       
       <p className="text-sm text-slate-500 text-center">
-        💡 Tip: OpenRouter gives you access to many models through one API key
+        <ProductIcon name="Compass" /> Tip: OpenRouter gives you access to many models through one API key
       </p>
     </div>
   );
@@ -390,7 +389,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
             <div key={providerId} className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
               <div className="flex items-center gap-3 mb-4">
                 <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${info.color} flex items-center justify-center text-xl`}>
-                  {info.icon}
+                  {<ProductIcon name={info.icon} />}
                 </div>
                 <div>
                   <h3 className="font-semibold text-white">{provider.name}</h3>
@@ -399,9 +398,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                       href={provider.docsUrl} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-xs text-cyan-400 hover:underline"
+                      className="text-xs text-teal-200 hover:underline"
                     >
-                      {provider.keyInstructions} ↗
+                      {provider.keyInstructions} →
                     </a>
                   )}
                 </div>
@@ -411,7 +410,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                       ? 'bg-green-500/20 text-green-400' 
                       : 'bg-red-500/20 text-red-400'
                   }`}>
-                    {state.isValid ? '✓ Valid' : '✗ Invalid'}
+                    {state.isValid ? 'OK Valid' : 'No Invalid'}
                   </div>
                 )}
               </div>
@@ -426,7 +425,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                     className={`w-full bg-slate-900 border rounded-lg px-4 py-3 pr-12 text-white focus:ring-2 focus:outline-none ${
                       state.apiKey && !state.formatValid
                         ? 'border-red-500 focus:ring-red-500'
-                        : 'border-slate-600 focus:ring-cyan-500'
+                        : 'border-slate-600 focus:ring-teal-700'
                     }`}
                   />
                   <button
@@ -434,13 +433,13 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                     title={state.showKey ? 'Hide' : 'Show'}
                   >
-                    {state.showKey ? '🙈' : '👁️'}
+                    {state.showKey ? 'Hide' : 'Eye'}
                   </button>
                 </div>
                 <button
                   onClick={() => validateKey(providerId)}
                   disabled={!state.apiKey || state.validating || !state.formatValid}
-                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:hover:bg-cyan-600 text-white rounded-lg font-medium transition-colors min-w-[100px]"
+                  className="px-4 py-2 bg-teal-800 hover:bg-teal-700 disabled:opacity-50 disabled:hover:bg-teal-800 text-white rounded-lg font-medium transition-colors min-w-[100px]"
                 >
                   {state.validating ? (
                     <span className="flex items-center gap-2">
@@ -463,7 +462,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
       
       {validProviders.length === 0 && (
         <p className="text-amber-400 text-sm text-center bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
-          ⚠️ Please validate at least one API key to continue
+          <ProductIcon name="Warning" /> Please validate at least one API key to continue
         </p>
       )}
     </div>
@@ -510,7 +509,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
               <div key={taskType} className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{taskInfo.icon}</span>
+                    <span className="text-2xl">{<ProductIcon name={taskInfo.icon} />}</span>
                     <div>
                       <h4 className="font-medium text-white">{taskInfo.name}</h4>
                       <p className="text-xs text-slate-400">{taskInfo.description}</p>
@@ -531,7 +530,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
                           setTaskMappings(prev => ({ ...prev, [taskType]: null }));
                         }
                       }}
-                      className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none min-w-[200px]"
+                      className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-teal-700 focus:outline-none min-w-[200px]"
                     >
                       <option value="">Auto-select</option>
                       {capable.map(opt => (
@@ -552,7 +551,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         </div>
         
         <p className="text-sm text-slate-500 text-center">
-          💡 Leave on "Auto-select" to let the app choose the best provider automatically
+          <ProductIcon name="Compass" /> Leave on "Auto-select" to let the app choose the best provider automatically
         </p>
       </div>
     );
@@ -561,7 +560,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   const renderComplete = () => (
     <div className="text-center space-y-6">
       <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-4xl shadow-lg shadow-green-500/20">
-        ✓
+        OK
       </div>
       <h2 className="text-3xl font-bold text-white">You're All Set!</h2>
       <p className="text-slate-400 max-w-md mx-auto">
@@ -576,9 +575,9 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
             const info = PROVIDER_INFO[providerId];
             return (
               <div key={providerId} className="flex items-center gap-2 text-sm">
-                <span>{info.icon}</span>
+                <span>{<ProductIcon name={info.icon} />}</span>
                 <span className="text-slate-300">{provider?.name}</span>
-                <span className="text-green-400 ml-auto">✓ Configured</span>
+                <span className="text-green-400 ml-auto">OK Configured</span>
               </div>
             );
           })}
@@ -596,24 +595,24 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
   // ============================================================================
 
   return (
-    <div className="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="w-full max-w-2xl">
+    <div className="setup-screen fixed inset-0 bg-slate-950 z-50 overflow-y-auto p-4">
+      <div className="setup-content w-full max-w-2xl mx-auto">
         {/* Progress indicator */}
         <div className="flex items-center justify-center gap-2 mb-8">
           {steps.map((step, index) => (
             <React.Fragment key={step}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                 index < stepIndex 
-                  ? 'bg-cyan-500 text-white' 
+                  ? 'bg-teal-700 text-white' 
                   : index === stepIndex 
-                    ? 'bg-cyan-500/20 text-cyan-400 border-2 border-cyan-500' 
+                    ? 'bg-teal-700/20 text-teal-200 border-2 border-teal-700' 
                     : 'bg-slate-800 text-slate-500'
               }`}>
-                {index < stepIndex ? '✓' : index + 1}
+                {index < stepIndex ? 'OK' : index + 1}
               </div>
               {index < steps.length - 1 && (
                 <div className={`w-12 h-1 rounded ${
-                  index < stepIndex ? 'bg-cyan-500' : 'bg-slate-800'
+                  index < stepIndex ? 'bg-teal-700' : 'bg-slate-800'
                 }`} />
               )}
             </React.Fragment>
@@ -621,7 +620,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
         </div>
 
         {/* Content */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
+        <div className="setup-card bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
           {currentStep === 'welcome' && renderWelcome()}
           {currentStep === 'providers' && renderProviderSelection()}
           {currentStep === 'apikeys' && renderApiKeyEntry()}
@@ -634,7 +633,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
           <button
             onClick={goBack}
             disabled={stepIndex === 0}
-            className="px-6 py-3 text-slate-400 hover:text-white disabled:opacity-0 transition-colors"
+            className={`px-6 py-3 text-slate-400 hover:text-white transition-colors ${stepIndex === 0 ? "invisible" : ""}`}
           >
             ← Back
           </button>
@@ -642,15 +641,15 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
           {currentStep === 'complete' ? (
             <button
               onClick={handleComplete}
-              className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-cyan-500/20"
+              className="px-8 py-3 bg-gradient-to-r from-teal-700 to-indigo-600 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-none"
             >
-              Start Mapping 🚀
+              Start Mapping <ProductIcon name="Connect" />
             </button>
           ) : (
             <button
               onClick={goNext}
               disabled={!canProceed()}
-              className="px-8 py-3 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 disabled:hover:bg-cyan-600 text-white font-semibold rounded-xl transition-colors"
+              className="px-8 py-3 bg-teal-800 hover:bg-teal-700 disabled:opacity-50 disabled:hover:bg-teal-800 text-white font-semibold rounded-xl transition-colors"
             >
               Continue →
             </button>

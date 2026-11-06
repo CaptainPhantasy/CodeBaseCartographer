@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * SettingsPage Component - Tabbed settings interface for managing configuration
  */
@@ -40,23 +41,23 @@ interface ProviderEditState {
 // ============================================================================
 
 const PROVIDER_INFO: Record<ProviderId, { icon: string; color: string }> = {
-  openrouter: { icon: '🌐', color: 'from-purple-500 to-indigo-600' },
-  openai: { icon: '🤖', color: 'from-green-500 to-emerald-600' },
-  anthropic: { icon: '🧠', color: 'from-orange-500 to-amber-600' },
-  google: { icon: '✨', color: 'from-blue-500 to-cyan-600' },
-  elevenlabs: { icon: '🎵', color: 'from-pink-500 to-rose-600' },
-  local_llm: { icon: '💻', color: 'from-slate-500 to-slate-600' }
+  openrouter: { icon: 'Connect', color: 'from-slate-500 to-indigo-600' },
+  openai: { icon: 'Code', color: 'from-green-500 to-emerald-600' },
+  anthropic: { icon: 'Compass', color: 'from-orange-500 to-amber-600' },
+  google: { icon: 'Compass', color: 'from-blue-500 to-teal-800' },
+  elevenlabs: { icon: 'Volume', color: 'from-slate-500 to-rose-600' },
+  local_llm: { icon: 'Code', color: 'from-slate-500 to-slate-600' }
 };
 
 const TASK_INFO: Record<TaskType, { name: string; icon: string }> = {
-  [TaskType.TEXT_GENERATION]: { name: 'Text Generation', icon: '💬' },
-  [TaskType.GRAPH_GENERATION]: { name: 'Graph Generation', icon: '🗺️' },
-  [TaskType.TTS]: { name: 'Text-to-Speech', icon: '🔊' },
-  [TaskType.VIDEO]: { name: 'Video Generation', icon: '🎬' },
-  [TaskType.REALTIME_VOICE]: { name: 'Live Voice', icon: '🎙️' },
-  [TaskType.IMAGE_ANALYSIS]: { name: 'Image Analysis', icon: '🖼️' },
-  [TaskType.CODE_ANALYSIS]: { name: 'Code Analysis', icon: '💻' },
-  [TaskType.TASK_GENERATION]: { name: 'Task Generation', icon: '✅' }
+  [TaskType.TEXT_GENERATION]: { name: 'Text Generation', icon: 'Chat' },
+  [TaskType.GRAPH_GENERATION]: { name: 'Graph Generation', icon: 'Map' },
+  [TaskType.TTS]: { name: 'Text-to-Speech', icon: 'Volume' },
+  [TaskType.VIDEO]: { name: 'Video Generation', icon: 'Video' },
+  [TaskType.REALTIME_VOICE]: { name: 'Live Voice', icon: 'Mic' },
+  [TaskType.IMAGE_ANALYSIS]: { name: 'Image Analysis', icon: 'Eye' },
+  [TaskType.CODE_ANALYSIS]: { name: 'Code Analysis', icon: 'Code' },
+  [TaskType.TASK_GENERATION]: { name: 'Task Generation', icon: 'Check' }
 };
 
 // ============================================================================
@@ -226,7 +227,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                   <div key={providerConfig.providerId} className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${info.color} flex items-center justify-center text-xl`}>
-                        {info.icon}
+                        {<ProductIcon name={info.icon} />}
                       </div>
                       <div className="flex-1">
                         <h4 className="font-medium text-white">{provider.name}</h4>
@@ -236,7 +237,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                               ? 'bg-green-500/20 text-green-400' 
                               : 'bg-yellow-500/20 text-yellow-400'
                           }`}>
-                            {providerConfig.isValid ? '✓ Valid' : '? Not validated'}
+                            {providerConfig.isValid ? 'OK Valid' : '? Not validated'}
                           </span>
                           {providerConfig.validatedAt && (
                             <span className="text-xs text-slate-500">
@@ -274,20 +275,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                               className={`w-full bg-slate-900 border rounded-lg px-4 py-2 pr-12 text-white focus:ring-2 focus:outline-none ${
                                 editState.apiKey && !editState.formatValid
                                   ? 'border-red-500 focus:ring-red-500'
-                                  : 'border-slate-600 focus:ring-cyan-500'
+                                  : 'border-slate-600 focus:ring-teal-700'
                               }`}
                             />
                             <button
                               onClick={() => setEditState(prev => ({ ...prev, showKey: !prev.showKey }))}
                               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                             >
-                              {editState.showKey ? '🙈' : '👁️'}
+                              {editState.showKey ? 'Hide' : 'Eye'}
                             </button>
                           </div>
                           <button
                             onClick={handleSaveKey}
                             disabled={editState.validating || !editState.apiKey || !editState.formatValid}
-                            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white rounded-lg transition-colors"
+                            className="px-4 py-2 bg-teal-800 hover:bg-teal-700 disabled:opacity-50 text-white rounded-lg transition-colors"
                           >
                             {editState.validating ? 'Validating...' : 'Save'}
                           </button>
@@ -374,7 +375,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                   <div key={provider.id} className="bg-slate-800/30 border border-slate-700/50 rounded-xl p-4">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${info.color} flex items-center justify-center text-xl opacity-60`}>
-                        {info.icon}
+                        {<ProductIcon name={info.icon} />}
                       </div>
                       <div className="flex-1">
                         <h4 className="font-medium text-slate-300">{provider.name}</h4>
@@ -383,7 +384,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                       {!isEditing && (
                         <button
                           onClick={() => handleEditProvider(provider.id)}
-                          className="px-4 py-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 text-sm rounded-lg transition-colors"
+                          className="px-4 py-2 bg-teal-800/20 hover:bg-teal-800/30 text-teal-200 text-sm rounded-lg transition-colors"
                         >
                           + Add Key
                         </button>
@@ -397,9 +398,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                             href={provider.docsUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs text-cyan-400 hover:underline mb-2 block"
+                            className="text-xs text-teal-200 hover:underline mb-2 block"
                           >
-                            {provider.keyInstructions} ↗
+                            {provider.keyInstructions} →
                           </a>
                         )}
                         <div className="flex gap-2">
@@ -412,20 +413,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                               className={`w-full bg-slate-900 border rounded-lg px-4 py-2 pr-12 text-white focus:ring-2 focus:outline-none ${
                                 editState.apiKey && !editState.formatValid
                                   ? 'border-red-500 focus:ring-red-500'
-                                  : 'border-slate-600 focus:ring-cyan-500'
+                                  : 'border-slate-600 focus:ring-teal-700'
                               }`}
                             />
                             <button
                               onClick={() => setEditState(prev => ({ ...prev, showKey: !prev.showKey }))}
                               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                             >
-                              {editState.showKey ? '🙈' : '👁️'}
+                              {editState.showKey ? 'Hide' : 'Eye'}
                             </button>
                           </div>
                           <button
                             onClick={handleSaveKey}
                             disabled={editState.validating || !editState.apiKey || !editState.formatValid}
-                            className="px-4 py-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-50 text-white rounded-lg transition-colors"
+                            className="px-4 py-2 bg-teal-800 hover:bg-teal-700 disabled:opacity-50 text-white rounded-lg transition-colors"
                           >
                             {editState.validating ? 'Validating...' : 'Validate & Save'}
                           </button>
@@ -504,7 +505,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
               <div key={taskType} className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{taskInfo.icon}</span>
+                    <span className="text-2xl">{<ProductIcon name={taskInfo.icon} />}</span>
                     <div>
                       <h4 className="font-medium text-white">{taskInfo.name}</h4>
                       <p className="text-xs text-slate-500">
@@ -526,7 +527,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                           });
                         }
                       }}
-                      className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none min-w-[220px]"
+                      className="bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:ring-2 focus:ring-teal-700 focus:outline-none min-w-[220px]"
                     >
                       <option value="">Auto-select best</option>
                       {capable.map(opt => (
@@ -537,7 +538,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                     </select>
                   ) : (
                     <span className="text-sm text-red-400/80 bg-red-500/10 px-3 py-2 rounded-lg">
-                      ⚠️ No capable provider
+                      <ProductIcon name="Warning" /> No capable provider
                     </span>
                   )}
                 </div>
@@ -605,11 +606,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                     onClick={() => setPreferences({ preferredTier: tier })}
                     className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                       preferences.preferredTier === tier
-                        ? 'bg-cyan-500 text-white'
+                        ? 'bg-teal-700 text-white'
                         : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                     }`}
                   >
-                    {tier === 'fast' && '⚡'} {tier === 'balanced' && '⚖️'} {tier === 'smart' && '🧠'} {tier.charAt(0).toUpperCase() + tier.slice(1)}
+                    {tier === 'fast' && 'Code'} {tier === 'balanced' && 'Compass'} {tier === 'smart' && 'Compass'} {tier.charAt(0).toUpperCase() + tier.slice(1)}
                   </button>
                 ))}
               </div>
@@ -626,7 +627,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
               <button
                 onClick={() => setPreferences({ preferCost: !preferences.preferCost })}
                 className={`w-12 h-7 rounded-full p-1 transition-colors ${
-                  preferences.preferCost ? 'bg-cyan-500' : 'bg-slate-700'
+                  preferences.preferCost ? 'bg-teal-700' : 'bg-slate-700'
                 }`}
               >
                 <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -643,7 +644,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
               <button
                 onClick={() => setPreferences({ preferSpeed: !preferences.preferSpeed })}
                 className={`w-12 h-7 rounded-full p-1 transition-colors ${
-                  preferences.preferSpeed ? 'bg-cyan-500' : 'bg-slate-700'
+                  preferences.preferSpeed ? 'bg-teal-700' : 'bg-slate-700'
                 }`}
               >
                 <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
@@ -663,13 +664,13 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
                 onClick={handleExport}
                 className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
-                📤 Export Config
+                <ProductIcon name="Upload" /> Export Config
               </button>
               <button
                 onClick={() => fileInputRef.current?.click()}
                 className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
               >
-                📥 Import Config
+                <ProductIcon name="Download" /> Import Config
               </button>
               <input
                 ref={fileInputRef}
@@ -727,33 +728,34 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ isOpen, onClose }) =
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-800/50">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              ⚙️ Settings
+              <ProductIcon name="Settings" /> Settings
             </h2>
             <button
               onClick={onClose}
+              aria-label="Close settings"
               className="text-slate-400 hover:text-white transition-colors p-2 hover:bg-slate-700 rounded-lg"
             >
-              ✕
+              <ProductIcon name="Close" />
             </button>
           </div>
 
           {/* Tabs */}
           <div className="flex border-b border-slate-800">
             {[
-              { id: 'apikeys' as const, label: 'API Keys', icon: '🔑' },
-              { id: 'tasks' as const, label: 'Task Mappings', icon: '🔗' },
-              { id: 'preferences' as const, label: 'Preferences', icon: '⚡' }
+              { id: 'apikeys' as const, label: 'API Keys', icon: 'Connect' },
+              { id: 'tasks' as const, label: 'Task Mappings', icon: 'Connect' },
+              { id: 'preferences' as const, label: 'Preferences', icon: 'Code' }
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                   activeTab === tab.id
-                    ? 'bg-cyan-500/10 text-cyan-400 border-b-2 border-cyan-500'
+                    ? 'bg-teal-700/10 text-teal-200 border-b-2 border-teal-700'
                     : 'text-slate-400 hover:bg-slate-800'
                 }`}
               >
-                <span>{tab.icon}</span> {tab.label}
+                <span>{<ProductIcon name={tab.icon} />}</span> {tab.label}
               </button>
             ))}
           </div>

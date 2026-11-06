@@ -71,8 +71,8 @@ const DiffViewer: React.FC<DiffViewerProps> = ({
       return code
         .replace(/\/\/.*/g, '<span class="text-green-400">$&</span>') // Comments
         .replace(/('.*?'|".*?"|`.*?`)/g, '<span class="text-yellow-300">$&</span>') // Strings
-        .replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|from|default)\b/g, '<span class="text-purple-400">$&</span>') // Keywords
-        .replace(/\b(true|false|null|undefined)\b/g, '<span class="text-cyan-400">$&</span>') // Literals
+        .replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|from|default)\b/g, '<span class="text-slate-400">$&</span>') // Keywords
+        .replace(/\b(true|false|null|undefined)\b/g, '<span class="text-teal-200">$&</span>') // Literals
         .replace(/\b(\d+)\b/g, '<span class="text-orange-400">$&</span>'); // Numbers
     }
 

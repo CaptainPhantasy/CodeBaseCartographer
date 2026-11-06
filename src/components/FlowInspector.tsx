@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * FlowInspector - Live "Data Passport" panel showing data transformation at each layer
  * Displays when particles pass through architectural layers
@@ -100,7 +101,7 @@ export default function FlowInspector({
       payload,
       influences,
       nextHop: getNextHop(activeLayerId, nodes, particleType),
-      latency: Math.floor(Math.random() * 100) + 20, // Simulated latency 20-120ms
+      latency: undefined, // No measured latency is available from this event.
       timestamp: Date.now(),
     });
 
@@ -132,14 +133,15 @@ export default function FlowInspector({
       {/* Header */}
       <div className="sticky top-0 bg-slate-900 border-b border-slate-700 p-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-slate-200 flex items-center gap-2">
-          <span>🔍</span> Data Passport
+          <span><ProductIcon name="Search" /></span> Data Passport
         </h2>
         {onClose && (
           <button
             onClick={onClose}
+            aria-label="Close flow inspector"
             className="text-slate-400 hover:text-white transition-colors"
           >
-            ✕
+            <ProductIcon name="Close" />
           </button>
         )}
       </div>
@@ -150,12 +152,12 @@ export default function FlowInspector({
           <div className="text-xs text-slate-400 mb-1">Current Layer</div>
           <div className="text-lg font-semibold text-slate-200">{currentLayer || 'Unknown'}</div>
           {layer !== undefined && (
-            <div className="text-xs text-purple-400 mt-1">
+            <div className="text-xs text-slate-400 mt-1">
               Layer {layer}: {layerNames[layer] || 'Unknown'}
             </div>
           )}
           {file && (
-            <div className="mt-2 text-xs font-mono text-cyan-400 truncate" title={file}>
+            <div className="mt-2 text-xs font-mono text-teal-200 truncate" title={file}>
               {file}
               {functionName && `::${functionName}()`}
               {line && `:${line}`}
@@ -166,17 +168,17 @@ export default function FlowInspector({
         {/* Data Transformation */}
         {(inputType || outputType) && (
           <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
-            <div className="text-xs text-slate-400 mb-2">⚙️ Data Transformation</div>
+            <div className="text-xs text-slate-400 mb-2"><ProductIcon name="Settings" /> Data Transformation</div>
             <div className="space-y-2">
               {inputType && (
                 <div className="flex items-start gap-2">
-                  <span className="text-xs text-cyan-400">📥 Input:</span>
+                  <span className="text-xs text-teal-200"><ProductIcon name="Download" /> Input:</span>
                   <span className="text-xs text-slate-300">{inputType}</span>
                 </div>
               )}
               {outputType && (
                 <div className="flex items-start gap-2">
-                  <span className="text-xs text-green-400">📤 Output:</span>
+                  <span className="text-xs text-green-400"><ProductIcon name="Upload" /> Output:</span>
                   <span className="text-xs text-slate-300">{outputType}</span>
                 </div>
               )}
@@ -187,7 +189,7 @@ export default function FlowInspector({
         {/* Transforms */}
         {transforms && transforms.length > 0 && (
           <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
-            <div className="text-xs text-slate-400 mb-2">🔧 Transforms Applied</div>
+            <div className="text-xs text-slate-400 mb-2"><ProductIcon name="Settings" /> Transforms Applied</div>
             <ul className="space-y-1">
               {transforms.map((transform, idx) => (
                 <li key={idx} className="text-xs text-green-400 flex items-start gap-2">
@@ -203,10 +205,10 @@ export default function FlowInspector({
         {payload && (
           <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs text-slate-400">📦 Payload</span>
+              <span className="text-xs text-slate-400"><ProductIcon name="Folder" /> Payload</span>
               <span className={`text-xs px-2 py-0.5 rounded ${
                 (payload.type as string) === 'REQUEST'
-                  ? 'bg-cyan-500/20 text-cyan-400'
+                  ? 'bg-teal-700/20 text-teal-200'
                   : 'bg-green-500/20 text-green-400'
               }`}>
                 {(payload.type as string) || 'DATA'}
@@ -248,13 +250,13 @@ export default function FlowInspector({
         <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <div className="text-xs text-slate-400">➡ Next Hop</div>
+              <div className="text-xs text-slate-400"><ProductIcon name="Send" /> Next Hop</div>
               <div className="text-xs font-medium text-slate-300">{nextHop || 'End of path'}</div>
             </div>
             <div className="flex items-center justify-between">
-              <div className="text-xs text-slate-400">⏱️ Latency</div>
+              <div className="text-xs text-slate-400"> Latency</div>
               <div className="text-xs font-mono text-slate-300">
-                {latency ? `${latency}ms` : '-'}
+                {latency ? `${latency}ms` : 'Not measured'}
               </div>
             </div>
           </div>
@@ -263,12 +265,12 @@ export default function FlowInspector({
         {/* Particle Type Indicator */}
         <div className="flex items-center justify-center gap-4 py-3 bg-slate-800/30 rounded-lg">
           <div className={`flex items-center gap-2 px-3 py-2 rounded-lg ${
-            particleType === 'request' ? 'bg-cyan-500/20 text-cyan-400' :
+            particleType === 'request' ? 'bg-teal-700/20 text-teal-200' :
             particleType === 'response' ? 'bg-green-500/20 text-green-400' :
             'bg-slate-700 text-slate-400'
           }`}>
             <span className={`w-3 h-3 rounded-full ${
-              particleType === 'request' ? 'bg-cyan-500' :
+              particleType === 'request' ? 'bg-teal-700' :
               particleType === 'response' ? 'bg-green-500' :
               'bg-slate-500'
             }`}></span>

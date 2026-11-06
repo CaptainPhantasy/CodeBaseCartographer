@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * Custom node component for React Flow with inline editing
  */
@@ -15,23 +16,23 @@ interface CustomNodeData {
 }
 
 const NODE_TYPE_COLORS: Record<string, string> = {
-  entry: '#06b6d4', // cyan
-  logic: '#8b5cf6', // purple
-  storage: '#10b981', // green
-  exit: '#f59e0b', // amber
-  external: '#6b7280', // gray
-  decision: '#ef4444', // red
-  process: '#3b82f6' // blue
+  entry: '#5ec8d8', // cyan — AA on slate-950
+  logic: '#c4b5fd', // purple — AA on slate-950
+  storage: '#6ee7b7', // green
+  exit: '#fbbf24', // amber
+  external: '#cbd5e1', // gray
+  decision: '#fca5a5', // red
+  process: '#93c5fd' // blue
 };
 
 const NODE_TYPE_ICONS: Record<string, string> = {
-  entry: '⚡',
-  logic: '⚙️',
-  storage: '💾',
-  exit: '🚪',
-  external: '🔌',
-  decision: '🔀',
-  process: '⚗️'
+  entry: 'Code',
+  logic: 'Settings',
+  storage: 'File',
+  exit: 'Connect',
+  external: 'Connect',
+  decision: 'Chart',
+  process: 'Code'
 };
 
 export default function DiagramNode({
@@ -77,12 +78,12 @@ export default function DiagramNode({
   };
 
   const nodeColor = nodeData.color || NODE_TYPE_COLORS[nodeData.type] || '#6b7280';
-  const nodeIcon = NODE_TYPE_ICONS[nodeData.type] || '📦';
+  const nodeIcon = NODE_TYPE_ICONS[nodeData.type] || 'Folder';
 
   return (
     <div
       className={`relative px-4 py-3 rounded-lg border-2 bg-slate-900 shadow-xl transition-all ${
-        selected ? 'ring-2 ring-cyan-400 ring-offset-2 ring-offset-slate-900' : ''
+        selected ? 'ring-2 ring-teal-200 ring-offset-2 ring-offset-slate-900' : ''
       }`}
       style={{
         borderColor: nodeColor,
@@ -101,7 +102,7 @@ export default function DiagramNode({
       {/* Node header */}
       <div className="flex items-center gap-2 mb-2">
         <span className="text-lg" style={{ color: nodeColor }}>
-          {nodeIcon}
+          {<ProductIcon name={nodeIcon} />}
         </span>
         {isEditing ? (
           <input
@@ -111,7 +112,7 @@ export default function DiagramNode({
             onChange={(e) => setEditValue(e.target.value)}
             onBlur={handleBlur}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-slate-800 text-white text-sm font-semibold px-2 py-1 rounded border border-slate-600 focus:outline-none focus:border-cyan-500"
+            className="flex-1 bg-slate-800 text-white text-sm font-semibold px-2 py-1 rounded border border-slate-600 focus:outline-none focus:border-teal-700"
           />
         ) : (
           <span className="text-sm font-semibold text-slate-100 flex-1">

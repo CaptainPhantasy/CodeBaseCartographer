@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * ModelSelector Component - Dropdown for selecting OpenRouter models
  */
@@ -149,7 +150,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
           focus:ring-2 focus:outline-none transition-all
           ${disabled
             ? 'border-slate-700 opacity-50 cursor-not-allowed'
-            : 'border-slate-600 hover:border-slate-500 cursor-pointer focus:ring-cyan-500'
+            : 'border-slate-600 hover:border-slate-500 cursor-pointer focus:ring-teal-700'
           }
         `}
         role="button"
@@ -182,7 +183,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
               title="Clear selection"
               aria-label="Clear selection"
             >
-              ✕
+              <ProductIcon name="Close" />
             </button>
           )}
           <span className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}>
@@ -202,11 +203,11 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search models..."
-                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 pl-10 text-white text-sm focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-2 pl-10 text-white text-sm focus:ring-2 focus:ring-teal-700 focus:outline-none"
                 autoFocus
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                🔍
+                <ProductIcon name="Search" />
               </span>
             </div>
             {filteredModels.length > 0 && (
@@ -235,13 +236,13 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                       onClick={() => handleSelect(model.id)}
                       className={`
                         w-full px-4 py-3 text-left hover:bg-slate-800 transition-colors
-                        ${isSelected ? 'bg-cyan-500/10 border-l-2 border-cyan-500' : ''}
+                        ${isSelected ? 'bg-teal-700/10 border-l-2 border-teal-700' : ''}
                       `}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className={`font-medium truncate ${isSelected ? 'text-cyan-400' : 'text-white'}`}>
+                            <span className={`font-medium truncate ${isSelected ? 'text-teal-200' : 'text-white'}`}>
                               {model.name}
                             </span>
                           </div>
@@ -258,13 +259,13 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                               <span className="font-medium">{formatPrice(completionPrice)}</span>
                             </span>
                             <span className="text-slate-500 flex items-center gap-1">
-                              <span>📏</span>
+                              <span><ProductIcon name="Map" /></span>
                               <span>{(model.context_length / 1000).toFixed(0)}k ctx</span>
                             </span>
                           </div>
                         </div>
                         {isSelected && (
-                          <span className="text-cyan-400 text-xl">✓</span>
+                          <span className="text-teal-200 text-xl">OK</span>
                         )}
                       </div>
                     </button>

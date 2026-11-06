@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * FocusMode Component - Hides all but selected node + dependencies
  */
@@ -83,7 +84,7 @@ const FocusMode: React.FC<FocusModeProps> = ({
   return (
     <div className="relative w-full h-full">
       {/* Focus Mode Banner */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-cyan-600/90 backdrop-blur border border-cyan-400 rounded-lg px-4 py-2 shadow-lg">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-teal-800/90 backdrop-blur border border-teal-200 rounded-lg px-4 py-2 shadow-lg">
         <span className="text-sm font-semibold text-white">
           Focus: {focusedNodeLabel}
         </span>
@@ -95,7 +96,7 @@ const FocusMode: React.FC<FocusModeProps> = ({
           className="ml-2 px-2 py-1 bg-white/20 hover:bg-white/30 text-white text-xs rounded transition-colors"
           title="Clear focus (Cmd+Shift+F)"
         >
-          ✕ Clear
+          <ProductIcon name="Close" /> Clear
         </button>
       </div>
 

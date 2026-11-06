@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * TaskGenerator component - AI-powered task generation interface
  */
@@ -158,7 +159,7 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({
     <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-5">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <span className="text-2xl">🤖</span>
+        <span className="text-2xl"><ProductIcon name="Code" /></span>
         <h3 className="text-lg font-semibold text-white">AI Task Generator</h3>
       </div>
 
@@ -175,7 +176,7 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({
             onChange={(e) => setUserGoal(e.target.value)}
             placeholder="Describe your goal (optional): e.g., 'Improve code quality', 'Add testing', 'Fix performance issues'..."
             rows={2}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none resize-none text-sm"
+            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:ring-2 focus:ring-teal-700 focus:border-transparent outline-none resize-none text-sm"
             disabled={isGenerating}
           />
         )}
@@ -186,7 +187,7 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({
         <button
           onClick={handleGenerate}
           disabled={isGenerating || (!filePaths.length && !selectedNodeId)}
-          className="flex-1 px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="flex-1 px-4 py-2.5 bg-teal-800 hover:bg-teal-700 disabled:bg-slate-700 text-white rounded-lg font-medium transition-colors disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isGenerating ? (
             <>
@@ -195,7 +196,7 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({
             </>
           ) : (
             <>
-              <span>✨</span> Generate Tasks
+              <span><ProductIcon name="Compass" /></span> Generate Tasks
             </>
           )}
         </button>
@@ -262,7 +263,7 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({
                     setSelectedTasks(new Set(generatedTasks.map((_, i) => i)));
                   }
                 }}
-                className="text-xs text-cyan-400 hover:text-cyan-300"
+                className="text-xs text-teal-200 hover:text-cyan-300"
               >
                 {selectedTasks.size === generatedTasks.length
                   ? 'Deselect All'
@@ -287,7 +288,7 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleTaskSelection(idx)}
-                      className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-600 focus:ring-cyan-500 focus:ring-offset-slate-800"
+                      className="mt-1 w-4 h-4 rounded border-slate-600 bg-slate-800 text-teal-800 focus:ring-teal-700 focus:ring-offset-slate-800"
                     />
                     <div className="flex-1 min-w-0">
                       <h4 className="text-white font-medium text-sm mb-1">

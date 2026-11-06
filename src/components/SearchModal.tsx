@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * SearchModal - Global search UI with cmd+K trigger
  */
@@ -96,7 +97,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
     return parts.map((part, idx) =>
       regex.test(part) ? (
-        <mark key={idx} className="bg-cyan-500/30 text-cyan-300 rounded px-0.5">
+        <mark key={idx} className="bg-teal-700/30 text-cyan-300 rounded px-0.5">
           {part}
         </mark>
       ) : (
@@ -110,13 +111,13 @@ const SearchModal: React.FC<SearchModalProps> = ({
    */
   const getTypeIcon = (item: SearchResultItem) => {
     if (item.type === 'link') {
-      return <span className="text-slate-400">↗️</span>;
+      return <span className="text-slate-400">→</span>;
     }
     // Node type icons based on description
-    if (item.description?.includes('entry')) return <span className="text-cyan-400">🚪</span>;
-    if (item.description?.includes('logic')) return <span className="text-violet-400">⚙️</span>;
-    if (item.description?.includes('storage')) return <span className="text-amber-400">💾</span>;
-    if (item.description?.includes('exit')) return <span className="text-red-400">🚪</span>;
+    if (item.description?.includes('entry')) return <span className="text-teal-200"><ProductIcon name="Connect" /></span>;
+    if (item.description?.includes('logic')) return <span className="text-slate-400"><ProductIcon name="Settings" /></span>;
+    if (item.description?.includes('storage')) return <span className="text-amber-400"><ProductIcon name="File" /></span>;
+    if (item.description?.includes('exit')) return <span className="text-red-400"><ProductIcon name="Connect" /></span>;
     return <span className="text-slate-400">⬡</span>;
   };
 
@@ -135,7 +136,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
       >
         {/* Header with search input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-700">
-          <span className="text-slate-400">🔍</span>
+          <span className="text-slate-400"><ProductIcon name="Search" /></span>
           <input
             ref={inputRef}
             type="text"
@@ -150,7 +151,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
               className="p-1 hover:bg-slate-800 rounded transition-colors"
               title="Clear search"
             >
-              ✕
+              <ProductIcon name="Close" />
             </button>
           )}
           <kbd className="px-2 py-1 bg-slate-800 text-slate-400 text-xs rounded">
@@ -185,7 +186,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                   onClick={() => onSelectResult(item)}
                   className={`w-full px-4 py-3 flex items-start gap-3 transition-colors ${
                     idx === selectedIndex
-                      ? 'bg-cyan-500/10 border-l-2 border-cyan-500'
+                      ? 'bg-teal-700/10 border-l-2 border-teal-700'
                       : 'hover:bg-slate-800 border-l-2 border-transparent'
                   }`}
                 >
@@ -202,7 +203,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
                       </span>
                       <span className={`text-xs px-1.5 py-0.5 rounded ${
                         item.type === 'node'
-                          ? 'bg-violet-500/20 text-violet-400'
+                          ? 'bg-slate-500/20 text-slate-400'
                           : 'bg-slate-700 text-slate-400'
                       }`}>
                         {item.type}
@@ -217,7 +218,7 @@ const SearchModal: React.FC<SearchModalProps> = ({
 
                   {/* Score indicator */}
                   <div className="text-xs text-slate-600">
-                    {item.score > 50 && '⭐'}
+                    {item.score > 50 && ''}
                   </div>
                 </button>
               ))}

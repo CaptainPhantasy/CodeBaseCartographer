@@ -16,7 +16,9 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { SubagentOrchestrator, getOrchestrator } from '../../src/services/subagentOrchestrator';
 import { getRollbackService } from '../../src/services/rollbackService';
 import type { ExecutionRequest, FileChange } from '../../src/types/subagent';
-import { Server } from '../../server/src/server';
+// Type-only: the server runtime (express, ws, sql.js) lives in server/node_modules and is
+// loaded lazily below, so the default skipped run does not require server dependencies.
+import type { Server } from '../../server/src/server';
 import { resolve } from 'path';
 import { writeFileSync, unlinkSync, existsSync, mkdirSync, rmSync } from 'fs';
 import { randomBytes } from 'crypto';
@@ -90,7 +92,8 @@ function test() {
     serverBaseUrl = `http://localhost:${serverPort}`;
 
     // Start the server with dynamic ports
-    server = new Server(serverPort, wsPort, testDir, ':memory:');
+    const { Server: ServerImpl } = await import('../../server/src/server');
+    server = new ServerImpl(serverPort, wsPort, testDir, ':memory:');
     await server.start();
 
     // Give server a moment to start

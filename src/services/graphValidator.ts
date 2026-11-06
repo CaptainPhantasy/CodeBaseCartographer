@@ -546,7 +546,7 @@ export function formatValidationFeedback(result: GraphValidationResult): string 
 
   lines.push('# Graph Validation Results');
   lines.push('');
-  lines.push(`Status: ${result.isValid ? '✓ VALID' : '✗ INVALID'}`);
+  lines.push(`Status: ${result.isValid ? 'OK VALID' : 'FAIL INVALID'}`);
   lines.push('');
   lines.push('## Statistics');
   lines.push(`- Nodes: ${result.stats.nodeCount}`);

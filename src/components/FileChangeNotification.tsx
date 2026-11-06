@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 /**
  * File Change Notification Component
  * Displays toast notifications for file changes with "View Diff" button
@@ -52,13 +53,13 @@ const FileChangeNotification: React.FC<FileChangeNotificationProps> = ({
   const getChangeIcon = (type: FileChange['type']) => {
     switch (type) {
       case 'file:added':
-        return '📄';
+        return 'File';
       case 'file:deleted':
-        return '🗑️';
+        return 'Trash';
       case 'file:changed':
-        return '✏️';
+        return 'Code';
       default:
-        return '📝';
+        return 'File';
     }
   };
 
@@ -98,7 +99,7 @@ const FileChangeNotification: React.FC<FileChangeNotificationProps> = ({
           )} animate-slide-in transition-all`}
         >
           <div className="flex items-start gap-3">
-            <span className="text-xl">{getChangeIcon(change.type)}</span>
+            <span className="text-xl">{<ProductIcon name={getChangeIcon(change.type)} />}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <span className="text-sm font-medium text-slate-200">
@@ -109,7 +110,7 @@ const FileChangeNotification: React.FC<FileChangeNotificationProps> = ({
                   className="text-slate-400 hover:text-white transition-colors"
                   aria-label="Dismiss"
                 >
-                  ✕
+                  <ProductIcon name="Close" />
                 </button>
               </div>
               <p className="text-xs text-slate-400 font-mono truncate mb-2">
@@ -118,7 +119,7 @@ const FileChangeNotification: React.FC<FileChangeNotificationProps> = ({
               {change.type !== 'file:deleted' && onViewDiff && (
                 <button
                   onClick={() => onViewDiff(change.path)}
-                  className="w-full py-2 px-3 bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium rounded-lg transition-colors"
+                  className="w-full py-2 px-3 bg-teal-800 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors"
                 >
                   View Diff
                 </button>

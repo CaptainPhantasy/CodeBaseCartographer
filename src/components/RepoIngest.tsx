@@ -1,3 +1,4 @@
+import { ProductIcon } from './ProductIcon';
 import React, { useState, useRef } from 'react';
 import { fetchGithubTree, processFileSelect, IngestOptions } from '../services/ingestService';
 import { FILE_CATEGORIES, FileCategory, DEFAULT_FILTER_OPTIONS } from '../types/fileTypes';
@@ -79,19 +80,19 @@ const RepoIngest: React.FC<RepoIngestProps> = ({ isOpen, onClose, onIngest }) =>
                     <h3 className="font-bold text-lg text-slate-100 flex items-center gap-2">
                         <span>Introduce Codebase</span>
                     </h3>
-                    <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors text-xl">✕</button>
+                    <button onClick={onClose} aria-label="Close repository import" className="text-slate-400 hover:text-white transition-colors text-xl"><ProductIcon name="Close" /></button>
                 </div>
 
                 <div className="p-0">
                     <div className="flex border-b border-slate-800">
                         <button 
-                            className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'local' ? 'bg-cyan-500/10 text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-400 hover:bg-slate-800'}`}
+                            className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'local' ? 'bg-teal-700/10 text-teal-200 border-b-2 border-teal-700' : 'text-slate-400 hover:bg-slate-800'}`}
                             onClick={() => setActiveTab('local')}
                         >
                             Local File System
                         </button>
                         <button 
-                            className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'github' ? 'bg-cyan-500/10 text-cyan-400 border-b-2 border-cyan-500' : 'text-slate-400 hover:bg-slate-800'}`}
+                            className={`flex-1 py-3 text-sm font-medium transition-colors ${activeTab === 'github' ? 'bg-teal-700/10 text-teal-200 border-b-2 border-teal-700' : 'text-slate-400 hover:bg-slate-800'}`}
                             onClick={() => setActiveTab('github')}
                         >
                             GitHub Repository
@@ -101,8 +102,8 @@ const RepoIngest: React.FC<RepoIngestProps> = ({ isOpen, onClose, onIngest }) =>
                     <div className="p-6">
                         {activeTab === 'local' ? (
                             <div className="space-y-4 text-center">
-                                <div className="border-2 border-dashed border-slate-700 rounded-xl p-8 hover:border-cyan-500/50 transition-colors bg-slate-800/30">
-                                    <div className="text-4xl mb-3">📂</div>
+                                <div className="border-2 border-dashed border-slate-700 rounded-xl p-8 hover:border-teal-700/50 transition-colors bg-slate-800/30">
+                                    <div className="text-4xl mb-3"><ProductIcon name="Folder" /></div>
                                     <p className="text-slate-300 mb-2">Select your project root folder</p>
                                     <p className="text-xs text-slate-500 mb-4">We'll scan the structure to map architecture. No code leaves your device.</p>
 
@@ -119,7 +120,7 @@ const RepoIngest: React.FC<RepoIngestProps> = ({ isOpen, onClose, onIngest }) =>
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
                                         disabled={isLoading}
-                                        className="px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition-colors"
+                                        className="px-6 py-2 bg-teal-800 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors"
                                     >
                                         {isLoading ? 'Scanning...' : 'Browse Folder'}
                                     </button>
@@ -134,16 +135,16 @@ const RepoIngest: React.FC<RepoIngestProps> = ({ isOpen, onClose, onIngest }) =>
                                         value={githubUrl}
                                         onChange={(e) => setGithubUrl(e.target.value)}
                                         placeholder="https://github.com/google/genai-js"
-                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                                        className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:ring-2 focus:ring-teal-700 focus:outline-none"
                                     />
                                 </div>
                                 <div className="text-xs text-slate-500">
-                                    Note: Public repositories only for this demo. Rate limits may apply.
+                                    Connect a public repository. GitHub rate limits may apply.
                                 </div>
                                 <button
                                     onClick={handleGithubFetch}
                                     disabled={isLoading || !githubUrl}
-                                    className="w-full py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                                    className="w-full py-2 bg-teal-800 hover:bg-teal-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
                                 >
                                     {isLoading ? 'Fetching Tree...' : 'Scan Repository'}
                                 </button>
@@ -154,9 +155,9 @@ const RepoIngest: React.FC<RepoIngestProps> = ({ isOpen, onClose, onIngest }) =>
                         <div className="mt-6 border-t border-slate-800 pt-4">
                             <button
                                 onClick={() => setShowAdvanced(!showAdvanced)}
-                                className="flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors w-full"
+                                className="flex items-center gap-2 text-sm text-slate-400 hover:text-teal-200 transition-colors w-full"
                             >
-                                <span className={`transform transition-transform ${showAdvanced ? 'rotate-90' : ''}`}>▶</span>
+                                <span className={`transform transition-transform ${showAdvanced ? 'rotate-90' : ''}`}><ProductIcon name="Play" /></span>
                                 <span>Advanced Options</span>
                             </button>
 
@@ -169,7 +170,7 @@ const RepoIngest: React.FC<RepoIngestProps> = ({ isOpen, onClose, onIngest }) =>
                                             id="includeHidden"
                                             checked={includeHidden}
                                             onChange={(e) => setIncludeHidden(e.target.checked)}
-                                            className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900"
+                                            className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-teal-700 focus:ring-teal-700 focus:ring-offset-slate-900"
                                         />
                                         <label htmlFor="includeHidden" className="text-sm text-slate-300 cursor-pointer">
                                             Include hidden files (.env, .gitignore, etc.)
@@ -187,7 +188,7 @@ const RepoIngest: React.FC<RepoIngestProps> = ({ isOpen, onClose, onIngest }) =>
                                                         id={`cat-${category.id}`}
                                                         checked={enabledCategories.includes(category.id)}
                                                         onChange={() => toggleCategory(category.id)}
-                                                        className="w-4 h-4 mt-0.5 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-slate-900"
+                                                        className="w-4 h-4 mt-0.5 rounded border-slate-600 bg-slate-800 text-teal-700 focus:ring-teal-700 focus:ring-offset-slate-900"
                                                     />
                                                     <label htmlFor={`cat-${category.id}`} className="text-sm text-slate-300 cursor-pointer flex-1">
                                                         <span className="block font-medium">{category.label}</span>

@@ -83,7 +83,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
     return (
       <div className="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-16 h-16 mx-auto mb-4 border-4 border-teal-700 border-t-transparent rounded-full animate-spin" />
           <p className="text-slate-400">Loading...</p>
         </div>
       </div>
@@ -101,7 +101,7 @@ export const SecurityProvider: React.FC<SecurityProviderProps> = ({ children }) 
       )}
       {/* Show migration indicator */}
       {isMigrating && (
-        <div className="fixed bottom-4 right-4 bg-cyan-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3">
+        <div className="fixed bottom-4 right-4 bg-teal-800 text-white px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3">
           <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           <span className="text-sm font-medium">Encrypting API keys...</span>
         </div>
