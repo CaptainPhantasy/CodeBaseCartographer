@@ -279,7 +279,7 @@ export const SetupWizard: React.FC<SetupWizardProps> = ({ onComplete }) => {
 
   const renderWelcome = () => (
     <div className="text-center space-y-6">
-      <img src="/icon.svg" alt="" width="56" height="56" className="mx-auto mb-2" />
+      <img src="/icon.svg" alt="" width="56" height="56" className="mx-auto mb-2 bg-transparent border-0 shadow-none" style={{background:"transparent",border:0,boxShadow:"none"}} />
       <h2 className="text-3xl font-bold text-white">Welcome to Codebase Cartographer</h2>
       <p className="text-slate-400 max-w-md mx-auto">
         To get started, configure API keys for AI providers or import an existing configuration.

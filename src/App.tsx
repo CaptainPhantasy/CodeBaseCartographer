@@ -431,7 +431,7 @@ After your analysis, suggest I ask you to "generate a flow chart" to visualize t
       {/* Sidebar */}
       <div className={`app-sidebar w-64 bg-slate-900 border-r border-slate-800 flex flex-col p-4 ${showSetupWizard ? "hidden" : ""}`}>
         <div className="flex items-center gap-2 mb-8">
-          <img src="/icon.svg" alt="" width="36" height="36" className="shrink-0" />
+          <img src="/icon.svg" alt="" width="36" height="36" className="shrink-0 bg-transparent border-0 shadow-none" style={{background:"transparent",border:0,boxShadow:"none"}} />
           <h1 className="font-bold text-lg tracking-tight">Cartographer</h1>
         </div>
         

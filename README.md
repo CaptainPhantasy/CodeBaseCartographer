@@ -1,38 +1,27 @@
-# 🗺️ Codebase Cartographer
+# Codebase Cartographer
 
-> **⚠️ IMPORTANT: LOCALHOST DEVELOPMENT ONLY**
->
-> This application is designed **exclusively for local development use**. It is **NOT production-ready** and should **NOT be deployed to public servers or shared environments** without implementing proper authentication, server-side key management, and security hardening.
->
-> **Key limitations:**
-> - No authentication or authorization system
-> - API keys stored in browser localStorage (encrypted, but client-side)
-> - No rate limiting on API endpoints
-> - Overly permissive CORS configuration
-> - No security headers (CSP, etc.)
->
-> **Do not deploy to GitHub Pages, Vercel, or any public hosting service without addressing these security issues first.**
+Codebase Cartographer maps, visualizes, and explains complex codebases. It uses
+configurable LLM providers to trace data flows, generate architecture diagrams,
+and support interactive code analysis from a local development workstation.
 
-An AI-powered tool for mapping, visualizing, and understanding complex codebases. Uses multiple LLM providers to trace data flows, generate architecture diagrams, and provide intelligent code analysis.
+API keys stay on the machine that runs the app. Treat provider credentials as
+secrets, prefer the in-app Settings UI or a local `.env.local` file, and do not
+publish unauthenticated builds to shared or public hosts.
 
-![Codebase Cartographer](https://img.shields.io/badge/AI-Powered-cyan) ![Multi-Provider](https://img.shields.io/badge/Multi--Provider-LLM-blue) ![React](https://img.shields.io/badge/React-19-61dafb) ![Development_Only-red)
+## Features
 
-## ✨ Features
+- **Multi-provider LLM support** — Google Gemini, OpenAI, Anthropic Claude, OpenRouter, and ElevenLabs
+- **Intelligent chat** — Ask questions about your codebase with optional thinking mode and search grounding
+- **Visual architecture maps** — Auto-generates interactive node-link diagrams of your system
+- **Real-time voice** — Live audio conversations with your AI assistant
+- **Text-to-speech** — Read AI responses aloud with natural voices, including auto-speak, queue, pause, resume, skip, and stop controls
+- **Video generation** — Create animated architecture walkthroughs with Veo
+- **Voice selection** — Choose from your ElevenLabs voice library with preview
+- **Model selection** — Browse OpenRouter's model catalog with pricing information
+- **Codebase ingestion** — Load and analyze project file structures
+- **Graceful degradation** — Features adapt based on the providers you configure
 
-- **🤖 Multi-Provider LLM Support** - Works with Google Gemini, OpenAI, Anthropic Claude, OpenRouter, and ElevenLabs
-- **💬 Intelligent Chat** - Ask questions about your codebase with optional thinking mode and search grounding
-- **🗺️ Visual Architecture Maps** - Auto-generates interactive node-link diagrams of your system
-- **🎙️ Real-time Voice** - Live audio conversations with your AI assistant
-- **🔊 Text-to-Speech** - Read AI responses aloud with natural voices
-  - **Auto-Speak** - Automatically reads AI responses with queuing and playback controls
-  - **Queue Management** - Pause, resume, skip, or stop speech playback
-- **🎬 Video Generation** - Create animated architecture walkthroughs with Veo
-- **🎵 Voice Selection** - Choose from your ElevenLabs voice library with preview functionality
-- **🔍 Model Selection** - Select from OpenRouter's model catalog with pricing information
-- **📁 Codebase Ingestion** - Load and analyze project file structures
-- **⚙️ Graceful Degradation** - Features automatically adapt based on configured providers
-
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -43,7 +32,6 @@ An AI-powered tool for mapping, visualizing, and understanding complex codebases
 ### Installation
 
 ```bash
-# Clone the repository
 git clone <repository-url>
 cd codebase-cartographer
 
@@ -54,18 +42,18 @@ npm install
 npm run dev
 ```
 
-The app will open at `http://localhost:5173`
+The app opens at `http://localhost:5173`.
 
 ### First Run
 
-On first launch, you'll see the **Setup Wizard** which guides you through:
+On first launch, the **Setup Wizard** guides you through:
 
-1. **Select Providers** - Choose which LLM providers you want to use
-2. **Enter API Keys** - Securely enter your API keys (stored locally)
-3. **Configure Tasks** - Map features to your preferred providers
-4. **Start Exploring** - Begin mapping your codebase!
+1. **Select Providers** — Choose which LLM providers you want to use
+2. **Enter API Keys** — Enter your API keys (stored locally)
+3. **Configure Tasks** — Map features to your preferred providers
+4. **Start Exploring** — Begin mapping your codebase
 
-## 🔑 Provider Setup
+## Provider Setup
 
 ### Supported Providers
 
@@ -81,51 +69,51 @@ On first launch, you'll see the **Setup Wizard** which guides you through:
 
 | Feature | Google | OpenAI | Anthropic | OpenRouter | ElevenLabs |
 |---------|--------|--------|-----------|------------|------------|
-| Chat | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Code Analysis | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Vision | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Text-to-Speech | ✅ | ✅ | ❌ | ❌ | ✅ |
-| Speech-to-Text | ✅ | ✅ | ❌ | ❌ | ✅ |
-| Video Generation | ✅ (Veo) | ❌ | ❌ | ❌ | ❌ |
-| Real-time Voice | ✅ | ✅ | ❌ | ❌ | ✅ |
-| Thinking Mode | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Search Grounding | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Chat | Yes | Yes | Yes | Yes | No |
+| Code Analysis | Yes | Yes | Yes | Yes | No |
+| Vision | Yes | Yes | Yes | Yes | No |
+| Text-to-Speech | Yes | Yes | No | No | Yes |
+| Speech-to-Text | Yes | Yes | No | No | Yes |
+| Video Generation | Yes (Veo) | No | No | No | No |
+| Real-time Voice | Yes | Yes | No | No | Yes |
+| Thinking Mode | Yes | Yes | Yes | Yes | No |
+| Search Grounding | Yes | No | No | No | No |
 
 ### Resource Selection Features
 
-After adding your API keys in the Settings → API Keys tab, the application automatically fetches and displays available resources:
+After adding your API keys in Settings → API Keys, the application fetches and displays available resources:
 
-**🎵 ElevenLabs Voice Selection**
-- Automatically fetches your available voices after API key validation
+**ElevenLabs Voice Selection**
+- Fetches available voices after API key validation
 - Categorizes voices by type (Cloned, Premade, Generated, Other)
-- Play voice previews directly in the UI
-- View detailed voice information including descriptions and labels
-- Select your preferred voice for TTS tasks
+- Plays voice previews directly in the UI
+- Shows voice descriptions and labels
+- Selects your preferred voice for TTS tasks
 
-**🔍 OpenRouter Model Selection**
+**OpenRouter Model Selection**
 - Fetches available models from your OpenRouter account
-- Sort models by price (most affordable first)
-- View detailed pricing per 1M tokens for both input and output
-- Search through hundreds of models by name or ID
-- See context length and model capabilities
-- Real-time model selection with visual feedback
+- Sorts models by price (most affordable first)
+- Shows pricing per 1M tokens for input and output
+- Searches models by name or ID
+- Displays context length and capabilities
 
 ### Recommended Configuration
 
-For the **best experience**, we recommend:
+For the best experience:
 
-1. **Google AI (Gemini)** - Best all-around provider with video generation and search grounding
-2. **+ OpenAI** - Fallback for text/TTS with high reliability
-3. **+ ElevenLabs** (optional) - Premium voice quality for TTS
+1. **Google AI (Gemini)** — Broadest feature set, including video generation and search grounding
+2. **+ OpenAI** — Reliable fallback for text and TTS
+3. **+ ElevenLabs** (optional) — Premium voice quality for TTS
 
 ### Minimum Configuration
 
-For **basic functionality**, you need at least one of:
+For basic functionality, configure at least one of:
+
 - Google AI (most features)
 - OpenAI (core features)
 - Anthropic (text/code only)
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 codebase-cartographer/
@@ -155,6 +143,7 @@ codebase-cartographer/
     │   └── useFeatureAvailability.ts # Feature availability hook
     ├── services/
     │   ├── llmService.ts     # Unified LLM service layer
+    │   ├── resourceFetchers.ts # API resource fetching
     │   └── adapters/         # Provider-specific adapters
     │       ├── base.ts       # Base adapter interface
     │       ├── google.ts     # Google/Gemini adapter
@@ -162,9 +151,6 @@ codebase-cartographer/
     │       ├── anthropic.ts  # Anthropic adapter
     │       ├── openrouter.ts # OpenRouter adapter
     │       └── elevenlabs.ts # ElevenLabs adapter
-    ├── services/
-    │   ├── resourceFetchers.ts # API resource fetching
-    │   └── adapters/         # Provider-specific adapters
     ├── types/
     │   └── capabilities.ts   # Capability type definitions
     └── utils/
@@ -172,7 +158,7 @@ codebase-cartographer/
         └── capabilityMatrix.ts # Task-provider matching
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables (Optional)
 
@@ -190,26 +176,23 @@ VITE_OPENAI_API_KEY=your_openai_key
 # etc.
 ```
 
-**Note:** The in-app Settings UI is the recommended way to manage keys. Environment variables serve as fallbacks.
+The in-app Settings UI is the recommended way to manage keys. Environment variables serve as fallbacks.
 
 ### Local Storage
 
-All configuration is stored in browser localStorage:
-- API keys are obfuscated (not encrypted - don't use in shared environments)
+Configuration is stored in browser localStorage:
+
+- API keys are obfuscated for local use; do not treat client storage as a vault on shared machines
 - Task mappings and preferences are JSON-stored
 - Config can be exported/imported via Settings
 - Voice and model selections are cached for faster loading
 
-## 📚 Documentation
+## Documentation
 
-Comprehensive documentation is available for different aspects of the application:
-
-- 🏗️ [Architecture](docs/ARCHITECTURE.md) - System architecture diagrams and component relationships
-- 🔌 [Adding a Provider](docs/ADDING_A_PROVIDER.md) - Step-by-step guide for adding new LLM providers
-- 📚 [API Reference](docs/API_REFERENCE.md) - Complete API documentation for services, hooks, and types
-- 🛠️ [Troubleshooting](docs/TROUBLESHOOTING.md) - Common issues and solutions for providers and setup
-
-### Documentation Overview
+- [Architecture](docs/ARCHITECTURE.md) — System architecture diagrams and component relationships
+- [Adding a Provider](docs/ADDING_A_PROVIDER.md) — Guide for adding new LLM providers
+- [API Reference](docs/API_REFERENCE.md) — Services, hooks, and types
+- [Troubleshooting](docs/TROUBLESHOOTING.md) — Common issues and solutions
 
 | Document | Purpose | Audience |
 |---------|---------|----------|
@@ -218,7 +201,7 @@ Comprehensive documentation is available for different aspects of the applicatio
 | **API Reference** | Technical API documentation | Developers |
 | **Troubleshooting** | Fixing common issues | Users, Developers |
 
-## 🛠️ Development
+## Development
 
 ### Scripts
 
@@ -227,6 +210,7 @@ npm run dev      # Start development server
 npm run build    # Build for production
 npm run preview  # Preview production build
 npm run lint     # Type-check with TypeScript
+npm test         # Run Vitest suite
 ```
 
 ### Adding a New Provider
@@ -238,61 +222,60 @@ For detailed instructions, see [Adding a Provider](docs/ADDING_A_PROVIDER.md). S
 3. Update type definitions in `src/types/capabilities.ts`
 4. Update adapter factory and UI components
 
-## 🔒 Security Notes
+## Security Notes
 
-> **⚠️ CRITICAL: LOCALHOST DEVELOPMENT ONLY**
->
-> This application is **NOT production-ready**. It lacks:
-> - Authentication/Authorization system
-> - Rate limiting on API endpoints
-> - Content Security Policy (CSP) headers
-> - Input sanitization for LLM prompts
-> - Server-side key management
+Codebase Cartographer is intended for local workstation use. It does not ship
+with multi-user authentication, server-side key management, rate limiting, or
+production CORS/CSP defaults. Keep provider keys private, rotate them if
+exposure is suspected, and avoid running the UI on shared or public devices.
 
-### Key Storage Security
-- API keys are stored in **browser localStorage** with **AES-GCM-256 encryption** and PIN protection
-- While encrypted, client-side storage is still accessible to determined attackers
-- **Auto-lock** after 15 minutes of inactivity
-- **Do not use this app on shared computers or public devices**
-- **Do not commit `.env.local` files to version control** (already in .gitignore)
+### Key Storage
 
-### Security Weaknesses (Known Issues)
+- API keys may be stored in browser localStorage with AES-GCM-256 encryption and PIN protection
+- Auto-lock after 15 minutes of inactivity
+- Do not commit `.env.local` files (already listed in `.gitignore`)
+
+### Known Hardening Gaps
+
 | Issue | Severity | Status |
 |-------|----------|--------|
-| No authentication | CRITICAL | Not implemented |
-| Permissive CORS | HIGH | Allows all origins |
-| No CSP headers | HIGH | Not implemented |
-| No rate limiting | MEDIUM | Not implemented |
-| Client-side key storage | MEDIUM | Encrypted but client-accessible |
+| No authentication | High | Not implemented |
+| Permissive CORS | High | Allows all origins in local server |
+| No CSP headers | High | Not implemented |
+| No rate limiting | Medium | Not implemented |
+| Client-side key storage | Medium | Encrypted but client-accessible |
 
-### Recommended Security Practices
+### Recommended Practices
 
-1. **Local Development Only**: Run this application only on your personal development machine
-2. **Environment Variables**: Use `.env.local` for API keys instead of the in-app settings when possible
-3. **Key Rotation**: Regularly rotate your API keys, especially if you suspect exposure
-4. **Permissions**: Use API keys with minimal required permissions/scopes
-5. **Monitoring**: Monitor your API provider's usage dashboard for unusual activity
+1. Run on a personal development machine
+2. Prefer `.env.local` or the Settings UI for keys; never commit secrets
+3. Rotate API keys if you suspect exposure
+4. Use keys with the minimum required scopes
+5. Monitor provider usage dashboards for unusual activity
 
 ### Production Deployment Requirements
-For production use, you **must implement**:
-- **Server-side key management** (never expose keys to clients)
-- **Authentication/Authorization** to control access
-- **Backend proxy** for all LLM API calls
-- **Secure key vault** (e.g., AWS Secrets Manager, Azure Key Vault)
-- **CORS restrictions** to specific origins only
-- **CSP headers** to prevent XSS attacks
-- **Rate limiting** to prevent API abuse
+
+Before any shared or hosted deployment, implement:
+
+- Server-side key management (never expose keys to clients)
+- Authentication and authorization
+- A backend proxy for LLM API calls
+- A secure key vault
+- Restricted CORS origins
+- CSP headers
+- Rate limiting
 
 ### Data Privacy
-- API keys are sent **directly to their respective providers only**
-- No keys are sent to any third-party services or intermediaries
-- No telemetry or analytics data is collected by this application
 
-## 📄 License
+- API keys are sent only to their respective providers
+- No keys are sent to third-party intermediaries by this application
+- No telemetry or analytics are collected by this application
 
-MIT License - See LICENSE file for details.
+## License
 
-## 🙏 Acknowledgments
+MIT License — see LICENSE for details.
+
+## Acknowledgments
 
 - Built with [React](https://react.dev/) and [Vite](https://vite.dev/)
 - Visualization powered by [D3.js](https://d3js.org/)
